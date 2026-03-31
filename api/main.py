@@ -1,10 +1,11 @@
 """
-FinSight FastAPI backend — Phase 1.
+FinSight FastAPI backend — Phase 2.
 
 Endpoints:
-  POST /query   — NL question → SQL → results
-  GET  /health  — pipeline status + DuckDB freshness
-  GET  /schema  — mart_query_context column list (for UI hints)
+  POST /query      — NL question → SQL → results + analyst commentary
+  GET  /health     — pipeline status + DuckDB freshness
+  GET  /schema     — mart_query_context column list (for UI hints)
+  GET  /anomalies  — latest-date anomaly signals from the gold table
 """
 
 import os
@@ -15,6 +16,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from commentary import generate_commentary
 from qwen_agent import query as nl_query
 from schema_context import MART_QUERY_CONTEXT_DDL
 
@@ -44,8 +46,9 @@ class QueryResponse(BaseModel):
     question: str
     sql: str
     results: list[dict]
-    path: str          # 'cold' for Phase 1; 'hot' added in Phase 3
+    path: str               # 'cold' for Phase 2; 'hot' added in Phase 3
     row_count: int
+    commentary: str = ''    # analyst summary — Phase 2
 
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
@@ -89,12 +92,15 @@ async def run_query(req: QueryRequest):
     except duckdb.Error as e:
         raise HTTPException(status_code=400, detail=f'SQL execution error: {e}')
 
+    commentary = generate_commentary(result['question'], result['results'])
+
     return QueryResponse(
         question=result['question'],
         sql=result['sql'],
         results=result['results'],
         path=result['path'],
         row_count=len(result['results']),
+        commentary=commentary,
     )
 
 
@@ -115,3 +121,31 @@ async def health():
 async def schema():
     """Return the mart_query_context DDL for the UI's schema hint panel."""
     return {'ddl': MART_QUERY_CONTEXT_DDL}
+
+
+@app.get('/anomalies')
+async def anomalies():
+    """Return anomaly signals for the latest available date in the gold table."""
+    try:
+        conn = duckdb.connect(DUCKDB_PATH, read_only=True)
+        rows = conn.execute("""
+            SELECT symbol, company_name, sector, date,
+                   close, pct_change, rsi_14, volume_zscore,
+                   is_oversold, is_overbought, is_volume_spike, is_large_move
+            FROM main_gold.mart_query_context
+            WHERE date = (SELECT max(date) FROM main_gold.mart_query_context)
+              AND (is_oversold OR is_overbought OR is_volume_spike OR is_large_move)
+            ORDER BY symbol
+        """).fetchall()
+        conn.close()
+        if not rows:
+            return {'date': None, 'anomalies': []}
+        columns = [
+            'symbol', 'company_name', 'sector', 'date',
+            'close', 'pct_change', 'rsi_14', 'volume_zscore',
+            'is_oversold', 'is_overbought', 'is_volume_spike', 'is_large_move',
+        ]
+        result = [dict(zip(columns, row)) for row in rows]
+        return {'date': str(result[0]['date']), 'anomalies': result}
+    except duckdb.Error as e:
+        raise HTTPException(status_code=503, detail=f'DuckDB error: {e}')

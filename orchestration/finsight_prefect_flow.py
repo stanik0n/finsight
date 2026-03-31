@@ -119,6 +119,17 @@ def finsight_daily(target_date: str | None = None) -> None:
         extra_env=dbt_env,
     ).result()
 
+    run_step.submit(
+        "detect_anomalies",
+        ["python", "orchestration/scripts/detect_anomalies.py", ds],
+        extra_env=dbt_env,
+    ).result()
+
+    run_step.submit(
+        "send_telegram",
+        ["python", "orchestration/scripts/send_telegram.py", ds],
+    ).result()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Run the FinSight Phase 1 daily Prefect flow.")

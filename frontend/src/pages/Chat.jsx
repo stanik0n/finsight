@@ -1,7 +1,8 @@
 import { useState } from 'react'
+import CommentaryPanel from '../components/CommentaryPanel'
 import QueryInput from '../components/QueryInput'
-import SqlPanel from '../components/SqlPanel'
 import ResultsTable from '../components/ResultsTable'
+import SqlPanel from '../components/SqlPanel'
 
 const API = ''  // empty = same origin (proxied by Vite in dev)
 
@@ -48,7 +49,7 @@ export default function Chat() {
 
       {loading && (
         <div className="text-center py-12 text-gray-500 text-sm animate-pulse">
-          Generating SQL and querying data…
+          Generating SQL, querying data, and writing analysis…
         </div>
       )}
 
@@ -66,6 +67,9 @@ export default function Chat() {
 
             {/* Results table */}
             <ResultsTable results={entry.results} />
+
+            {/* Analyst commentary */}
+            <CommentaryPanel commentary={entry.commentary} />
           </div>
         ))}
       </div>
@@ -75,7 +79,7 @@ export default function Chat() {
           Ask a question about US stock market data above.
           <br />
           <span className="text-gray-700 text-xs">
-            Powered by Qwen2.5-7B via Groq · DuckDB · 50 tickers across 5 sectors
+            Powered by Llama-3.3-70B via Groq · DuckDB · 50 tickers across 5 sectors
           </span>
         </div>
       )}
