@@ -1,0 +1,59 @@
+version: 2
+
+models:
+  - name: fct_daily_stock_metrics
+    description: "Gold fact table — one row per ticker per trading day with all computed indicators"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns: [symbol, date]
+    columns:
+      - name: symbol
+        tests: [not_null]
+      - name: date
+        tests: [not_null]
+      - name: close
+        tests: [not_null]
+      - name: volume
+        description: "Daily volume — must be positive"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 1
+      - name: rsi_14
+        description: "RSI must be between 0 and 100"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 100
+
+  - name: dim_tickers
+    description: "Ticker metadata — symbol, name, sector, market cap tier"
+    columns:
+      - name: symbol
+        tests: [not_null, unique]
+      - name: sector
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - Technology
+                - Financials
+                - Energy
+                - Healthcare
+                - Consumer Discretionary
+
+  - name: agg_sector_daily
+    description: "Daily sector-level aggregates"
+    columns:
+      - name: sector
+        tests: [not_null]
+      - name: date
+        tests: [not_null]
+
+  - name: mart_query_context
+    description: "Wide denormalized view for Qwen text-to-SQL — the primary query target"
+    columns:
+      - name: symbol
+        tests: [not_null]
+      - name: date
+        tests: [not_null]

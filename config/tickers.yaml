@@ -1,0 +1,60 @@
+sectors:
+  technology:
+    - AAPL
+    - MSFT
+    - NVDA
+    - GOOGL
+    - META
+    - AMZN
+    - TSLA
+    - AMD
+    - INTC
+    - CRM
+
+  financials:
+    - JPM
+    - BAC
+    - GS
+    - MS
+    - WFC
+    - C
+    - BLK
+    - AXP
+    - USB
+    - COF
+
+  energy:
+    - XOM
+    - CVX
+    - COP
+    - EOG
+    - SLB
+    - PSX
+    - MPC
+    - VLO
+    - OXY
+    - HAL
+
+  healthcare:
+    - JNJ
+    - UNH
+    - PFE
+    - ABBV
+    - MRK
+    - TMO
+    - ABT
+    - DHR
+    - BMY
+    - AMGN
+
+  consumer_discretionary:
+    - HD
+    - MCD
+    - NKE
+    - SBUX
+    - TGT
+    - LOW
+    - TJX
+    - BKNG
+    - MAR
+    - COST

@@ -1,0 +1,36 @@
+# Environment / secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# dbt
+dbt_finsight/target/
+dbt_finsight/logs/
+dbt_finsight/.user.yml
+
+# Node / frontend
+frontend/node_modules/
+frontend/dist/
+
+# DuckDB
+*.duckdb
+*.duckdb.wal
+
+# Spark / Java
+spark-warehouse/
+derby.log
+metastore_db/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db

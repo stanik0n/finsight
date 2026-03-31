@@ -1,0 +1,51 @@
+symbol,name,sector,market_cap_tier
+AAPL,Apple Inc,Technology,mega
+MSFT,Microsoft Corporation,Technology,mega
+NVDA,NVIDIA Corporation,Technology,mega
+GOOGL,Alphabet Inc,Technology,mega
+META,Meta Platforms Inc,Technology,mega
+AMZN,Amazon.com Inc,Technology,mega
+TSLA,Tesla Inc,Technology,large
+AMD,Advanced Micro Devices,Technology,large
+INTC,Intel Corporation,Technology,large
+CRM,Salesforce Inc,Technology,large
+JPM,JPMorgan Chase & Co,Financials,mega
+BAC,Bank of America Corp,Financials,large
+GS,Goldman Sachs Group,Financials,large
+MS,Morgan Stanley,Financials,large
+WFC,Wells Fargo & Co,Financials,large
+C,Citigroup Inc,Financials,large
+BLK,BlackRock Inc,Financials,large
+AXP,American Express Co,Financials,large
+USB,U.S. Bancorp,Financials,mid
+COF,Capital One Financial,Financials,mid
+XOM,Exxon Mobil Corporation,Energy,mega
+CVX,Chevron Corporation,Energy,large
+COP,ConocoPhillips,Energy,large
+EOG,EOG Resources Inc,Energy,mid
+SLB,SLB (Schlumberger),Energy,large
+PSX,Phillips 66,Energy,mid
+MPC,Marathon Petroleum Corp,Energy,mid
+VLO,Valero Energy Corp,Energy,mid
+OXY,Occidental Petroleum,Energy,mid
+HAL,Halliburton Company,Energy,mid
+JNJ,Johnson & Johnson,Healthcare,mega
+UNH,UnitedHealth Group Inc,Healthcare,mega
+PFE,Pfizer Inc,Healthcare,large
+ABBV,AbbVie Inc,Healthcare,large
+MRK,Merck & Co Inc,Healthcare,large
+TMO,Thermo Fisher Scientific,Healthcare,large
+ABT,Abbott Laboratories,Healthcare,large
+DHR,Danaher Corporation,Healthcare,large
+BMY,Bristol-Myers Squibb Co,Healthcare,large
+AMGN,Amgen Inc,Healthcare,large
+HD,Home Depot Inc,Consumer Discretionary,mega
+MCD,McDonald's Corporation,Consumer Discretionary,large
+NKE,Nike Inc,Consumer Discretionary,large
+SBUX,Starbucks Corporation,Consumer Discretionary,large
+TGT,Target Corporation,Consumer Discretionary,large
+LOW,Lowe's Companies Inc,Consumer Discretionary,large
+TJX,TJX Companies Inc,Consumer Discretionary,large
+BKNG,Booking Holdings Inc,Consumer Discretionary,large
+MAR,Marriott International,Consumer Discretionary,large
+COST,Costco Wholesale Corp,Consumer Discretionary,mega

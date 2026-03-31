@@ -1,0 +1,11 @@
+finsight:
+  target: prod
+  outputs:
+    prod:
+      type: duckdb
+      path: "{{ env_var('DUCKDB_PATH', '/data/finsight.duckdb') }}"
+      threads: 4
+    dev:
+      type: duckdb
+      path: "/tmp/finsight_dev.duckdb"
+      threads: 2
