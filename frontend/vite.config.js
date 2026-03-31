@@ -7,9 +7,12 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 3000,
     proxy: {
-      '/query':  'http://api:8000',
-      '/health': 'http://api:8000',
-      '/schema': 'http://api:8000',
+      '/query':         'http://api:8000',
+      '/health':        'http://api:8000',
+      '/schema':        'http://api:8000',
+      '/anomalies':     'http://api:8000',
+      '/portfolio':     'http://api:8000',
+      '/stream-status': 'http://api:8000',
     },
   },
 })

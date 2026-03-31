@@ -20,6 +20,7 @@ from pydantic import BaseModel
 
 from commentary import generate_commentary
 from hot_query import hot_query
+from portfolio import calculate_portfolio
 from qwen_agent import query as nl_query
 from schema_context import MART_QUERY_CONTEXT_DDL
 
@@ -189,3 +190,23 @@ async def anomalies():
 async def stream_status():
     """Return live intraday stream health: bar count and latest bar timestamp."""
     return _get_intraday_status()
+
+
+class HoldingIn(BaseModel):
+    symbol: str
+    shares: float
+    avg_cost: float
+
+
+class PortfolioRequest(BaseModel):
+    holdings: list[HoldingIn]
+
+
+@app.post('/portfolio')
+async def portfolio(req: PortfolioRequest):
+    """Calculate current portfolio value, P&L, and sector exposure."""
+    try:
+        result = calculate_portfolio([h.model_dump() for h in req.holdings])
+        return result
+    except duckdb.Error as e:
+        raise HTTPException(status_code=503, detail=f'DuckDB error: {e}')
