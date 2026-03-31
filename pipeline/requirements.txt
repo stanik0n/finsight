@@ -10,3 +10,4 @@ pyyaml==6.0.1
 pyspark==3.5.1
 prefect==2.19.9
 pydantic==2.6.4
+kafka-python==2.0.2

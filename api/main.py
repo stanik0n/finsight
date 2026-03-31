@@ -1,11 +1,13 @@
 """
-FinSight FastAPI backend — Phase 2.
+FinSight FastAPI backend — Phase 3.
 
 Endpoints:
-  POST /query      — NL question → SQL → results + analyst commentary
-  GET  /health     — pipeline status + DuckDB freshness
-  GET  /schema     — mart_query_context column list (for UI hints)
-  GET  /anomalies  — latest-date anomaly signals from the gold table
+  POST /query         — NL question → SQL → results + analyst commentary
+                        Routes to hot (intraday.duckdb) or cold (Gold DuckDB) based on intent
+  GET  /health        — pipeline status + DuckDB freshness
+  GET  /schema        — mart_query_context column list (for UI hints)
+  GET  /anomalies     — latest-date anomaly signals from the gold table
+  GET  /stream-status — live intraday stream health (bar count, latest timestamp)
 """
 
 import os
@@ -17,6 +19,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from commentary import generate_commentary
+from hot_query import hot_query
 from qwen_agent import query as nl_query
 from schema_context import MART_QUERY_CONTEXT_DDL
 
@@ -34,6 +37,15 @@ app.add_middleware(
 )
 
 DUCKDB_PATH = os.environ.get('DUCKDB_PATH', '/data/finsight.duckdb')
+INTRADAY_DUCKDB_PATH = os.environ.get('INTRADAY_DUCKDB_PATH', '/data/intraday.duckdb')
+
+# Keywords that signal the user wants live intraday data (hot path)
+_HOT_KEYWORDS = frozenset([
+    'intraday', 'live', 'real-time', 'realtime', 'streaming',
+    'current price', 'right now', 'premarket', 'pre-market',
+    'after hours', 'afterhours', 'after-hours', 'this morning',
+    'latest price', 'trading now',
+])
 
 
 # ── Models ──────────────────────────────────────────────────────────────────
@@ -46,15 +58,19 @@ class QueryResponse(BaseModel):
     question: str
     sql: str
     results: list[dict]
-    path: str               # 'cold' for Phase 2; 'hot' added in Phase 3
+    path: str               # 'cold' (Gold DuckDB) or 'hot' (intraday.duckdb)
     row_count: int
     commentary: str = ''    # analyst summary — Phase 2
 
 
 # ── Helpers ─────────────────────────────────────────────────────────────────
 
+def _is_hot_query(question: str) -> bool:
+    q = question.lower()
+    return any(kw in q for kw in _HOT_KEYWORDS)
+
+
 def _get_duckdb_freshness() -> dict:
-    """Return the latest date in mart_query_context, or None if the table doesn't exist."""
     try:
         conn = duckdb.connect(DUCKDB_PATH, read_only=True)
         row = conn.execute(
@@ -66,28 +82,48 @@ def _get_duckdb_freshness() -> dict:
         return {'latest_date': None, 'row_count': 0, 'error': str(e)}
 
 
+def _get_intraday_status() -> dict:
+    try:
+        conn = duckdb.connect(INTRADAY_DUCKDB_PATH, read_only=True)
+        row = conn.execute(
+            "SELECT count(*), max(timestamp) FROM intraday_bars"
+        ).fetchone()
+        conn.close()
+        bar_count = row[0] or 0
+        return {
+            'live': bar_count > 0,
+            'bar_count': bar_count,
+            'latest_bar': str(row[1]) if row[1] else None,
+        }
+    except Exception as e:
+        return {'live': False, 'bar_count': 0, 'latest_bar': None, 'error': str(e)}
+
+
 # ── Routes ───────────────────────────────────────────────────────────────────
 
 @app.post('/query', response_model=QueryResponse)
 async def run_query(req: QueryRequest):
     """
-    Translate a natural language question to SQL, execute against Gold DuckDB,
-    and return the results.
+    Translate a natural language question to SQL and execute it.
 
-    Requires GROQ_API_KEY to be set. Get a free key at console.groq.com.
+    Routes to the hot path (intraday.duckdb) when the question contains
+    live/intraday keywords; otherwise routes to the cold path (Gold DuckDB).
     """
     if not req.question.strip():
         raise HTTPException(status_code=400, detail='Question cannot be empty')
 
+    use_hot = _is_hot_query(req.question)
+
     try:
-        freshness = _get_duckdb_freshness()
-        latest_date = freshness.get('latest_date')
-        result = nl_query(req.question, DUCKDB_PATH, latest_date=latest_date)
+        if use_hot:
+            result = hot_query(req.question)
+        else:
+            freshness = _get_duckdb_freshness()
+            latest_date = freshness.get('latest_date')
+            result = nl_query(req.question, DUCKDB_PATH, latest_date=latest_date)
     except RuntimeError as e:
-        # GROQ_API_KEY missing or connection error
         raise HTTPException(status_code=503, detail=str(e))
     except ValueError as e:
-        # SQL parsing failed
         raise HTTPException(status_code=422, detail=str(e))
     except duckdb.Error as e:
         raise HTTPException(status_code=400, detail=f'SQL execution error: {e}')
@@ -119,13 +155,11 @@ async def health():
 
 @app.get('/schema')
 async def schema():
-    """Return the mart_query_context DDL for the UI's schema hint panel."""
     return {'ddl': MART_QUERY_CONTEXT_DDL}
 
 
 @app.get('/anomalies')
 async def anomalies():
-    """Return anomaly signals for the latest available date in the gold table."""
     try:
         conn = duckdb.connect(DUCKDB_PATH, read_only=True)
         rows = conn.execute("""
@@ -149,3 +183,9 @@ async def anomalies():
         return {'date': str(result[0]['date']), 'anomalies': result}
     except duckdb.Error as e:
         raise HTTPException(status_code=503, detail=f'DuckDB error: {e}')
+
+
+@app.get('/stream-status')
+async def stream_status():
+    """Return live intraday stream health: bar count and latest bar timestamp."""
+    return _get_intraday_status()
