@@ -241,7 +241,6 @@ def ensure_portfolio_tables() -> None:
             )
             """,
             [
-                _DEFAULT_PROFILE_ID,
                 DEFAULT_ALERT_PREFERENCES['concentration_alerts_enabled'],
                 DEFAULT_ALERT_PREFERENCES['concentration_threshold_pct'],
                 DEFAULT_ALERT_PREFERENCES['rsi_alerts_enabled'],
