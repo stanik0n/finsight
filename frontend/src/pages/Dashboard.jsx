@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { authedFetch } from '../lib/api'
+import { useFinsightAuth } from '../lib/finsight-auth'
 
 const TICKERS = [
   { symbol: 'AAPL', name: 'Apple Inc', sector: 'Technology' },
@@ -285,6 +287,7 @@ function SectorMatrixChart({ sectors }) {
 }
 
 export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }) {
+  const { getToken } = useFinsightAuth()
   const [data, setData] = useState(null)
   const [snapshot, setSnapshot] = useState(null)
   const [news, setNews] = useState(null)
@@ -298,10 +301,10 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
     async function loadDashboard() {
       try {
         const [anomaliesRes, snapshotRes, newsRes, watchlistRes] = await Promise.all([
-          fetch('/anomalies', { cache: 'no-store' }),
-          fetch('/market-snapshot', { cache: 'no-store' }),
-          fetch('/market-news', { cache: 'no-store' }),
-          fetch('/portfolio/watchlist', { cache: 'no-store' }),
+          authedFetch(getToken, '/anomalies', { cache: 'no-store' }),
+          authedFetch(getToken, '/market-snapshot', { cache: 'no-store' }),
+          authedFetch(getToken, '/market-news', { cache: 'no-store' }),
+          authedFetch(getToken, '/portfolio/watchlist', { cache: 'no-store' }),
         ])
 
         const anomaliesJson = await anomaliesRes.json()
@@ -424,7 +427,7 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
     : faangCards
 
   async function refreshWatchlist() {
-    const response = await fetch('/portfolio/watchlist', { cache: 'no-store' })
+    const response = await authedFetch(getToken, '/portfolio/watchlist', { cache: 'no-store' })
     if (!response.ok) throw new Error('Unable to refresh watchlist')
     const payload = await response.json()
     setWatchlistData(payload)
@@ -435,7 +438,7 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
     if (!symbol) return
     setWatchlistBusy(true)
     try {
-      const response = await fetch('/portfolio/watchlist', {
+      const response = await authedFetch(getToken, '/portfolio/watchlist', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ symbol }),
@@ -451,7 +454,7 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
   async function removeWatchlistSymbol(symbol) {
     setWatchlistBusy(true)
     try {
-      const response = await fetch(`/portfolio/watchlist/${symbol}`, { method: 'DELETE' })
+      const response = await authedFetch(getToken, `/portfolio/watchlist/${symbol}`, { method: 'DELETE' })
       if (!response.ok) throw new Error('Unable to remove symbol')
       await refreshWatchlist()
     } finally {

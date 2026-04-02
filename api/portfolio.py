@@ -30,6 +30,16 @@ DEFAULT_ALERT_PREFERENCES = {
     'telegram_alerts_enabled': True,
 }
 _CENTRAL_TZ = ZoneInfo('America/Chicago')
+_DEFAULT_PROFILE_ID = 1
+
+
+def _normalize_user_id(user_id: str | None) -> str | None:
+    cleaned = (user_id or '').strip()
+    return cleaned or None
+
+
+def _using_user_scope(user_id: str | None) -> bool:
+    return _normalize_user_id(user_id) is not None
 
 
 def _connect(read_only: bool = False) -> duckdb.DuckDBPyConnection:
@@ -118,6 +128,94 @@ def ensure_portfolio_tables() -> None:
             )
             """
         )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS app.user_portfolio_holdings (
+                user_id TEXT NOT NULL,
+                symbol TEXT NOT NULL,
+                shares DOUBLE NOT NULL,
+                avg_cost DOUBLE NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW(),
+                PRIMARY KEY (user_id, symbol)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS app.user_portfolio_watchlist (
+                user_id TEXT NOT NULL,
+                symbol TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW(),
+                PRIMARY KEY (user_id, symbol)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS app.user_portfolio_alerts (
+                user_id TEXT NOT NULL,
+                alert_id TEXT NOT NULL,
+                symbol TEXT,
+                source_scope TEXT DEFAULT 'portfolio',
+                alert_type TEXT NOT NULL,
+                severity TEXT NOT NULL,
+                title TEXT NOT NULL,
+                message TEXT NOT NULL,
+                status TEXT DEFAULT 'new',
+                payload_json TEXT,
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW(),
+                sent_to_telegram_at TIMESTAMP,
+                PRIMARY KEY (user_id, alert_id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS app.user_portfolio_alert_preferences (
+                user_id TEXT PRIMARY KEY,
+                concentration_alerts_enabled BOOLEAN NOT NULL,
+                concentration_threshold_pct DOUBLE NOT NULL,
+                rsi_alerts_enabled BOOLEAN NOT NULL,
+                overbought_rsi_threshold DOUBLE NOT NULL,
+                oversold_rsi_threshold DOUBLE NOT NULL,
+                daily_move_alerts_enabled BOOLEAN NOT NULL,
+                daily_move_threshold_pct DOUBLE NOT NULL,
+                telegram_daily_brief_enabled BOOLEAN NOT NULL,
+                telegram_alerts_enabled BOOLEAN NOT NULL,
+                updated_at TIMESTAMP DEFAULT NOW()
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS app.user_portfolio_delivery_state (
+                user_id TEXT NOT NULL,
+                delivery_key TEXT NOT NULL,
+                last_sent_date TEXT,
+                updated_at TIMESTAMP DEFAULT NOW(),
+                PRIMARY KEY (user_id, delivery_key)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS app.user_ticker_notes (
+                user_id TEXT NOT NULL,
+                note_id BIGINT NOT NULL,
+                symbol TEXT NOT NULL,
+                note_type TEXT DEFAULT 'note',
+                note_title TEXT,
+                note_text TEXT NOT NULL,
+                review_date DATE,
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW(),
+                PRIMARY KEY (user_id, note_id)
+            )
+            """
+        )
         conn.execute("ALTER TABLE app.portfolio_alerts ADD COLUMN IF NOT EXISTS source_scope TEXT DEFAULT 'portfolio'")
         conn.execute("ALTER TABLE app.ticker_notes ADD COLUMN IF NOT EXISTS note_type TEXT DEFAULT 'note'")
         conn.execute("ALTER TABLE app.ticker_notes ADD COLUMN IF NOT EXISTS note_title TEXT")
@@ -139,10 +237,11 @@ def ensure_portfolio_tables() -> None:
             )
             SELECT 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()
             WHERE NOT EXISTS (
-                SELECT 1 FROM app.portfolio_alert_preferences WHERE profile_id = 1
+                SELECT 1 FROM app.portfolio_alert_preferences WHERE profile_id = ?
             )
             """,
             [
+                _DEFAULT_PROFILE_ID,
                 DEFAULT_ALERT_PREFERENCES['concentration_alerts_enabled'],
                 DEFAULT_ALERT_PREFERENCES['concentration_threshold_pct'],
                 DEFAULT_ALERT_PREFERENCES['rsi_alerts_enabled'],
@@ -152,28 +251,84 @@ def ensure_portfolio_tables() -> None:
                 DEFAULT_ALERT_PREFERENCES['daily_move_threshold_pct'],
                 DEFAULT_ALERT_PREFERENCES['telegram_daily_brief_enabled'],
                 DEFAULT_ALERT_PREFERENCES['telegram_alerts_enabled'],
+                _DEFAULT_PROFILE_ID,
             ],
         )
     finally:
         conn.close()
 
 
-def _next_note_id(conn: duckdb.DuckDBPyConnection) -> int:
-    row = conn.execute("SELECT COALESCE(MAX(note_id), 0) + 1 FROM app.ticker_notes").fetchone()
+def _ensure_user_alert_preferences(conn: duckdb.DuckDBPyConnection, user_id: str) -> None:
+    conn.execute(
+        """
+        INSERT INTO app.user_portfolio_alert_preferences (
+            user_id,
+            concentration_alerts_enabled,
+            concentration_threshold_pct,
+            rsi_alerts_enabled,
+            overbought_rsi_threshold,
+            oversold_rsi_threshold,
+            daily_move_alerts_enabled,
+            daily_move_threshold_pct,
+            telegram_daily_brief_enabled,
+            telegram_alerts_enabled,
+            updated_at
+        )
+        SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW()
+        WHERE NOT EXISTS (
+            SELECT 1 FROM app.user_portfolio_alert_preferences WHERE user_id = ?
+        )
+        """,
+        [
+            user_id,
+            DEFAULT_ALERT_PREFERENCES['concentration_alerts_enabled'],
+            DEFAULT_ALERT_PREFERENCES['concentration_threshold_pct'],
+            DEFAULT_ALERT_PREFERENCES['rsi_alerts_enabled'],
+            DEFAULT_ALERT_PREFERENCES['overbought_rsi_threshold'],
+            DEFAULT_ALERT_PREFERENCES['oversold_rsi_threshold'],
+            DEFAULT_ALERT_PREFERENCES['daily_move_alerts_enabled'],
+            DEFAULT_ALERT_PREFERENCES['daily_move_threshold_pct'],
+            DEFAULT_ALERT_PREFERENCES['telegram_daily_brief_enabled'],
+            DEFAULT_ALERT_PREFERENCES['telegram_alerts_enabled'],
+            user_id,
+        ],
+    )
+
+
+def _next_note_id(conn: duckdb.DuckDBPyConnection, user_id: str | None = None) -> int:
+    if _using_user_scope(user_id):
+        row = conn.execute(
+            "SELECT COALESCE(MAX(note_id), 0) + 1 FROM app.user_ticker_notes WHERE user_id = ?",
+            [_normalize_user_id(user_id)],
+        ).fetchone()
+    else:
+        row = conn.execute("SELECT COALESCE(MAX(note_id), 0) + 1 FROM app.ticker_notes").fetchone()
     return int(row[0]) if row and row[0] is not None else 1
 
 
-def list_holdings() -> list[dict]:
+def list_holdings(user_id: str | None = None) -> list[dict]:
     ensure_portfolio_tables()
+    normalized_user_id = _normalize_user_id(user_id)
     conn = _connect(read_only=True)
     try:
-        rows = conn.execute(
-            """
-            SELECT symbol, shares, avg_cost, created_at, updated_at
-            FROM app.portfolio_holdings
-            ORDER BY symbol
-            """
-        ).fetchall()
+        if normalized_user_id:
+            rows = conn.execute(
+                """
+                SELECT symbol, shares, avg_cost, created_at, updated_at
+                FROM app.user_portfolio_holdings
+                WHERE user_id = ?
+                ORDER BY symbol
+                """,
+                [normalized_user_id],
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                """
+                SELECT symbol, shares, avg_cost, created_at, updated_at
+                FROM app.portfolio_holdings
+                ORDER BY symbol
+                """
+            ).fetchall()
     finally:
         conn.close()
 
@@ -189,17 +344,29 @@ def list_holdings() -> list[dict]:
     ]
 
 
-def list_watchlist() -> list[dict]:
+def list_watchlist(user_id: str | None = None) -> list[dict]:
     ensure_portfolio_tables()
+    normalized_user_id = _normalize_user_id(user_id)
     conn = _connect(read_only=True)
     try:
-        rows = conn.execute(
-            """
-            SELECT symbol, created_at, updated_at
-            FROM app.portfolio_watchlist
-            ORDER BY symbol
-            """
-        ).fetchall()
+        if normalized_user_id:
+            rows = conn.execute(
+                """
+                SELECT symbol, created_at, updated_at
+                FROM app.user_portfolio_watchlist
+                WHERE user_id = ?
+                ORDER BY symbol
+                """,
+                [normalized_user_id],
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                """
+                SELECT symbol, created_at, updated_at
+                FROM app.portfolio_watchlist
+                ORDER BY symbol
+                """
+            ).fetchall()
     finally:
         conn.close()
 
@@ -213,11 +380,32 @@ def list_watchlist() -> list[dict]:
     ]
 
 
-def list_ticker_notes(symbol: str | None = None) -> list[dict]:
+def list_ticker_notes(symbol: str | None = None, user_id: str | None = None) -> list[dict]:
     ensure_portfolio_tables()
+    normalized_user_id = _normalize_user_id(user_id)
     conn = _connect(read_only=True)
     try:
-        if symbol:
+        if normalized_user_id and symbol:
+            rows = conn.execute(
+                """
+                SELECT note_id, symbol, COALESCE(note_type, 'note'), note_title, note_text, review_date, created_at, updated_at
+                FROM app.user_ticker_notes
+                WHERE user_id = ? AND symbol = ?
+                ORDER BY updated_at DESC, note_id DESC
+                """,
+                [normalized_user_id, symbol.upper().strip()],
+            ).fetchall()
+        elif normalized_user_id:
+            rows = conn.execute(
+                """
+                SELECT note_id, symbol, COALESCE(note_type, 'note'), note_title, note_text, review_date, created_at, updated_at
+                FROM app.user_ticker_notes
+                WHERE user_id = ?
+                ORDER BY updated_at DESC, note_id DESC
+                """,
+                [normalized_user_id],
+            ).fetchall()
+        elif symbol:
             rows = conn.execute(
                 """
                 SELECT note_id, symbol, COALESCE(note_type, 'note'), note_title, note_text, review_date, created_at, updated_at
@@ -253,89 +441,141 @@ def list_ticker_notes(symbol: str | None = None) -> list[dict]:
     ]
 
 
-def upsert_holding(symbol: str, shares: float, avg_cost: float) -> dict:
+def upsert_holding(symbol: str, shares: float, avg_cost: float, user_id: str | None = None) -> dict:
     ensure_portfolio_tables()
     symbol = symbol.upper().strip()
+    normalized_user_id = _normalize_user_id(user_id)
     conn = _connect()
     try:
-        conn.execute(
-            """
-            INSERT INTO app.portfolio_holdings (symbol, shares, avg_cost, created_at, updated_at)
-            VALUES (?, ?, ?, NOW(), NOW())
-            ON CONFLICT(symbol) DO UPDATE
-            SET shares = excluded.shares,
-                avg_cost = excluded.avg_cost,
-                updated_at = NOW()
-            """,
-            [symbol, shares, avg_cost],
-        )
+        if normalized_user_id:
+            conn.execute(
+                """
+                INSERT INTO app.user_portfolio_holdings (user_id, symbol, shares, avg_cost, created_at, updated_at)
+                VALUES (?, ?, ?, ?, NOW(), NOW())
+                ON CONFLICT(user_id, symbol) DO UPDATE
+                SET shares = excluded.shares,
+                    avg_cost = excluded.avg_cost,
+                    updated_at = NOW()
+                """,
+                [normalized_user_id, symbol, shares, avg_cost],
+            )
+        else:
+            conn.execute(
+                """
+                INSERT INTO app.portfolio_holdings (symbol, shares, avg_cost, created_at, updated_at)
+                VALUES (?, ?, ?, NOW(), NOW())
+                ON CONFLICT(symbol) DO UPDATE
+                SET shares = excluded.shares,
+                    avg_cost = excluded.avg_cost,
+                    updated_at = NOW()
+                """,
+                [symbol, shares, avg_cost],
+            )
     finally:
         conn.close()
 
-    for holding in list_holdings():
+    for holding in list_holdings(user_id=normalized_user_id):
         if holding['symbol'] == symbol:
             return holding
     return {'symbol': symbol, 'shares': shares, 'avg_cost': avg_cost}
 
 
-def delete_holding(symbol: str) -> bool:
+def delete_holding(symbol: str, user_id: str | None = None) -> bool:
     ensure_portfolio_tables()
     normalized = symbol.upper().strip()
+    normalized_user_id = _normalize_user_id(user_id)
     conn = _connect()
     try:
-        existing = conn.execute(
-            "SELECT 1 FROM app.portfolio_holdings WHERE symbol = ?",
-            [normalized],
-        ).fetchone()
+        if normalized_user_id:
+            existing = conn.execute(
+                "SELECT 1 FROM app.user_portfolio_holdings WHERE user_id = ? AND symbol = ?",
+                [normalized_user_id, normalized],
+            ).fetchone()
+        else:
+            existing = conn.execute(
+                "SELECT 1 FROM app.portfolio_holdings WHERE symbol = ?",
+                [normalized],
+            ).fetchone()
         if not existing:
             return False
-        conn.execute(
-            "DELETE FROM app.portfolio_holdings WHERE symbol = ?",
-            [normalized],
-        )
+        if normalized_user_id:
+            conn.execute(
+                "DELETE FROM app.user_portfolio_holdings WHERE user_id = ? AND symbol = ?",
+                [normalized_user_id, normalized],
+            )
+        else:
+            conn.execute(
+                "DELETE FROM app.portfolio_holdings WHERE symbol = ?",
+                [normalized],
+            )
     finally:
         conn.close()
     return True
 
 
-def upsert_watchlist_symbol(symbol: str) -> dict:
+def upsert_watchlist_symbol(symbol: str, user_id: str | None = None) -> dict:
     ensure_portfolio_tables()
     symbol = symbol.upper().strip()
+    normalized_user_id = _normalize_user_id(user_id)
     conn = _connect()
     try:
-        conn.execute(
-            """
-            INSERT INTO app.portfolio_watchlist (symbol, created_at, updated_at)
-            VALUES (?, NOW(), NOW())
-            ON CONFLICT(symbol) DO UPDATE
-            SET updated_at = NOW()
-            """,
-            [symbol],
-        )
+        if normalized_user_id:
+            conn.execute(
+                """
+                INSERT INTO app.user_portfolio_watchlist (user_id, symbol, created_at, updated_at)
+                VALUES (?, ?, NOW(), NOW())
+                ON CONFLICT(user_id, symbol) DO UPDATE
+                SET updated_at = NOW()
+                """,
+                [normalized_user_id, symbol],
+            )
+        else:
+            conn.execute(
+                """
+                INSERT INTO app.portfolio_watchlist (symbol, created_at, updated_at)
+                VALUES (?, NOW(), NOW())
+                ON CONFLICT(symbol) DO UPDATE
+                SET updated_at = NOW()
+                """,
+                [symbol],
+            )
     finally:
         conn.close()
 
-    for row in list_watchlist():
+    for row in list_watchlist(user_id=normalized_user_id):
         if row['symbol'] == symbol:
             return row
     return {'symbol': symbol}
 
 
-def delete_watchlist_symbol(symbol: str) -> bool:
+def delete_watchlist_symbol(symbol: str, user_id: str | None = None) -> bool:
     ensure_portfolio_tables()
     normalized = symbol.upper().strip()
+    normalized_user_id = _normalize_user_id(user_id)
     conn = _connect()
     try:
-        existing = conn.execute(
-            "SELECT 1 FROM app.portfolio_watchlist WHERE symbol = ?",
-            [normalized],
-        ).fetchone()
+        if normalized_user_id:
+            existing = conn.execute(
+                "SELECT 1 FROM app.user_portfolio_watchlist WHERE user_id = ? AND symbol = ?",
+                [normalized_user_id, normalized],
+            ).fetchone()
+        else:
+            existing = conn.execute(
+                "SELECT 1 FROM app.portfolio_watchlist WHERE symbol = ?",
+                [normalized],
+            ).fetchone()
         if not existing:
             return False
-        conn.execute(
-            "DELETE FROM app.portfolio_watchlist WHERE symbol = ?",
-            [normalized],
-        )
+        if normalized_user_id:
+            conn.execute(
+                "DELETE FROM app.user_portfolio_watchlist WHERE user_id = ? AND symbol = ?",
+                [normalized_user_id, normalized],
+            )
+        else:
+            conn.execute(
+                "DELETE FROM app.portfolio_watchlist WHERE symbol = ?",
+                [normalized],
+            )
     finally:
         conn.close()
     return True
@@ -348,34 +588,62 @@ def upsert_ticker_note(
     note_type: str = 'note',
     note_title: str | None = None,
     review_date: str | None = None,
+    user_id: str | None = None,
 ) -> dict:
     ensure_portfolio_tables()
     normalized_symbol = symbol.upper().strip()
+    normalized_user_id = _normalize_user_id(user_id)
     cleaned_text = note_text.strip()
     cleaned_type = (note_type or 'note').strip().lower()
     cleaned_title = note_title.strip() if note_title and note_title.strip() else None
     cleaned_review_date = review_date.strip() if isinstance(review_date, str) and review_date.strip() else None
     conn = _connect()
     try:
-        target_note_id = int(note_id) if note_id is not None else _next_note_id(conn)
-        conn.execute(
-            """
-            INSERT INTO app.ticker_notes (note_id, symbol, note_type, note_title, note_text, review_date, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
-            ON CONFLICT(note_id) DO UPDATE
-            SET symbol = excluded.symbol,
-                note_type = excluded.note_type,
-                note_title = excluded.note_title,
-                note_text = excluded.note_text,
-                review_date = excluded.review_date,
-                updated_at = NOW()
-            """,
-            [target_note_id, normalized_symbol, cleaned_type, cleaned_title, cleaned_text, cleaned_review_date],
-        )
+        target_note_id = int(note_id) if note_id is not None else _next_note_id(conn, normalized_user_id)
+        if normalized_user_id:
+            conn.execute(
+                """
+                INSERT INTO app.user_ticker_notes (
+                    user_id, note_id, symbol, note_type, note_title, note_text, review_date, created_at, updated_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())
+                ON CONFLICT(user_id, note_id) DO UPDATE
+                SET symbol = excluded.symbol,
+                    note_type = excluded.note_type,
+                    note_title = excluded.note_title,
+                    note_text = excluded.note_text,
+                    review_date = excluded.review_date,
+                    updated_at = NOW()
+                """,
+                [
+                    normalized_user_id,
+                    target_note_id,
+                    normalized_symbol,
+                    cleaned_type,
+                    cleaned_title,
+                    cleaned_text,
+                    cleaned_review_date,
+                ],
+            )
+        else:
+            conn.execute(
+                """
+                INSERT INTO app.ticker_notes (note_id, symbol, note_type, note_title, note_text, review_date, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())
+                ON CONFLICT(note_id) DO UPDATE
+                SET symbol = excluded.symbol,
+                    note_type = excluded.note_type,
+                    note_title = excluded.note_title,
+                    note_text = excluded.note_text,
+                    review_date = excluded.review_date,
+                    updated_at = NOW()
+                """,
+                [target_note_id, normalized_symbol, cleaned_type, cleaned_title, cleaned_text, cleaned_review_date],
+            )
     finally:
         conn.close()
 
-    for note in list_ticker_notes(normalized_symbol):
+    for note in list_ticker_notes(normalized_symbol, user_id=normalized_user_id):
         if note['note_id'] == target_note_id:
             return note
 
@@ -391,20 +659,33 @@ def upsert_ticker_note(
     }
 
 
-def delete_ticker_note(note_id: int) -> bool:
+def delete_ticker_note(note_id: int, user_id: str | None = None) -> bool:
     ensure_portfolio_tables()
+    normalized_user_id = _normalize_user_id(user_id)
     conn = _connect()
     try:
-        existing = conn.execute(
-            "SELECT 1 FROM app.ticker_notes WHERE note_id = ?",
-            [int(note_id)],
-        ).fetchone()
+        if normalized_user_id:
+            existing = conn.execute(
+                "SELECT 1 FROM app.user_ticker_notes WHERE user_id = ? AND note_id = ?",
+                [normalized_user_id, int(note_id)],
+            ).fetchone()
+        else:
+            existing = conn.execute(
+                "SELECT 1 FROM app.ticker_notes WHERE note_id = ?",
+                [int(note_id)],
+            ).fetchone()
         if not existing:
             return False
-        conn.execute(
-            "DELETE FROM app.ticker_notes WHERE note_id = ?",
-            [int(note_id)],
-        )
+        if normalized_user_id:
+            conn.execute(
+                "DELETE FROM app.user_ticker_notes WHERE user_id = ? AND note_id = ?",
+                [normalized_user_id, int(note_id)],
+            )
+        else:
+            conn.execute(
+                "DELETE FROM app.ticker_notes WHERE note_id = ?",
+                [int(note_id)],
+            )
     finally:
         conn.close()
     return True
@@ -612,12 +893,12 @@ def calculate_portfolio(holdings: list[dict]) -> dict:
     }
 
 
-def calculate_saved_portfolio() -> dict:
-    return calculate_portfolio(list_holdings())
+def calculate_saved_portfolio(user_id: str | None = None) -> dict:
+    return calculate_portfolio(list_holdings(user_id=user_id))
 
 
-def calculate_watchlist_snapshot() -> dict:
-    watchlist = list_watchlist()
+def calculate_watchlist_snapshot(user_id: str | None = None) -> dict:
+    watchlist = list_watchlist(user_id=user_id)
     if not watchlist:
         return {
             'as_of_date': None,
@@ -673,31 +954,60 @@ def calculate_watchlist_snapshot() -> dict:
     }
 
 
-def get_alert_preferences() -> dict:
+def get_alert_preferences(user_id: str | None = None) -> dict:
     ensure_portfolio_tables()
+    normalized_user_id = _normalize_user_id(user_id)
     conn = _connect(read_only=True)
     try:
-        row = conn.execute(
-            """
-            SELECT
-                concentration_alerts_enabled,
-                concentration_threshold_pct,
-                rsi_alerts_enabled,
-                overbought_rsi_threshold,
-                oversold_rsi_threshold,
-                daily_move_alerts_enabled,
-                daily_move_threshold_pct,
-                telegram_daily_brief_enabled,
-                telegram_alerts_enabled,
-                updated_at
-            FROM app.portfolio_alert_preferences
-            WHERE profile_id = 1
-            """
-        ).fetchone()
+        if normalized_user_id:
+            row = conn.execute(
+                """
+                SELECT
+                    concentration_alerts_enabled,
+                    concentration_threshold_pct,
+                    rsi_alerts_enabled,
+                    overbought_rsi_threshold,
+                    oversold_rsi_threshold,
+                    daily_move_alerts_enabled,
+                    daily_move_threshold_pct,
+                    telegram_daily_brief_enabled,
+                    telegram_alerts_enabled,
+                    updated_at
+                FROM app.user_portfolio_alert_preferences
+                WHERE user_id = ?
+                """,
+                [normalized_user_id],
+            ).fetchone()
+        else:
+            row = conn.execute(
+                """
+                SELECT
+                    concentration_alerts_enabled,
+                    concentration_threshold_pct,
+                    rsi_alerts_enabled,
+                    overbought_rsi_threshold,
+                    oversold_rsi_threshold,
+                    daily_move_alerts_enabled,
+                    daily_move_threshold_pct,
+                    telegram_daily_brief_enabled,
+                    telegram_alerts_enabled,
+                    updated_at
+                FROM app.portfolio_alert_preferences
+                WHERE profile_id = ?
+                """,
+                [_DEFAULT_PROFILE_ID],
+            ).fetchone()
     finally:
         conn.close()
 
     if not row:
+        if normalized_user_id:
+            conn = _connect()
+            try:
+                _ensure_user_alert_preferences(conn, normalized_user_id)
+            finally:
+                conn.close()
+            return get_alert_preferences(user_id=normalized_user_id)
         return {**DEFAULT_ALERT_PREFERENCES, 'updated_at': None}
 
     return {
@@ -714,43 +1024,76 @@ def get_alert_preferences() -> dict:
     }
 
 
-def update_alert_preferences(updates: dict) -> dict:
+def update_alert_preferences(updates: dict, user_id: str | None = None) -> dict:
     ensure_portfolio_tables()
-    current = get_alert_preferences()
+    normalized_user_id = _normalize_user_id(user_id)
+    current = get_alert_preferences(user_id=normalized_user_id)
     merged = {**current, **updates}
     conn = _connect()
     try:
-        conn.execute(
-            """
-            UPDATE app.portfolio_alert_preferences
-            SET concentration_alerts_enabled = ?,
-                concentration_threshold_pct = ?,
-                rsi_alerts_enabled = ?,
-                overbought_rsi_threshold = ?,
-                oversold_rsi_threshold = ?,
-                daily_move_alerts_enabled = ?,
-                daily_move_threshold_pct = ?,
-                telegram_daily_brief_enabled = ?,
-                telegram_alerts_enabled = ?,
-                updated_at = NOW()
-            WHERE profile_id = 1
-            """,
-            [
-                merged['concentration_alerts_enabled'],
-                merged['concentration_threshold_pct'],
-                merged['rsi_alerts_enabled'],
-                merged['overbought_rsi_threshold'],
-                merged['oversold_rsi_threshold'],
-                merged['daily_move_alerts_enabled'],
-                merged['daily_move_threshold_pct'],
-                merged['telegram_daily_brief_enabled'],
-                merged['telegram_alerts_enabled'],
-            ],
-        )
+        if normalized_user_id:
+            _ensure_user_alert_preferences(conn, normalized_user_id)
+            conn.execute(
+                """
+                UPDATE app.user_portfolio_alert_preferences
+                SET concentration_alerts_enabled = ?,
+                    concentration_threshold_pct = ?,
+                    rsi_alerts_enabled = ?,
+                    overbought_rsi_threshold = ?,
+                    oversold_rsi_threshold = ?,
+                    daily_move_alerts_enabled = ?,
+                    daily_move_threshold_pct = ?,
+                    telegram_daily_brief_enabled = ?,
+                    telegram_alerts_enabled = ?,
+                    updated_at = NOW()
+                WHERE user_id = ?
+                """,
+                [
+                    merged['concentration_alerts_enabled'],
+                    merged['concentration_threshold_pct'],
+                    merged['rsi_alerts_enabled'],
+                    merged['overbought_rsi_threshold'],
+                    merged['oversold_rsi_threshold'],
+                    merged['daily_move_alerts_enabled'],
+                    merged['daily_move_threshold_pct'],
+                    merged['telegram_daily_brief_enabled'],
+                    merged['telegram_alerts_enabled'],
+                    normalized_user_id,
+                ],
+            )
+        else:
+            conn.execute(
+                """
+                UPDATE app.portfolio_alert_preferences
+                SET concentration_alerts_enabled = ?,
+                    concentration_threshold_pct = ?,
+                    rsi_alerts_enabled = ?,
+                    overbought_rsi_threshold = ?,
+                    oversold_rsi_threshold = ?,
+                    daily_move_alerts_enabled = ?,
+                    daily_move_threshold_pct = ?,
+                    telegram_daily_brief_enabled = ?,
+                    telegram_alerts_enabled = ?,
+                    updated_at = NOW()
+                WHERE profile_id = ?
+                """,
+                [
+                    merged['concentration_alerts_enabled'],
+                    merged['concentration_threshold_pct'],
+                    merged['rsi_alerts_enabled'],
+                    merged['overbought_rsi_threshold'],
+                    merged['oversold_rsi_threshold'],
+                    merged['daily_move_alerts_enabled'],
+                    merged['daily_move_threshold_pct'],
+                    merged['telegram_daily_brief_enabled'],
+                    merged['telegram_alerts_enabled'],
+                    _DEFAULT_PROFILE_ID,
+                ],
+            )
     finally:
         conn.close()
 
-    return get_alert_preferences()
+    return get_alert_preferences(user_id=normalized_user_id)
 
 
 def _serialize_alert_payload(payload: dict | None) -> str | None:
@@ -945,47 +1288,107 @@ def _build_watchlist_alerts(watchlist: dict, preferences: dict | None = None) ->
     return alerts
 
 
-def refresh_portfolio_alerts() -> list[dict]:
+def refresh_portfolio_alerts(user_id: str | None = None) -> list[dict]:
     ensure_portfolio_tables()
-    portfolio = calculate_saved_portfolio()
-    watchlist = calculate_watchlist_snapshot()
-    preferences = get_alert_preferences()
+    normalized_user_id = _normalize_user_id(user_id)
+    portfolio = calculate_saved_portfolio(user_id=normalized_user_id)
+    watchlist = calculate_watchlist_snapshot(user_id=normalized_user_id)
+    preferences = get_alert_preferences(user_id=normalized_user_id)
     alerts = _build_portfolio_alerts(portfolio, preferences) + _build_watchlist_alerts(watchlist, preferences)
 
     conn = _connect()
     try:
-        conn.execute("DELETE FROM app.portfolio_alerts")
-        for alert in alerts:
-            conn.execute(
-                """
-                INSERT INTO app.portfolio_alerts (
-                    alert_id, symbol, source_scope, alert_type, severity, title, message, status,
-                    payload_json, created_at, updated_at
+        if normalized_user_id:
+            conn.execute("DELETE FROM app.user_portfolio_alerts WHERE user_id = ?", [normalized_user_id])
+            for alert in alerts:
+                conn.execute(
+                    """
+                    INSERT INTO app.user_portfolio_alerts (
+                        user_id, alert_id, symbol, source_scope, alert_type, severity, title, message, status,
+                        payload_json, created_at, updated_at
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'new', ?, NOW(), NOW())
+                    """,
+                    [
+                        normalized_user_id,
+                        alert['alert_id'],
+                        alert.get('symbol'),
+                        alert.get('source_scope', 'portfolio'),
+                        alert['alert_type'],
+                        alert['severity'],
+                        alert['title'],
+                        alert['message'],
+                        _serialize_alert_payload(alert.get('payload')),
+                    ],
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, 'new', ?, NOW(), NOW())
-                """,
-                [
-                    alert['alert_id'],
-                    alert.get('symbol'),
-                    alert.get('source_scope', 'portfolio'),
-                    alert['alert_type'],
-                    alert['severity'],
-                    alert['title'],
-                    alert['message'],
-                    _serialize_alert_payload(alert.get('payload')),
-                ],
-            )
+        else:
+            conn.execute("DELETE FROM app.portfolio_alerts")
+            for alert in alerts:
+                conn.execute(
+                    """
+                    INSERT INTO app.portfolio_alerts (
+                        alert_id, symbol, source_scope, alert_type, severity, title, message, status,
+                        payload_json, created_at, updated_at
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, 'new', ?, NOW(), NOW())
+                    """,
+                    [
+                        alert['alert_id'],
+                        alert.get('symbol'),
+                        alert.get('source_scope', 'portfolio'),
+                        alert['alert_type'],
+                        alert['severity'],
+                        alert['title'],
+                        alert['message'],
+                        _serialize_alert_payload(alert.get('payload')),
+                    ],
+                )
     finally:
         conn.close()
 
-    return list_portfolio_alerts()
+    return list_portfolio_alerts(user_id=normalized_user_id)
 
 
-def list_portfolio_alerts(status: str | None = None) -> list[dict]:
+def list_portfolio_alerts(status: str | None = None, user_id: str | None = None) -> list[dict]:
     ensure_portfolio_tables()
+    normalized_user_id = _normalize_user_id(user_id)
     conn = _connect(read_only=True)
     try:
-        if status:
+        if normalized_user_id and status:
+            rows = conn.execute(
+                """
+                SELECT alert_id, symbol, alert_type, severity, title, message, status,
+                       payload_json, created_at, updated_at, sent_to_telegram_at, source_scope
+                FROM app.user_portfolio_alerts
+                WHERE user_id = ? AND status = ?
+                ORDER BY
+                  CASE severity
+                    WHEN 'high' THEN 1
+                    WHEN 'medium' THEN 2
+                    ELSE 3
+                  END,
+                  created_at DESC
+                """,
+                [normalized_user_id, status],
+            ).fetchall()
+        elif normalized_user_id:
+            rows = conn.execute(
+                """
+                SELECT alert_id, symbol, alert_type, severity, title, message, status,
+                       payload_json, created_at, updated_at, sent_to_telegram_at, source_scope
+                FROM app.user_portfolio_alerts
+                WHERE user_id = ?
+                ORDER BY
+                  CASE severity
+                    WHEN 'high' THEN 1
+                    WHEN 'medium' THEN 2
+                    ELSE 3
+                  END,
+                  created_at DESC
+                """,
+                [normalized_user_id],
+            ).fetchall()
+        elif status:
             rows = conn.execute(
                 """
                 SELECT alert_id, symbol, alert_type, severity, title, message, status,
@@ -1039,31 +1442,44 @@ def list_portfolio_alerts(status: str | None = None) -> list[dict]:
     ]
 
 
-def mark_alerts_sent(alert_ids: list[str]) -> None:
+def mark_alerts_sent(alert_ids: list[str], user_id: str | None = None) -> None:
     if not alert_ids:
         return
     ensure_portfolio_tables()
+    normalized_user_id = _normalize_user_id(user_id)
     placeholders = ', '.join('?' for _ in alert_ids)
     conn = _connect()
     try:
-        conn.execute(
-            f"""
-            UPDATE app.portfolio_alerts
-            SET sent_to_telegram_at = NOW(),
-                updated_at = NOW()
-            WHERE alert_id IN ({placeholders})
-            """,
-            alert_ids,
-        )
+        if normalized_user_id:
+            conn.execute(
+                f"""
+                UPDATE app.user_portfolio_alerts
+                SET sent_to_telegram_at = NOW(),
+                    updated_at = NOW()
+                WHERE user_id = ?
+                  AND alert_id IN ({placeholders})
+                """,
+                [normalized_user_id, *alert_ids],
+            )
+        else:
+            conn.execute(
+                f"""
+                UPDATE app.portfolio_alerts
+                SET sent_to_telegram_at = NOW(),
+                    updated_at = NOW()
+                WHERE alert_id IN ({placeholders})
+                """,
+                alert_ids,
+            )
     finally:
         conn.close()
 
 
-def build_portfolio_brief() -> dict:
-    portfolio = calculate_saved_portfolio()
-    watchlist = calculate_watchlist_snapshot()
-    preferences = get_alert_preferences()
-    alerts = refresh_portfolio_alerts()
+def build_portfolio_brief(user_id: str | None = None) -> dict:
+    portfolio = calculate_saved_portfolio(user_id=user_id)
+    watchlist = calculate_watchlist_snapshot(user_id=user_id)
+    preferences = get_alert_preferences(user_id=user_id)
+    alerts = refresh_portfolio_alerts(user_id=user_id)
     insights = portfolio.get('portfolio_insights', {})
     top_position = insights.get('top_position')
     top_gainer = insights.get('top_gainer')
@@ -1114,18 +1530,29 @@ def current_central_date() -> str:
     return datetime.now(_CENTRAL_TZ).date().isoformat()
 
 
-def get_delivery_state(delivery_key: str) -> dict | None:
+def get_delivery_state(delivery_key: str, user_id: str | None = None) -> dict | None:
     ensure_portfolio_tables()
+    normalized_user_id = _normalize_user_id(user_id)
     conn = _connect(read_only=True)
     try:
-        row = conn.execute(
-            """
-            SELECT delivery_key, last_sent_date, updated_at
-            FROM app.portfolio_delivery_state
-            WHERE delivery_key = ?
-            """,
-            [delivery_key],
-        ).fetchone()
+        if normalized_user_id:
+            row = conn.execute(
+                """
+                SELECT delivery_key, last_sent_date, updated_at
+                FROM app.user_portfolio_delivery_state
+                WHERE user_id = ? AND delivery_key = ?
+                """,
+                [normalized_user_id, delivery_key],
+            ).fetchone()
+        else:
+            row = conn.execute(
+                """
+                SELECT delivery_key, last_sent_date, updated_at
+                FROM app.portfolio_delivery_state
+                WHERE delivery_key = ?
+                """,
+                [delivery_key],
+            ).fetchone()
     finally:
         conn.close()
 
@@ -1139,31 +1566,44 @@ def get_delivery_state(delivery_key: str) -> dict | None:
     }
 
 
-def should_send_delivery(delivery_key: str, target_date: str | None = None) -> bool:
+def should_send_delivery(delivery_key: str, target_date: str | None = None, user_id: str | None = None) -> bool:
     target_date = target_date or current_central_date()
-    state = get_delivery_state(delivery_key)
+    state = get_delivery_state(delivery_key, user_id=user_id)
     return not state or state.get('last_sent_date') != target_date
 
 
-def mark_delivery_sent(delivery_key: str, sent_date: str | None = None) -> dict:
+def mark_delivery_sent(delivery_key: str, sent_date: str | None = None, user_id: str | None = None) -> dict:
     ensure_portfolio_tables()
+    normalized_user_id = _normalize_user_id(user_id)
     sent_date = sent_date or current_central_date()
     conn = _connect()
     try:
-        conn.execute(
-            """
-            INSERT INTO app.portfolio_delivery_state (delivery_key, last_sent_date, updated_at)
-            VALUES (?, ?, NOW())
-            ON CONFLICT(delivery_key) DO UPDATE
-            SET last_sent_date = excluded.last_sent_date,
-                updated_at = NOW()
-            """,
-            [delivery_key, sent_date],
-        )
+        if normalized_user_id:
+            conn.execute(
+                """
+                INSERT INTO app.user_portfolio_delivery_state (user_id, delivery_key, last_sent_date, updated_at)
+                VALUES (?, ?, ?, NOW())
+                ON CONFLICT(user_id, delivery_key) DO UPDATE
+                SET last_sent_date = excluded.last_sent_date,
+                    updated_at = NOW()
+                """,
+                [normalized_user_id, delivery_key, sent_date],
+            )
+        else:
+            conn.execute(
+                """
+                INSERT INTO app.portfolio_delivery_state (delivery_key, last_sent_date, updated_at)
+                VALUES (?, ?, NOW())
+                ON CONFLICT(delivery_key) DO UPDATE
+                SET last_sent_date = excluded.last_sent_date,
+                    updated_at = NOW()
+                """,
+                [delivery_key, sent_date],
+            )
     finally:
         conn.close()
 
-    return get_delivery_state(delivery_key) or {
+    return get_delivery_state(delivery_key, user_id=user_id) or {
         'delivery_key': delivery_key,
         'last_sent_date': sent_date,
         'updated_at': None,

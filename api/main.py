@@ -21,7 +21,7 @@ from zoneinfo import ZoneInfo
 
 import duckdb
 import pandas as pd
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel
@@ -29,6 +29,7 @@ import requests
 import yfinance as yf
 
 from commentary import generate_commentary
+from auth import get_current_user_id
 from hot_query import hot_query
 from portfolio import (
     build_portfolio_brief,
@@ -79,7 +80,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allow_headers=['Authorization', 'Content-Type', 'X-Requested-With'],
+    allow_headers=['Authorization', 'Content-Type', 'X-Requested-With', 'X-Finsight-Service-Key'],
 )
 
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS or ['*'])
@@ -394,8 +395,8 @@ def _is_opinion_query(question: str) -> bool:
     )
 
 
-def _run_portfolio_query(question: str) -> dict:
-    portfolio = calculate_saved_portfolio()
+def _run_portfolio_query(question: str, user_id: str | None = None) -> dict:
+    portfolio = calculate_saved_portfolio(user_id=user_id)
     holdings = portfolio.get('holdings', [])
     positions = portfolio.get('positions', [])
     insights = portfolio.get('portfolio_insights', {})
@@ -403,7 +404,7 @@ def _run_portfolio_query(question: str) -> dict:
 
     if _is_note_query(question):
         symbol = _extract_symbol(question)
-        notes = list_ticker_notes(symbol)
+        notes = list_ticker_notes(symbol, user_id=user_id)
         if not notes:
             commentary = (
                 f"There are no saved research notes for {symbol} yet. Add one in Portfolio memory or from Telegram with "
@@ -569,14 +570,14 @@ def _run_portfolio_query(question: str) -> dict:
     }
 
 
-def _run_watchlist_query(question: str) -> dict:
+def _run_watchlist_query(question: str, user_id: str | None = None) -> dict:
     if _is_watchlist_alert_query(question):
         alerts = [
-            alert for alert in refresh_portfolio_alerts()
+            alert for alert in refresh_portfolio_alerts(user_id=user_id)
             if alert.get('source_scope') == 'watchlist'
         ]
         if not alerts:
-            snapshot = calculate_watchlist_snapshot()
+            snapshot = calculate_watchlist_snapshot(user_id=user_id)
             summary = snapshot.get('summary') or {}
             top_mover = summary.get('top_mover')
             commentary = (
@@ -1370,7 +1371,7 @@ def _get_market_news() -> list[dict]:
 # ── Routes ───────────────────────────────────────────────────────────────────
 
 @app.post('/query', response_model=QueryResponse)
-async def run_query(req: QueryRequest):
+async def run_query(req: QueryRequest, user_id: str | None = Depends(get_current_user_id)):
     """
     Translate a natural language question to SQL and execute it.
 
@@ -1421,7 +1422,7 @@ async def run_query(req: QueryRequest):
 
     try:
         if route == 'portfolio':
-            result = _run_portfolio_query(req.question)
+            result = _run_portfolio_query(req.question, user_id=user_id)
         elif route == 'hybrid':
             result = _run_hybrid_query(req.question)
         elif route == 'hot':
@@ -1431,7 +1432,7 @@ async def run_query(req: QueryRequest):
                 result = hot_query(req.question)
         else:
             if _is_watchlist_query(req.question):
-                result = _run_watchlist_query(req.question)
+                result = _run_watchlist_query(req.question, user_id=user_id)
             else:
                 freshness = _get_duckdb_freshness()
                 latest_date = freshness.get('latest_date')
@@ -1759,19 +1760,23 @@ async def portfolio(req: PortfolioRequest):
 
 
 @app.get('/portfolio')
-async def saved_portfolio():
+async def saved_portfolio(user_id: str | None = Depends(get_current_user_id)):
     """Return the calculated portfolio summary for saved holdings."""
     try:
-        return calculate_saved_portfolio()
+        return calculate_saved_portfolio(user_id=user_id)
     except duckdb.Error as e:
         raise HTTPException(status_code=503, detail=f'DuckDB error: {e}')
 
 
 @app.get('/portfolio/alerts')
-async def get_portfolio_alerts(status: str | None = None, refresh: bool = False):
+async def get_portfolio_alerts(
+    status: str | None = None,
+    refresh: bool = False,
+    user_id: str | None = Depends(get_current_user_id),
+):
     """Return saved portfolio alerts, optionally regenerating them first."""
     try:
-        alerts = refresh_portfolio_alerts() if refresh else list_portfolio_alerts(status=status)
+        alerts = refresh_portfolio_alerts(user_id=user_id) if refresh else list_portfolio_alerts(status=status, user_id=user_id)
         return {
             'alerts': alerts,
             'grouped_alerts': {
@@ -1786,16 +1791,16 @@ async def get_portfolio_alerts(status: str | None = None, refresh: bool = False)
 
 
 @app.get('/portfolio/alert-preferences')
-async def get_portfolio_alert_preferences():
+async def get_portfolio_alert_preferences(user_id: str | None = Depends(get_current_user_id)):
     """Return the saved alert preference profile."""
     try:
-        return get_alert_preferences()
+        return get_alert_preferences(user_id=user_id)
     except duckdb.Error as e:
         raise HTTPException(status_code=503, detail=f'DuckDB error: {e}')
 
 
 @app.put('/portfolio/alert-preferences')
-async def put_portfolio_alert_preferences(req: AlertPreferencesUpsert):
+async def put_portfolio_alert_preferences(req: AlertPreferencesUpsert, user_id: str | None = Depends(get_current_user_id)):
     """Update the saved alert preference profile."""
     payload = {key: value for key, value in req.model_dump().items() if value is not None}
 
@@ -1809,8 +1814,8 @@ async def put_portfolio_alert_preferences(req: AlertPreferencesUpsert):
         raise HTTPException(status_code=400, detail='daily_move_threshold_pct must be positive.')
 
     try:
-        preferences = update_alert_preferences(payload)
-        alerts = refresh_portfolio_alerts()
+        preferences = update_alert_preferences(payload, user_id=user_id)
+        alerts = refresh_portfolio_alerts(user_id=user_id)
         return {
             'preferences': preferences,
             'alerts': alerts,
@@ -1821,20 +1826,20 @@ async def put_portfolio_alert_preferences(req: AlertPreferencesUpsert):
 
 
 @app.post('/portfolio/alerts/refresh')
-async def refresh_saved_portfolio_alerts():
+async def refresh_saved_portfolio_alerts(user_id: str | None = Depends(get_current_user_id)):
     """Regenerate portfolio alerts from the latest holdings snapshot."""
     try:
-        alerts = refresh_portfolio_alerts()
+        alerts = refresh_portfolio_alerts(user_id=user_id)
         return {'alerts': alerts, 'count': len(alerts)}
     except duckdb.Error as e:
         raise HTTPException(status_code=503, detail=f'DuckDB error: {e}')
 
 
 @app.get('/portfolio/brief')
-async def get_portfolio_brief():
+async def get_portfolio_brief(user_id: str | None = Depends(get_current_user_id)):
     """Return a generated portfolio daily brief plus current alerts."""
     try:
-        brief = build_portfolio_brief()
+        brief = build_portfolio_brief(user_id=user_id)
         return {
             **brief,
             'telegram_configured': bool(os.environ.get('TELEGRAM_BOT_TOKEN') and os.environ.get('TELEGRAM_CHAT_ID')),
@@ -1844,22 +1849,22 @@ async def get_portfolio_brief():
 
 
 @app.get('/portfolio/watchlist')
-async def get_watchlist():
+async def get_watchlist(user_id: str | None = Depends(get_current_user_id)):
     """Return the saved watchlist and current warehouse snapshot."""
     try:
         return {
-            'watchlist': list_watchlist(),
-            'snapshot': calculate_watchlist_snapshot(),
+            'watchlist': list_watchlist(user_id=user_id),
+            'snapshot': calculate_watchlist_snapshot(user_id=user_id),
         }
     except duckdb.Error as e:
         raise HTTPException(status_code=503, detail=f'DuckDB error: {e}')
 
 
 @app.get('/notes')
-async def get_ticker_notes(symbol: str | None = None):
+async def get_ticker_notes(symbol: str | None = None, user_id: str | None = Depends(get_current_user_id)):
     """Return saved ticker notes, optionally filtered by symbol."""
     try:
-        notes = list_ticker_notes(symbol)
+        notes = list_ticker_notes(symbol, user_id=user_id)
         grouped = {
             'thesis': [note for note in notes if note.get('note_type') == 'thesis'],
             'risk': [note for note in notes if note.get('note_type') == 'risk'],
@@ -1878,7 +1883,7 @@ async def get_ticker_notes(symbol: str | None = None):
 
 
 @app.put('/notes')
-async def put_ticker_note(req: TickerNoteUpsert):
+async def put_ticker_note(req: TickerNoteUpsert, user_id: str | None = Depends(get_current_user_id)):
     """Create or update a saved ticker note."""
     if not req.symbol.strip():
         raise HTTPException(status_code=400, detail='Symbol cannot be empty.')
@@ -1897,8 +1902,9 @@ async def put_ticker_note(req: TickerNoteUpsert):
             note_type=note_type,
             note_title=req.note_title,
             review_date=req.review_date,
+            user_id=user_id,
         )
-        notes = list_ticker_notes(req.symbol)
+        notes = list_ticker_notes(req.symbol, user_id=user_id)
         return {
             'note': note,
             'notes': notes,
@@ -1910,32 +1916,32 @@ async def put_ticker_note(req: TickerNoteUpsert):
 
 
 @app.delete('/notes/{note_id}')
-async def remove_ticker_note(note_id: int):
+async def remove_ticker_note(note_id: int, user_id: str | None = Depends(get_current_user_id)):
     """Delete a saved ticker note by note id."""
     try:
-        deleted = delete_ticker_note(note_id)
+        deleted = delete_ticker_note(note_id, user_id=user_id)
         if not deleted:
             raise HTTPException(status_code=404, detail=f'No note found for id {note_id}.')
         return {
             'deleted_note_id': note_id,
-            'notes': list_ticker_notes(),
+            'notes': list_ticker_notes(user_id=user_id),
         }
     except duckdb.Error as e:
         raise HTTPException(status_code=503, detail=f'DuckDB error: {e}')
 
 
 @app.put('/portfolio/watchlist')
-async def put_watchlist(req: WatchlistUpsert):
+async def put_watchlist(req: WatchlistUpsert, user_id: str | None = Depends(get_current_user_id)):
     """Upsert a watchlist symbol."""
     if not req.symbol.strip():
         raise HTTPException(status_code=400, detail='Symbol cannot be empty.')
     try:
-        watch = upsert_watchlist_symbol(req.symbol)
-        snapshot = calculate_watchlist_snapshot()
-        alerts = refresh_portfolio_alerts()
+        watch = upsert_watchlist_symbol(req.symbol, user_id=user_id)
+        snapshot = calculate_watchlist_snapshot(user_id=user_id)
+        alerts = refresh_portfolio_alerts(user_id=user_id)
         return {
             'watchlist_symbol': watch,
-            'watchlist': list_watchlist(),
+            'watchlist': list_watchlist(user_id=user_id),
             'snapshot': snapshot,
             'alerts': alerts,
         }
@@ -1944,17 +1950,17 @@ async def put_watchlist(req: WatchlistUpsert):
 
 
 @app.delete('/portfolio/watchlist/{symbol}')
-async def remove_watchlist(symbol: str):
+async def remove_watchlist(symbol: str, user_id: str | None = Depends(get_current_user_id)):
     """Delete a saved watchlist symbol."""
     try:
-        deleted = delete_watchlist_symbol(symbol)
+        deleted = delete_watchlist_symbol(symbol, user_id=user_id)
         if not deleted:
             raise HTTPException(status_code=404, detail=f'No watchlist symbol found for {symbol.upper()}.')
-        snapshot = calculate_watchlist_snapshot()
-        alerts = refresh_portfolio_alerts()
+        snapshot = calculate_watchlist_snapshot(user_id=user_id)
+        alerts = refresh_portfolio_alerts(user_id=user_id)
         return {
             'deleted': symbol.upper(),
-            'watchlist': list_watchlist(),
+            'watchlist': list_watchlist(user_id=user_id),
             'snapshot': snapshot,
             'alerts': alerts,
         }
@@ -1963,11 +1969,14 @@ async def remove_watchlist(symbol: str):
 
 
 @app.post('/portfolio/brief/send-telegram')
-async def send_portfolio_brief_to_telegram(scheduled: bool = False):
+async def send_portfolio_brief_to_telegram(
+    scheduled: bool = False,
+    user_id: str | None = Depends(get_current_user_id),
+):
     """Send the current portfolio brief to the configured Telegram chat."""
     try:
-        brief = build_portfolio_brief()
-        preferences = brief.get('preferences') or get_alert_preferences()
+        brief = build_portfolio_brief(user_id=user_id)
+        preferences = brief.get('preferences') or get_alert_preferences(user_id=user_id)
         if not preferences.get('telegram_daily_brief_enabled', True):
             return {
                 'sent': False,
@@ -1979,7 +1988,7 @@ async def send_portfolio_brief_to_telegram(scheduled: bool = False):
 
         delivery_key = 'telegram_daily_brief'
         send_date = current_central_date()
-        if scheduled and not should_send_delivery(delivery_key, send_date):
+        if scheduled and not should_send_delivery(delivery_key, send_date, user_id=user_id):
             return {
                 'sent': False,
                 'scheduled': True,
@@ -1992,9 +2001,9 @@ async def send_portfolio_brief_to_telegram(scheduled: bool = False):
         message = _format_portfolio_brief_message(brief)
         _send_telegram_message(message)
         alert_ids = [alert['alert_id'] for alert in brief.get('alerts', [])]
-        mark_alerts_sent(alert_ids)
+        mark_alerts_sent(alert_ids, user_id=user_id)
         if scheduled:
-            mark_delivery_sent(delivery_key, send_date)
+            mark_delivery_sent(delivery_key, sent_date=send_date, user_id=user_id)
         return {
             'sent': True,
             'scheduled': scheduled,
@@ -2011,16 +2020,16 @@ async def send_portfolio_brief_to_telegram(scheduled: bool = False):
 
 
 @app.get('/portfolio/holdings')
-async def get_holdings():
+async def get_holdings(user_id: str | None = Depends(get_current_user_id)):
     """Return the saved portfolio holdings."""
     try:
-        return {'holdings': list_holdings()}
+        return {'holdings': list_holdings(user_id=user_id)}
     except duckdb.Error as e:
         raise HTTPException(status_code=503, detail=f'DuckDB error: {e}')
 
 
 @app.put('/portfolio/holdings')
-async def put_holding(req: HoldingUpsert):
+async def put_holding(req: HoldingUpsert, user_id: str | None = Depends(get_current_user_id)):
     """Upsert a saved holding."""
     if not req.symbol.strip():
         raise HTTPException(status_code=400, detail='Symbol cannot be empty.')
@@ -2028,19 +2037,19 @@ async def put_holding(req: HoldingUpsert):
         raise HTTPException(status_code=400, detail='Shares and average cost must be positive.')
 
     try:
-        holding = upsert_holding(req.symbol, req.shares, req.avg_cost)
-        return {'holding': holding, 'portfolio': calculate_saved_portfolio()}
+        holding = upsert_holding(req.symbol, req.shares, req.avg_cost, user_id=user_id)
+        return {'holding': holding, 'portfolio': calculate_saved_portfolio(user_id=user_id)}
     except duckdb.Error as e:
         raise HTTPException(status_code=503, detail=f'DuckDB error: {e}')
 
 
 @app.delete('/portfolio/holdings/{symbol}')
-async def remove_holding(symbol: str):
+async def remove_holding(symbol: str, user_id: str | None = Depends(get_current_user_id)):
     """Delete a saved holding by symbol."""
     try:
-        deleted = delete_holding(symbol)
+        deleted = delete_holding(symbol, user_id=user_id)
         if not deleted:
             raise HTTPException(status_code=404, detail=f'No holding found for {symbol.upper()}.')
-        return {'deleted': symbol.upper(), 'portfolio': calculate_saved_portfolio()}
+        return {'deleted': symbol.upper(), 'portfolio': calculate_saved_portfolio(user_id=user_id)}
     except duckdb.Error as e:
         raise HTTPException(status_code=503, detail=f'DuckDB error: {e}')

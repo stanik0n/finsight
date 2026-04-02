@@ -125,8 +125,11 @@ services:
       TWELVE_DATA_API_KEY: ${TWELVE_DATA_API_KEY}
       TWELVE_DATA_CACHE_MINUTES: ${TWELVE_DATA_CACHE_MINUTES:-15}
       FINSIGHT_ENV: ${FINSIGHT_ENV:-development}
+      FINSIGHT_AUTH_ENABLED: ${FINSIGHT_AUTH_ENABLED:-false}
       FINSIGHT_ALLOWED_ORIGINS: ${FINSIGHT_ALLOWED_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
       FINSIGHT_ALLOWED_HOSTS: ${FINSIGHT_ALLOWED_HOSTS:-localhost,127.0.0.1,api}
+      CLERK_JWT_PUBLIC_KEY: ${CLERK_JWT_PUBLIC_KEY:-}
+      FINSIGHT_INTERNAL_API_KEY: ${FINSIGHT_INTERNAL_API_KEY:-}
       DUCKDB_PATH: /data/finsight.duckdb
       INTRADAY_DUCKDB_PATH: /data/intraday.duckdb
     volumes:
@@ -153,6 +156,7 @@ services:
     environment:
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       FINSIGHT_API_URL: http://api:8000
+      FINSIGHT_INTERNAL_API_KEY: ${FINSIGHT_INTERNAL_API_KEY:-}
     command: python telegram_bot.py
     restart: unless-stopped
 
@@ -160,8 +164,12 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_LOGO_DEV_TOKEN: ${LOGO_DEV_PUBLISHABLE_KEY:-}
+        VITE_CLERK_PUBLISHABLE_KEY: ${VITE_CLERK_PUBLISHABLE_KEY:-}
     environment:
       VITE_LOGO_DEV_TOKEN: ${LOGO_DEV_PUBLISHABLE_KEY:-}
+      VITE_CLERK_PUBLISHABLE_KEY: ${VITE_CLERK_PUBLISHABLE_KEY:-}
     depends_on:
       - api
     restart: unless-stopped

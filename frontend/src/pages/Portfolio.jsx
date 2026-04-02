@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import CompanyLogo from '../components/CompanyLogo'
+import { authedFetch } from '../lib/api'
+import { useFinsightAuth } from '../lib/finsight-auth'
 
 const TICKERS = [
   { symbol: 'AAPL', name: 'Apple Inc', sector: 'Technology' },
@@ -254,6 +256,7 @@ function noteAccent(noteType) {
 }
 
 export default function Portfolio() {
+  const { getToken } = useFinsightAuth()
   const [holdings, setHoldings] = useState([])
   const [form, setForm] = useState(EMPTY_FORM)
   const [watchlistForm, setWatchlistForm] = useState(EMPTY_WATCHLIST_FORM)
@@ -285,12 +288,12 @@ export default function Portfolio() {
     setError(null)
     try {
       const [holdingsResponse, portfolioResponse, preferencesResponse, watchlistResponse, alertsResponse, notesResponse] = await Promise.all([
-        fetch('/portfolio/holdings'),
-        fetch('/portfolio'),
-        fetch('/portfolio/alert-preferences'),
-        fetch('/portfolio/watchlist'),
-        fetch('/portfolio/alerts'),
-        fetch('/notes'),
+        authedFetch(getToken, '/portfolio/holdings'),
+        authedFetch(getToken, '/portfolio'),
+        authedFetch(getToken, '/portfolio/alert-preferences'),
+        authedFetch(getToken, '/portfolio/watchlist'),
+        authedFetch(getToken, '/portfolio/alerts'),
+        authedFetch(getToken, '/notes'),
       ])
 
       if (!holdingsResponse.ok) {
@@ -349,7 +352,7 @@ export default function Portfolio() {
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch('/portfolio/holdings', {
+      const response = await authedFetch(getToken, '/portfolio/holdings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ symbol, shares, avg_cost: avgCost }),
@@ -374,7 +377,7 @@ export default function Portfolio() {
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch(`/portfolio/holdings/${symbol}`, {
+      const response = await authedFetch(getToken, `/portfolio/holdings/${symbol}`, {
         method: 'DELETE',
       })
       if (!response.ok) {
@@ -412,7 +415,7 @@ export default function Portfolio() {
     setSavingPreferences(true)
     setError(null)
     try {
-      const response = await fetch('/portfolio/alert-preferences', {
+      const response = await authedFetch(getToken, '/portfolio/alert-preferences', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(preferences),
@@ -438,7 +441,7 @@ export default function Portfolio() {
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch('/portfolio/watchlist', {
+      const response = await authedFetch(getToken, '/portfolio/watchlist', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ symbol }),
@@ -463,7 +466,7 @@ export default function Portfolio() {
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch(`/portfolio/watchlist/${symbol}`, { method: 'DELETE' })
+      const response = await authedFetch(getToken, `/portfolio/watchlist/${symbol}`, { method: 'DELETE' })
       if (!response.ok) {
         const detail = await response.json().catch(() => ({ detail: response.statusText }))
         throw new Error(detail.detail || `HTTP ${response.status}`)
@@ -490,7 +493,7 @@ export default function Portfolio() {
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch('/notes', {
+      const response = await authedFetch(getToken, '/notes', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -522,7 +525,7 @@ export default function Portfolio() {
     setLoading(true)
     setError(null)
     try {
-      const response = await fetch(`/notes/${noteId}`, { method: 'DELETE' })
+      const response = await authedFetch(getToken, `/notes/${noteId}`, { method: 'DELETE' })
       if (!response.ok) {
         const detail = await response.json().catch(() => ({ detail: response.statusText }))
         throw new Error(detail.detail || `HTTP ${response.status}`)

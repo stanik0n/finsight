@@ -9,6 +9,7 @@ import requests
 
 BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '').strip()
 API_BASE = os.environ.get('FINSIGHT_API_URL', 'http://api:8000').rstrip('/')
+INTERNAL_API_KEY = os.environ.get('FINSIGHT_INTERNAL_API_KEY', '').strip()
 POLL_TIMEOUT_SECONDS = int(os.environ.get('TELEGRAM_POLL_TIMEOUT_SECONDS', '30'))
 DAILY_BRIEF_SCHEDULE_ENABLED = os.environ.get('TELEGRAM_DAILY_BRIEF_SCHEDULE_ENABLED', 'true').lower() == 'true'
 DAILY_BRIEF_HOUR_CT = int(os.environ.get('TELEGRAM_DAILY_BRIEF_HOUR_CT', '8'))
@@ -86,26 +87,30 @@ def send_message(chat_id: int | str, text: str) -> None:
     )
 
 
+def _api_headers() -> dict:
+    return {'X-Finsight-Service-Key': INTERNAL_API_KEY} if INTERNAL_API_KEY else {}
+
+
 def api_get(path: str) -> dict:
-    resp = requests.get(f'{API_BASE}{path}', timeout=15)
+    resp = requests.get(f'{API_BASE}{path}', headers=_api_headers(), timeout=15)
     resp.raise_for_status()
     return resp.json()
 
 
 def api_post(path: str, payload: dict | None = None) -> dict:
-    resp = requests.post(f'{API_BASE}{path}', json=payload or {}, timeout=20)
+    resp = requests.post(f'{API_BASE}{path}', headers=_api_headers(), json=payload or {}, timeout=20)
     resp.raise_for_status()
     return resp.json()
 
 
 def api_put(path: str, payload: dict | None = None) -> dict:
-    resp = requests.put(f'{API_BASE}{path}', json=payload or {}, timeout=20)
+    resp = requests.put(f'{API_BASE}{path}', headers=_api_headers(), json=payload or {}, timeout=20)
     resp.raise_for_status()
     return resp.json()
 
 
 def api_delete(path: str) -> dict:
-    resp = requests.delete(f'{API_BASE}{path}', timeout=15)
+    resp = requests.delete(f'{API_BASE}{path}', headers=_api_headers(), timeout=15)
     resp.raise_for_status()
     return resp.json()
 

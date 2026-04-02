@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import CommentaryPanel from '../components/CommentaryPanel'
+import { authedFetch } from '../lib/api'
+import { useFinsightAuth } from '../lib/finsight-auth'
 
 const EXAMPLES = [
   'Which tech stocks had the highest RSI last week?',
@@ -201,6 +203,7 @@ function fallbackCommentary(entry) {
 }
 
 export default function Chat({ initialQuestion = '', onInitialQuestionHandled = () => {} }) {
+  const { getToken } = useFinsightAuth()
   const [history, setHistory] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -211,7 +214,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
   const messagesEndRef = useRef(null)
 
   useEffect(() => {
-    fetch('/stream-status').then((r) => r.json()).then(setStreamStatus).catch(() => null)
+    authedFetch(getToken, '/stream-status').then((r) => r.json()).then(setStreamStatus).catch(() => null)
   }, [])
 
   useEffect(() => {
@@ -229,7 +232,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch('/query', {
+      const res = await authedFetch(getToken, '/query', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ question }),

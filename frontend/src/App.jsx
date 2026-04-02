@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/react'
 import Chat from './pages/Chat'
 import Portfolio from './pages/Portfolio'
 import Dashboard from './pages/Dashboard'
@@ -35,82 +36,134 @@ export default function App() {
     setHeaderSearch('')
   }
 
-  return (
-    <div className="min-h-screen bg-background text-on-surface">
-      <header className="fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-between border-b border-outline/20 bg-white/80 px-8 backdrop-blur-xl">
-        <div className="flex items-center gap-10">
-          <span className="font-headline text-xl font-extrabold tracking-tight text-slate-900">
-            FINSIGHT
-          </span>
-          <nav className="hidden items-center gap-7 md:flex">
-            {NAV.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setPage(item.id)}
-                className="border-b pb-1 text-[11px] font-bold uppercase tracking-[0.24em] transition-colors"
-                style={{
-                  borderColor: page === item.id ? '#556067' : 'transparent',
-                  color: page === item.id ? '#243036' : '#87939a',
-                }}
-              >
-                {item.label}
-              </button>
-            ))}
+  const authEnabled = Boolean(import.meta.env.VITE_CLERK_PUBLISHABLE_KEY)
+
+  function AppChrome() {
+    return (
+      <div className="min-h-screen bg-background text-on-surface">
+        <header className="fixed inset-x-0 top-0 z-50 flex h-16 items-center justify-between border-b border-outline/20 bg-white/80 px-8 backdrop-blur-xl">
+          <div className="flex items-center gap-10">
+            <span className="font-headline text-xl font-extrabold tracking-tight text-slate-900">
+              FINSIGHT
+            </span>
+            <nav className="hidden items-center gap-7 md:flex">
+              {NAV.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setPage(item.id)}
+                  className="border-b pb-1 text-[11px] font-bold uppercase tracking-[0.24em] transition-colors"
+                  style={{
+                    borderColor: page === item.id ? '#556067' : 'transparent',
+                    color: page === item.id ? '#243036' : '#87939a',
+                  }}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+          </div>
+          <div className="flex items-center gap-4">
+            <form onSubmit={submitHeaderSearch} className="hidden lg:block">
+              <div className="flex items-center gap-3 border border-outline/20 bg-surface-container-lowest px-4 py-2">
+                <span className="material-symbols-outlined text-[18px] text-slate-500">search</span>
+                <input
+                  value={headerSearch}
+                  onChange={(e) => setHeaderSearch(e.target.value)}
+                  className="w-64 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
+                  placeholder="Search stocks..."
+                  autoComplete="off"
+                />
+              </div>
+            </form>
+            {authEnabled && (
+              <div className="rounded-full border border-outline/15 bg-white p-1">
+                <UserButton appearance={{ elements: { avatarBox: 'h-8 w-8' } }} />
+              </div>
+            )}
+          </div>
+        </header>
+
+        <aside className="fixed left-0 top-16 flex h-[calc(100vh-64px)] w-64 flex-col border-r border-outline/15 bg-surface-container-low py-8">
+          <nav className="flex-1 space-y-1">
+            {NAV.map((item) => {
+              const active = page === item.id
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setPage(item.id)}
+                  className="flex w-full items-center gap-3 px-6 py-3 text-left transition-all"
+                  style={{
+                    backgroundColor: active ? '#ffffff' : 'transparent',
+                    borderLeft: active ? '2px solid #556067' : '2px solid transparent',
+                    color: active ? '#243036' : '#66737a',
+                  }}
+                >
+                  <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
+                  <span className="terminal-label text-[11px]">{item.label}</span>
+                </button>
+              )
+            })}
           </nav>
-        </div>
-        <div className="flex items-center gap-4">
-          <form onSubmit={submitHeaderSearch} className="hidden lg:block">
-            <div className="flex items-center gap-3 border border-outline/20 bg-surface-container-lowest px-4 py-2">
-              <span className="material-symbols-outlined text-[18px] text-slate-500">search</span>
-              <input
-                value={headerSearch}
-                onChange={(e) => setHeaderSearch(e.target.value)}
-                className="w-64 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
-                placeholder="Search stocks..."
-                autoComplete="off"
-              />
-            </div>
-          </form>
-        </div>
-      </header>
+        </aside>
 
-      <aside className="fixed left-0 top-16 flex h-[calc(100vh-64px)] w-64 flex-col border-r border-outline/15 bg-surface-container-low py-8">
-        <nav className="flex-1 space-y-1">
-          {NAV.map((item) => {
-            const active = page === item.id
-            return (
-              <button
-                key={item.id}
-                onClick={() => setPage(item.id)}
-                className="flex w-full items-center gap-3 px-6 py-3 text-left transition-all"
-                style={{
-                  backgroundColor: active ? '#ffffff' : 'transparent',
-                  borderLeft: active ? '2px solid #556067' : '2px solid transparent',
-                  color: active ? '#243036' : '#66737a',
-                }}
-              >
-                <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
-                <span className="terminal-label text-[11px]">{item.label}</span>
+        <main
+          className="bg-background"
+          style={{
+            marginLeft: '256px',
+            paddingTop: '64px',
+            minHeight: '100vh',
+            ...(page === 'chat' ? { height: '100vh', overflow: 'hidden' } : {}),
+          }}
+        >
+          {page === 'dashboard' && <Dashboard onSearch={openAnalysisWithQuestion} onOpenNews={openNewsArticle} />}
+          {page === 'chat' && <Chat initialQuestion={analysisQuestion} onInitialQuestionHandled={() => setAnalysisQuestion('')} />}
+          {page === 'portfolio' && <Portfolio />}
+          {page === 'news' && <NewsArticle article={selectedNewsArticle} onBack={() => setPage('dashboard')} />}
+        </main>
+      </div>
+    )
+  }
+
+  function SignedOutView() {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(180deg,#f7fafb_0%,#eef3f5_100%)] px-6">
+        <div className="w-full max-w-xl border border-outline/15 bg-white p-10 shadow-[0_30px_80px_rgba(148,163,184,0.12)]">
+          <p className="terminal-label text-outline">Private Workspace</p>
+          <h1 className="mt-5 font-headline text-5xl font-extrabold tracking-tight text-slate-900">
+            FinSight
+          </h1>
+          <p className="mt-5 max-w-lg text-base leading-8 text-slate-600">
+            Sign in to open your private market workspace. Holdings, watchlists, notes, and alerts stay tied to your account instead of one shared portfolio.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <SignInButton mode="modal">
+              <button className="rounded-lg bg-slate-800 px-5 py-3 text-sm font-semibold text-white">
+                Sign In
               </button>
-            )
-          })}
-        </nav>
-      </aside>
+            </SignInButton>
+            <SignUpButton mode="modal">
+              <button className="rounded-lg border border-outline/20 bg-white px-5 py-3 text-sm font-semibold text-slate-700">
+                Create Account
+              </button>
+            </SignUpButton>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
-      <main
-        className="bg-background"
-        style={{
-          marginLeft: '256px',
-          paddingTop: '64px',
-          minHeight: '100vh',
-          ...(page === 'chat' ? { height: '100vh', overflow: 'hidden' } : {}),
-        }}
-      >
-        {page === 'dashboard' && <Dashboard onSearch={openAnalysisWithQuestion} onOpenNews={openNewsArticle} />}
-        {page === 'chat' && <Chat initialQuestion={analysisQuestion} onInitialQuestionHandled={() => setAnalysisQuestion('')} />}
-        {page === 'portfolio' && <Portfolio />}
-        {page === 'news' && <NewsArticle article={selectedNewsArticle} onBack={() => setPage('dashboard')} />}
-      </main>
-    </div>
+  if (!authEnabled) {
+    return <AppChrome />
+  }
+
+  return (
+    <>
+      <Show when="signed-out">
+        <SignedOutView />
+      </Show>
+      <Show when="signed-in">
+        <AppChrome />
+      </Show>
+    </>
   )
 }
