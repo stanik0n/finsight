@@ -45,12 +45,13 @@ def _format_message(ds: str, anomalies: list[dict]) -> str:
     if not anomalies:
         return f"<b>FinSight Daily Signals - {safe_ds}</b>\n\nNo anomalies detected today."
 
+    displayed = anomalies[:10]
     lines = [
         f"<b>FinSight Daily Signals - {safe_ds}</b>",
-        f"{len(anomalies)} signal(s) detected:\n",
+        f"{len(anomalies)} signal(s) detected. Showing top {len(displayed)}:\n",
     ]
 
-    for anomaly in anomalies:
+    for anomaly in displayed:
         tags = []
         if anomaly.get("is_oversold"):
             tags.append("OVERSOLD")
@@ -74,6 +75,11 @@ def _format_message(ds: str, anomalies: list[dict]) -> str:
             f"  Close: ${close:.2f}  Chg: {pct:+.2f}%  RSI: {rsi:.1f}  VolZ: {volume_zscore:.2f}\n"
             f"  <i>{escape(tag_str)}</i>"
         )
+
+    remaining = len(anomalies) - len(displayed)
+    if remaining > 0:
+        lines.append("")
+        lines.append(f"<i>{remaining} additional signal(s) omitted for message size.</i>")
 
     return "\n".join(lines)
 
