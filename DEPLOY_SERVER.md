@@ -14,16 +14,11 @@ Recommended minimum:
 - 8 GB RAM
 - 40+ GB disk
 
-Ports used by the default stack:
+Compose files:
 
-- `3000` frontend
-- `8000` API
-- `4200` Prefect
-- `9000` MinIO S3 API
-- `9001` MinIO console
-- `9092` Kafka
-
-For a public deployment, you should normally expose only the frontend publicly and restrict the rest with a firewall.
+- `docker-compose.yml` base services only, with no host port exposure
+- `docker-compose.dev.yml` local development ports
+- `docker-compose.prod.yml` production-safe port binding for frontend only
 
 ## 2. Install Docker
 
@@ -83,20 +78,26 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 This will build and start:
 
 - frontend bound to `127.0.0.1:3000`
-- api
+- api on the internal Docker network
 - telegram-bot
 - pipeline
 - stream-producer
 - hot-consumer
-- minio
-- prefect
-- kafka
+- minio on the internal Docker network
+- prefect on the internal Docker network
+- kafka on the internal Docker network
 
 Important:
 
 - in production, internal services are not published publicly
 - only the frontend is bound locally on the server
 - you should place Nginx or Caddy in front of it and expose only `80/443`
+
+For local development, use:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+```
 
 ## 6. Verify Health
 
@@ -109,7 +110,7 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml ps
 Check API:
 
 ```bash
-curl http://localhost:8000/health
+docker compose -f docker-compose.yml -f docker-compose.prod.yml exec api curl -f http://localhost:8000/health
 ```
 
 Check frontend:
@@ -194,7 +195,7 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build ap
 Send a manual Telegram brief:
 
 ```bash
-curl -X POST http://localhost:8000/portfolio/brief/send-telegram
+docker compose -f docker-compose.yml -f docker-compose.prod.yml exec api curl -X POST http://localhost:8000/portfolio/brief/send-telegram
 ```
 
 ## 11. Recommended Next Step

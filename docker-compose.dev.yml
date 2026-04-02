@@ -1,0 +1,21 @@
+services:
+  minio:
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+
+  kafka:
+    ports:
+      - '9092:9092'
+
+  prefect:
+    ports:
+      - '4200:4200'
+
+  api:
+    ports:
+      - '8000:8000'
+
+  frontend:
+    ports:
+      - '3000:80'

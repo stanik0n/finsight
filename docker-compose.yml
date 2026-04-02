@@ -5,9 +5,6 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-finsight}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-finsight123}
-    ports:
-      - '9000:9000'
-      - '9001:9001'
     volumes:
       - minio-data:/data
     healthcheck:
@@ -44,8 +41,6 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
-    ports:
-      - '9092:9092'
     healthcheck:
       test: ['CMD', 'kafka-topics', '--bootstrap-server', 'localhost:9092', '--list']
       interval: 15s
@@ -59,8 +54,6 @@ services:
     build:
       context: .
       dockerfile: ./prefect/Dockerfile
-    ports:
-      - '4200:4200'
     volumes:
       - prefect-data:/root/.prefect
     restart: unless-stopped
@@ -131,12 +124,13 @@ services:
       TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
       TWELVE_DATA_API_KEY: ${TWELVE_DATA_API_KEY}
       TWELVE_DATA_CACHE_MINUTES: ${TWELVE_DATA_CACHE_MINUTES:-15}
+      FINSIGHT_ENV: ${FINSIGHT_ENV:-development}
+      FINSIGHT_ALLOWED_ORIGINS: ${FINSIGHT_ALLOWED_ORIGINS:-http://localhost:3000,http://127.0.0.1:3000}
+      FINSIGHT_ALLOWED_HOSTS: ${FINSIGHT_ALLOWED_HOSTS:-localhost,127.0.0.1,api}
       DUCKDB_PATH: /data/finsight.duckdb
       INTRADAY_DUCKDB_PATH: /data/intraday.duckdb
     volumes:
       - data:/data
-    ports:
-      - '8000:8000'
     healthcheck:
       test: ['CMD', 'curl', '-f', 'http://localhost:8000/health']
       interval: 30s
@@ -160,8 +154,6 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    ports:
-      - '3000:80'
     environment:
       VITE_LOGO_DEV_TOKEN: ${LOGO_DEV_PUBLISHABLE_KEY:-}
     depends_on:
