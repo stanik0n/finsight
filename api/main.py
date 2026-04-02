@@ -21,7 +21,7 @@ from zoneinfo import ZoneInfo
 
 import duckdb
 import pandas as pd
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel
@@ -29,27 +29,32 @@ import requests
 import yfinance as yf
 
 from commentary import generate_commentary
-from auth import get_current_user_id
+from auth import INTERNAL_API_KEY, get_current_user_id
 from hot_query import hot_query
 from portfolio import (
     build_portfolio_brief,
     calculate_portfolio,
     calculate_saved_portfolio,
     calculate_watchlist_snapshot,
+    complete_telegram_link,
+    create_telegram_link_code,
     current_central_date,
     delete_holding,
     delete_ticker_note,
     delete_watchlist_symbol,
     ensure_portfolio_tables,
     get_alert_preferences,
+    get_telegram_link_status,
     list_holdings,
     list_portfolio_alerts,
+    list_telegram_chat_links,
     list_ticker_notes,
     list_watchlist,
     mark_delivery_sent,
     mark_alerts_sent,
     refresh_portfolio_alerts,
     should_send_delivery,
+    unlink_telegram_chat_for_user,
     update_alert_preferences,
     upsert_holding,
     upsert_ticker_note,
@@ -80,22 +85,22 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
     allow_methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allow_headers=['Authorization', 'Content-Type', 'X-Requested-With', 'X-Finsight-Service-Key'],
+    allow_headers=['Authorization', 'Content-Type', 'X-Requested-With', 'X-Finsight-Service-Key', 'X-Telegram-Chat-Id'],
 )
 
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS or ['*'])
 
 
-def _send_telegram_message(text: str) -> None:
+def _send_telegram_message(text: str, chat_id: str | None = None) -> None:
     bot_token = os.environ.get('TELEGRAM_BOT_TOKEN', '').strip()
-    chat_id = os.environ.get('TELEGRAM_CHAT_ID', '').strip()
-    if not bot_token or not chat_id:
+    resolved_chat_id = (chat_id or '').strip() or os.environ.get('TELEGRAM_CHAT_ID', '').strip()
+    if not bot_token or not resolved_chat_id:
         raise RuntimeError('TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID is not configured.')
 
     resp = requests.post(
         f'https://api.telegram.org/bot{bot_token}/sendMessage',
         json={
-            'chat_id': chat_id,
+            'chat_id': resolved_chat_id,
             'text': text,
             'parse_mode': 'HTML',
             'disable_web_page_preview': True,
@@ -152,6 +157,11 @@ def _format_portfolio_brief_message(brief: dict) -> str:
             lines.append(f"• {alert['title']} — {alert['message']}")
 
     return '\n'.join(lines)
+
+
+def _require_internal_service_key(x_finsight_service_key: str | None) -> None:
+    if not INTERNAL_API_KEY or x_finsight_service_key != INTERNAL_API_KEY:
+        raise HTTPException(status_code=401, detail='Internal service authentication required.')
 
 DUCKDB_PATH = os.environ.get('DUCKDB_PATH', '/data/finsight.duckdb')
 INTRADAY_DUCKDB_PATH = os.environ.get('INTRADAY_DUCKDB_PATH', '/data/intraday.duckdb')
@@ -1741,6 +1751,12 @@ class TickerNoteUpsert(BaseModel):
     note_type: str | None = 'note'
     note_title: str | None = None
     review_date: str | None = None
+
+
+class TelegramLinkCompleteRequest(BaseModel):
+    code: str
+    chat_id: str
+    telegram_username: str | None = None
     note_id: int | None = None
 
 
@@ -1930,6 +1946,76 @@ async def remove_ticker_note(note_id: int, user_id: str | None = Depends(get_cur
         raise HTTPException(status_code=503, detail=f'DuckDB error: {e}')
 
 
+@app.get('/telegram/link')
+async def get_telegram_link(user_id: str | None = Depends(get_current_user_id)):
+    """Return Telegram link status for the signed-in user."""
+    if not user_id:
+        return {'linked': False, 'pending_code': None}
+    try:
+        return get_telegram_link_status(user_id)
+    except duckdb.Error as e:
+        raise HTTPException(status_code=503, detail=f'DuckDB error: {e}')
+
+
+@app.post('/telegram/link-code')
+async def create_telegram_link(user_id: str | None = Depends(get_current_user_id)):
+    """Generate a one-time Telegram link code for the signed-in user."""
+    if not user_id:
+        raise HTTPException(status_code=401, detail='Sign in to generate a Telegram link code.')
+    try:
+        return create_telegram_link_code(user_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except duckdb.Error as e:
+        raise HTTPException(status_code=503, detail=f'DuckDB error: {e}')
+
+
+@app.delete('/telegram/link')
+async def delete_telegram_link(user_id: str | None = Depends(get_current_user_id)):
+    """Remove the Telegram chat currently linked to the signed-in user."""
+    if not user_id:
+        raise HTTPException(status_code=401, detail='Sign in to manage Telegram links.')
+    try:
+        deleted = unlink_telegram_chat_for_user(user_id)
+        return {
+            'unlinked': deleted,
+            'status': get_telegram_link_status(user_id),
+        }
+    except duckdb.Error as e:
+        raise HTTPException(status_code=503, detail=f'DuckDB error: {e}')
+
+
+@app.post('/telegram/link/complete')
+async def complete_telegram_link_from_bot(
+    req: TelegramLinkCompleteRequest,
+    x_finsight_service_key: str | None = Header(default=None),
+):
+    """Link a Telegram chat to a Clerk user from the bot via a one-time code."""
+    _require_internal_service_key(x_finsight_service_key)
+    try:
+        status = complete_telegram_link(req.code, req.chat_id, telegram_username=req.telegram_username)
+        return {
+            'linked': True,
+            'status': status,
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except duckdb.Error as e:
+        raise HTTPException(status_code=503, detail=f'DuckDB error: {e}')
+
+
+@app.get('/telegram/links')
+async def get_telegram_links(x_finsight_service_key: str | None = Header(default=None)):
+    """Return linked Telegram chats for internal scheduling."""
+    _require_internal_service_key(x_finsight_service_key)
+    try:
+        return {
+            'links': list_telegram_chat_links(),
+        }
+    except duckdb.Error as e:
+        raise HTTPException(status_code=503, detail=f'DuckDB error: {e}')
+
+
 @app.put('/portfolio/watchlist')
 async def put_watchlist(req: WatchlistUpsert, user_id: str | None = Depends(get_current_user_id)):
     """Upsert a watchlist symbol."""
@@ -1999,7 +2085,12 @@ async def send_portfolio_brief_to_telegram(
             }
 
         message = _format_portfolio_brief_message(brief)
-        _send_telegram_message(message)
+        telegram_link = get_telegram_link_status(user_id) if user_id else {'linked': False}
+        telegram_chat_id = telegram_link.get('chat_id') if telegram_link.get('linked') else None
+        if user_id and not telegram_chat_id:
+            raise RuntimeError('Link a Telegram chat to this account before sending a brief.')
+
+        _send_telegram_message(message, chat_id=telegram_chat_id)
         alert_ids = [alert['alert_id'] for alert in brief.get('alerts', [])]
         mark_alerts_sent(alert_ids, user_id=user_id)
         if scheduled:
@@ -2010,6 +2101,7 @@ async def send_portfolio_brief_to_telegram(
             'send_date': send_date,
             'as_of_date': brief.get('as_of_date'),
             'alert_count': len(alert_ids),
+            'telegram_chat_id': telegram_chat_id,
         }
     except RuntimeError as e:
         raise HTTPException(status_code=400, detail=str(e))

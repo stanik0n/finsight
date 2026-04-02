@@ -4,16 +4,20 @@ import { useAuth } from '@clerk/react'
 const FinsightAuthContext = createContext({
   authEnabled: false,
   getToken: async () => null,
+  userId: null,
+  isSignedIn: false,
 })
 
 export function ClerkAuthBridge({ children }) {
-  const { getToken } = useAuth()
+  const { getToken, userId, isSignedIn } = useAuth()
 
   return (
     <FinsightAuthContext.Provider
       value={{
         authEnabled: true,
         getToken,
+        userId,
+        isSignedIn,
       }}
     >
       {children}
@@ -27,6 +31,8 @@ export function FallbackAuthProvider({ children }) {
       value={{
         authEnabled: false,
         getToken: async () => null,
+        userId: null,
+        isSignedIn: false,
       }}
     >
       {children}

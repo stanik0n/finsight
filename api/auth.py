@@ -39,8 +39,16 @@ def _decode_clerk_token(token: str) -> dict:
 def get_current_user_id(
     authorization: str | None = Header(default=None),
     x_finsight_service_key: str | None = Header(default=None),
+    x_telegram_chat_id: str | None = Header(default=None),
 ) -> str | None:
     if INTERNAL_API_KEY and x_finsight_service_key == INTERNAL_API_KEY:
+        if x_telegram_chat_id:
+            from portfolio import resolve_user_id_for_telegram_chat
+
+            user_id = resolve_user_id_for_telegram_chat(str(x_telegram_chat_id))
+            if not user_id:
+                raise HTTPException(status_code=401, detail='Telegram chat is not linked to a FinSight account.')
+            return user_id
         return None
 
     if not AUTH_ENABLED:

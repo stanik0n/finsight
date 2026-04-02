@@ -256,7 +256,7 @@ function noteAccent(noteType) {
 }
 
 export default function Portfolio() {
-  const { getToken } = useFinsightAuth()
+  const { getToken, authEnabled, isSignedIn } = useFinsightAuth()
   const [holdings, setHoldings] = useState([])
   const [form, setForm] = useState(EMPTY_FORM)
   const [watchlistForm, setWatchlistForm] = useState(EMPTY_WATCHLIST_FORM)
@@ -270,6 +270,8 @@ export default function Portfolio() {
   const [loading, setLoading] = useState(false)
   const [savingPreferences, setSavingPreferences] = useState(false)
   const [preferencesOpen, setPreferencesOpen] = useState(false)
+  const [telegramLink, setTelegramLink] = useState({ linked: false, pending_code: null })
+  const [telegramBusy, setTelegramBusy] = useState(false)
   const [error, setError] = useState(null)
 
   useEffect(() => {
@@ -287,14 +289,27 @@ export default function Portfolio() {
     setLoading(true)
     setError(null)
     try {
-      const [holdingsResponse, portfolioResponse, preferencesResponse, watchlistResponse, alertsResponse, notesResponse] = await Promise.all([
+      const requests = [
         authedFetch(getToken, '/portfolio/holdings'),
         authedFetch(getToken, '/portfolio'),
         authedFetch(getToken, '/portfolio/alert-preferences'),
         authedFetch(getToken, '/portfolio/watchlist'),
         authedFetch(getToken, '/portfolio/alerts'),
         authedFetch(getToken, '/notes'),
-      ])
+      ]
+      if (authEnabled && isSignedIn) {
+        requests.push(authedFetch(getToken, '/telegram/link'))
+      }
+
+      const [
+        holdingsResponse,
+        portfolioResponse,
+        preferencesResponse,
+        watchlistResponse,
+        alertsResponse,
+        notesResponse,
+        telegramLinkResponse,
+      ] = await Promise.all(requests)
 
       if (!holdingsResponse.ok) {
         const detail = await holdingsResponse.json().catch(() => ({ detail: holdingsResponse.statusText }))
@@ -322,6 +337,10 @@ export default function Portfolio() {
         const detail = await notesResponse.json().catch(() => ({ detail: notesResponse.statusText }))
         throw new Error(detail.detail || `HTTP ${notesResponse.status}`)
       }
+      if (telegramLinkResponse && !telegramLinkResponse.ok) {
+        const detail = await telegramLinkResponse.json().catch(() => ({ detail: telegramLinkResponse.statusText }))
+        throw new Error(detail.detail || `HTTP ${telegramLinkResponse.status}`)
+      }
 
       const holdingsJson = await holdingsResponse.json()
       const portfolioJson = await portfolioResponse.json()
@@ -329,6 +348,7 @@ export default function Portfolio() {
       const watchlistJson = await watchlistResponse.json()
       const alertsJson = await alertsResponse.json()
       const notesJson = await notesResponse.json()
+      const telegramLinkJson = telegramLinkResponse ? await telegramLinkResponse.json() : { linked: false, pending_code: null }
       setHoldings(holdingsJson.holdings || [])
       setResult(portfolioJson)
       setPreferences({ ...DEFAULT_PREFERENCES, ...(preferencesJson || {}) })
@@ -336,6 +356,7 @@ export default function Portfolio() {
       setWatchlistSnapshot(watchlistJson.snapshot || null)
       setAlerts(alertsJson.grouped_alerts || { portfolio: [], watchlist: [] })
       setNotes(notesJson.notes || [])
+      setTelegramLink(telegramLinkJson || { linked: false, pending_code: null })
     } catch (err) {
       setError(err.message)
     } finally {
@@ -536,6 +557,45 @@ export default function Portfolio() {
       setError(err.message)
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function generateTelegramLinkCode() {
+    setTelegramBusy(true)
+    setError(null)
+    try {
+      const response = await authedFetch(getToken, '/telegram/link-code', { method: 'POST' })
+      if (!response.ok) {
+        const detail = await response.json().catch(() => ({ detail: response.statusText }))
+        throw new Error(detail.detail || `HTTP ${response.status}`)
+      }
+      const payload = await response.json()
+      setTelegramLink(payload)
+      if (payload.pending_code && typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(payload.pending_code)
+      }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setTelegramBusy(false)
+    }
+  }
+
+  async function unlinkTelegram() {
+    setTelegramBusy(true)
+    setError(null)
+    try {
+      const response = await authedFetch(getToken, '/telegram/link', { method: 'DELETE' })
+      if (!response.ok) {
+        const detail = await response.json().catch(() => ({ detail: response.statusText }))
+        throw new Error(detail.detail || `HTTP ${response.status}`)
+      }
+      const payload = await response.json()
+      setTelegramLink(payload.status || { linked: false, pending_code: null })
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setTelegramBusy(false)
     }
   }
 
@@ -945,7 +1005,7 @@ export default function Portfolio() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-6">
+                <div className={`grid gap-6 ${authEnabled ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}>
                   <div className="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
                     <h3 className="terminal-label text-outline">Research memory</h3>
                     <form onSubmit={addNote} className="mt-4 space-y-3">
@@ -1028,6 +1088,71 @@ export default function Portfolio() {
                       )}
                     </div>
                   </div>
+
+                  {authEnabled && (
+                    <div className="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+                      <h3 className="terminal-label text-outline">Telegram</h3>
+                      <div className="mt-5 space-y-4">
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">
+                            {telegramLink.linked ? 'Chat linked' : 'Link your Telegram chat'}
+                          </p>
+                          <p className="mt-1 text-sm leading-6 text-slate-500">
+                            {telegramLink.linked
+                              ? 'Portfolio, watchlist, notes, and alert commands now resolve to your signed-in account.'
+                              : 'Generate a one-time code here, then send /link CODE to your FinSight Telegram bot.'}
+                          </p>
+                        </div>
+
+                        {telegramLink.linked ? (
+                          <div className="rounded-lg border border-surface-container bg-surface-container-low px-4 py-4">
+                            <p className="terminal-label text-outline">Linked chat</p>
+                            <p className="mt-2 text-sm text-slate-700">
+                              {telegramLink.telegram_username ? `@${telegramLink.telegram_username}` : telegramLink.chat_id}
+                            </p>
+                            <p className="mt-1 text-xs text-slate-500">{telegramLink.chat_id}</p>
+                          </div>
+                        ) : telegramLink.pending_code ? (
+                          <div className="rounded-lg border border-surface-container bg-surface-container-low px-4 py-4">
+                            <p className="terminal-label text-outline">One-time code</p>
+                            <p className="mt-2 font-mono text-lg font-semibold tracking-[0.2em] text-slate-900">
+                              {telegramLink.pending_code}
+                            </p>
+                            <p className="mt-2 text-xs text-slate-500">
+                              Expires {telegramLink.pending_code_expires_at ? new Date(telegramLink.pending_code_expires_at).toLocaleString() : 'soon'}.
+                            </p>
+                          </div>
+                        ) : null}
+
+                        <div className="space-y-2 rounded-lg border border-dashed border-outline/20 px-4 py-4 text-sm text-slate-500">
+                          <p>1. Generate a code here.</p>
+                          <p>2. Open your FinSight bot in Telegram.</p>
+                          <p>3. Send <span className="font-mono text-slate-700">/link CODE</span>.</p>
+                        </div>
+
+                        <div className="flex flex-wrap gap-3">
+                          <button
+                            type="button"
+                            onClick={generateTelegramLinkCode}
+                            disabled={telegramBusy}
+                            className="rounded-lg bg-slate-700 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
+                          >
+                            {telegramBusy ? 'Working' : telegramLink.pending_code ? 'Regenerate Code' : 'Generate Code'}
+                          </button>
+                          {telegramLink.linked && (
+                            <button
+                              type="button"
+                              onClick={unlinkTelegram}
+                              disabled={telegramBusy}
+                              className="rounded-lg bg-surface-container-low px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600 transition-colors hover:bg-surface-container disabled:opacity-50"
+                            >
+                              Unlink
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
                     <h3 className="terminal-label text-outline">Position overview</h3>

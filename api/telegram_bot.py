@@ -87,30 +87,33 @@ def send_message(chat_id: int | str, text: str) -> None:
     )
 
 
-def _api_headers() -> dict:
-    return {'X-Finsight-Service-Key': INTERNAL_API_KEY} if INTERNAL_API_KEY else {}
+def _api_headers(chat_id: int | str | None = None) -> dict:
+    headers = {'X-Finsight-Service-Key': INTERNAL_API_KEY} if INTERNAL_API_KEY else {}
+    if chat_id is not None:
+        headers['X-Telegram-Chat-Id'] = str(chat_id)
+    return headers
 
 
-def api_get(path: str) -> dict:
-    resp = requests.get(f'{API_BASE}{path}', headers=_api_headers(), timeout=15)
+def api_get(path: str, chat_id: int | str | None = None) -> dict:
+    resp = requests.get(f'{API_BASE}{path}', headers=_api_headers(chat_id), timeout=15)
     resp.raise_for_status()
     return resp.json()
 
 
-def api_post(path: str, payload: dict | None = None) -> dict:
-    resp = requests.post(f'{API_BASE}{path}', headers=_api_headers(), json=payload or {}, timeout=20)
+def api_post(path: str, payload: dict | None = None, chat_id: int | str | None = None) -> dict:
+    resp = requests.post(f'{API_BASE}{path}', headers=_api_headers(chat_id), json=payload or {}, timeout=20)
     resp.raise_for_status()
     return resp.json()
 
 
-def api_put(path: str, payload: dict | None = None) -> dict:
-    resp = requests.put(f'{API_BASE}{path}', headers=_api_headers(), json=payload or {}, timeout=20)
+def api_put(path: str, payload: dict | None = None, chat_id: int | str | None = None) -> dict:
+    resp = requests.put(f'{API_BASE}{path}', headers=_api_headers(chat_id), json=payload or {}, timeout=20)
     resp.raise_for_status()
     return resp.json()
 
 
-def api_delete(path: str) -> dict:
-    resp = requests.delete(f'{API_BASE}{path}', headers=_api_headers(), timeout=15)
+def api_delete(path: str, chat_id: int | str | None = None) -> dict:
+    resp = requests.delete(f'{API_BASE}{path}', headers=_api_headers(chat_id), timeout=15)
     resp.raise_for_status()
     return resp.json()
 
@@ -241,6 +244,8 @@ def format_query_response(data: dict) -> str:
 def help_text() -> str:
     return (
         "<b>FinSight Telegram Commands</b>\n\n"
+        "/link [code] - link this chat to your signed-in FinSight account\n"
+        "/unlink - disconnect this Telegram chat\n"
         "/brief - portfolio daily brief\n"
         "/alerts - current portfolio alerts\n"
         "/portfolio - holdings snapshot\n"
@@ -285,6 +290,7 @@ def small_talk_response(text: str) -> str | None:
         "/watchlist\n"
         "show my watchlist\n"
         "add NVDA to my watchlist\n"
+        "/link FS-ABC123\n"
         "how is my portfolio"
     )
 
@@ -348,17 +354,17 @@ def handle_watchlist_message(chat_id: int | str, text: str) -> bool:
     normalized = ' '.join(text.lower().strip().split())
 
     if normalized in {'show my watchlist', 'my watchlist', 'watchlist', 'show watchlist'}:
-        send_message(chat_id, format_watchlist_response(api_get('/portfolio/watchlist')))
+        send_message(chat_id, format_watchlist_response(api_get('/portfolio/watchlist', chat_id=chat_id)))
         return True
 
     if normalized in {'any watchlist alerts', 'watchlist alerts', 'show watchlist alerts', 'alerts on my watchlist'}:
-        send_message(chat_id, format_watchlist_alerts_response(api_get('/portfolio/alerts?refresh=true')))
+        send_message(chat_id, format_watchlist_alerts_response(api_get('/portfolio/alerts?refresh=true', chat_id=chat_id)))
         return True
 
     symbol = _extract_symbol(text)
     if symbol and 'watchlist' in normalized:
         if any(word in normalized for word in {'remove', 'delete', 'drop'}):
-            payload = api_delete(f'/portfolio/watchlist/{symbol}')
+            payload = api_delete(f'/portfolio/watchlist/{symbol}', chat_id=chat_id)
             send_message(
                 chat_id,
                 f"<b>Watchlist updated</b>\n\nRemoved <b>{escape(symbol)}</b> from your tracked names.\n\n{format_watchlist_response(payload)}",
@@ -366,7 +372,7 @@ def handle_watchlist_message(chat_id: int | str, text: str) -> bool:
             return True
 
         if any(word in normalized for word in {'add', 'track', 'watch'}):
-            payload = api_put('/portfolio/watchlist', {'symbol': symbol})
+            payload = api_put('/portfolio/watchlist', {'symbol': symbol}, chat_id=chat_id)
             send_message(
                 chat_id,
                 f"<b>Watchlist updated</b>\n\nAdded <b>{escape(symbol)}</b> to your tracked names.\n\n{format_watchlist_response(payload)}",
@@ -383,7 +389,7 @@ def handle_note_message(chat_id: int | str, text: str) -> bool:
         before, note_text = text.split(':', 1)
         symbol = _extract_symbol(before)
         if symbol and note_text.strip():
-            payload = api_put('/notes', {'symbol': symbol, 'note_text': note_text.strip()})
+            payload = api_put('/notes', {'symbol': symbol, 'note_text': note_text.strip()}, chat_id=chat_id)
             send_message(
                 chat_id,
                 f"<b>Research note saved</b>\n\nSaved a note for <b>{escape(symbol)}</b>.\n\n{format_notes_response(payload, symbol)}",
@@ -393,13 +399,15 @@ def handle_note_message(chat_id: int | str, text: str) -> bool:
     if normalized.startswith('show notes on ') or normalized.startswith('show notes for '):
         symbol = _extract_symbol(text)
         if symbol:
-            send_message(chat_id, format_notes_response(api_get(f'/notes?symbol={symbol}'), symbol))
+            send_message(chat_id, format_notes_response(api_get(f'/notes?symbol={symbol}', chat_id=chat_id), symbol))
             return True
 
     return False
 
 
-def handle_command(chat_id: int | str, text: str) -> None:
+def handle_command(chat: dict, text: str) -> None:
+    chat_id = chat.get('id')
+    telegram_username = chat.get('username')
     command = text.strip()
     lowered = command.lower()
     command_name = lowered.split()[0] if lowered else ''
@@ -410,16 +418,45 @@ def handle_command(chat_id: int | str, text: str) -> None:
             send_message(chat_id, help_text())
             return
 
+        if command_root == '/link':
+            parts = command.split(maxsplit=1)
+            if len(parts) < 2 or not parts[1].strip():
+                send_message(chat_id, 'Generate a Telegram link code in Portfolio, then send /link YOUR_CODE here.')
+                return
+            payload = api_post(
+                '/telegram/link/complete',
+                {
+                    'code': parts[1].strip(),
+                    'chat_id': str(chat_id),
+                    'telegram_username': telegram_username,
+                },
+            )
+            status = payload.get('status') or {}
+            username_suffix = f" @{escape(status['telegram_username'])}" if status.get('telegram_username') else ''
+            send_message(
+                chat_id,
+                f"<b>Telegram linked</b>\n\nThis chat is now connected to your FinSight account{username_suffix}.\nYou can now use portfolio, watchlist, notes, and alert commands here.",
+            )
+            return
+
+        if command_root == '/unlink':
+            payload = api_delete('/telegram/link', chat_id=chat_id)
+            if payload.get('unlinked'):
+                send_message(chat_id, '<b>Telegram unlinked</b>\n\nThis chat is no longer connected to your FinSight account.')
+            else:
+                send_message(chat_id, 'This chat was not linked to a FinSight account.')
+            return
+
         if command_root == '/brief':
-            send_message(chat_id, format_brief_response(api_get('/portfolio/brief')))
+            send_message(chat_id, format_brief_response(api_get('/portfolio/brief', chat_id=chat_id)))
             return
 
         if command_root == '/alerts':
-            send_message(chat_id, format_alerts_response(api_get('/portfolio/alerts?refresh=true')))
+            send_message(chat_id, format_alerts_response(api_get('/portfolio/alerts?refresh=true', chat_id=chat_id)))
             return
 
         if command_root == '/portfolio':
-            send_message(chat_id, format_portfolio_response(api_get('/portfolio')))
+            send_message(chat_id, format_portfolio_response(api_get('/portfolio', chat_id=chat_id)))
             return
 
         if command_root == '/addholding':
@@ -430,7 +467,7 @@ def handle_command(chat_id: int | str, text: str) -> None:
             symbol = _extract_symbol(parts[1]) or parts[1].upper()
             shares = float(parts[2])
             avg_cost = float(parts[3])
-            payload = api_put('/portfolio/holdings', {'symbol': symbol, 'shares': shares, 'avg_cost': avg_cost})
+            payload = api_put('/portfolio/holdings', {'symbol': symbol, 'shares': shares, 'avg_cost': avg_cost}, chat_id=chat_id)
             send_message(chat_id, format_holding_update_response(payload, 'Updated', symbol))
             return
 
@@ -440,17 +477,17 @@ def handle_command(chat_id: int | str, text: str) -> None:
                 send_message(chat_id, 'Use /removeholding SYMBOL, for example: /removeholding TSLA')
                 return
             symbol = _extract_symbol(parts[1]) or parts[1].upper()
-            payload = api_delete(f'/portfolio/holdings/{symbol}')
+            payload = api_delete(f'/portfolio/holdings/{symbol}', chat_id=chat_id)
             send_message(chat_id, format_holding_update_response(payload, 'Removed', symbol))
             return
 
         if command_root == '/notes':
             parts = command.split(maxsplit=1)
             if len(parts) == 1:
-                send_message(chat_id, format_notes_response(api_get('/notes')))
+                send_message(chat_id, format_notes_response(api_get('/notes', chat_id=chat_id)))
                 return
             symbol = _extract_symbol(parts[1]) or parts[1].strip().upper()
-            send_message(chat_id, format_notes_response(api_get(f'/notes?symbol={symbol}'), symbol))
+            send_message(chat_id, format_notes_response(api_get(f'/notes?symbol={symbol}', chat_id=chat_id), symbol))
             return
 
         if command_root == '/note':
@@ -459,7 +496,7 @@ def handle_command(chat_id: int | str, text: str) -> None:
                 send_message(chat_id, 'Use /note SYMBOL your note text, for example: /note NVDA trim if concentration stays too high')
                 return
             symbol = _extract_symbol(parts[1]) or parts[1].strip().upper()
-            payload = api_put('/notes', {'symbol': symbol, 'note_text': parts[2].strip()})
+            payload = api_put('/notes', {'symbol': symbol, 'note_text': parts[2].strip()}, chat_id=chat_id)
             send_message(
                 chat_id,
                 f"<b>Research note saved</b>\n\nSaved a note for <b>{escape(symbol)}</b>.\n\n{format_notes_response(payload, symbol)}",
@@ -467,11 +504,11 @@ def handle_command(chat_id: int | str, text: str) -> None:
             return
 
         if command_root == '/watchlist':
-            send_message(chat_id, format_watchlist_response(api_get('/portfolio/watchlist')))
+            send_message(chat_id, format_watchlist_response(api_get('/portfolio/watchlist', chat_id=chat_id)))
             return
 
         if command_root == '/watchalerts':
-            send_message(chat_id, format_watchlist_alerts_response(api_get('/portfolio/alerts?refresh=true')))
+            send_message(chat_id, format_watchlist_alerts_response(api_get('/portfolio/alerts?refresh=true', chat_id=chat_id)))
             return
 
         if command_root == '/watchadd':
@@ -479,7 +516,7 @@ def handle_command(chat_id: int | str, text: str) -> None:
             if not symbol:
                 send_message(chat_id, 'Use /watchadd followed by a ticker, for example: /watchadd NVDA')
                 return
-            payload = api_put('/portfolio/watchlist', {'symbol': symbol})
+            payload = api_put('/portfolio/watchlist', {'symbol': symbol}, chat_id=chat_id)
             send_message(
                 chat_id,
                 f"<b>Watchlist updated</b>\n\nAdded <b>{escape(symbol)}</b> to your tracked names.\n\n{format_watchlist_response(payload)}",
@@ -491,7 +528,7 @@ def handle_command(chat_id: int | str, text: str) -> None:
             if not symbol:
                 send_message(chat_id, 'Use /watchremove followed by a ticker, for example: /watchremove TSLA')
                 return
-            payload = api_delete(f'/portfolio/watchlist/{symbol}')
+            payload = api_delete(f'/portfolio/watchlist/{symbol}', chat_id=chat_id)
             send_message(
                 chat_id,
                 f"<b>Watchlist updated</b>\n\nRemoved <b>{escape(symbol)}</b> from your tracked names.\n\n{format_watchlist_response(payload)}",
@@ -503,7 +540,7 @@ def handle_command(chat_id: int | str, text: str) -> None:
             if not question:
                 send_message(chat_id, 'Use /ask followed by a question, for example: /ask is NVDA bullish right now')
                 return
-            send_message(chat_id, format_query_response(api_post('/query', {'question': question})))
+            send_message(chat_id, format_query_response(api_post('/query', {'question': question}, chat_id=chat_id)))
             return
 
         if command.startswith('/'):
@@ -525,11 +562,12 @@ def handle_command(chat_id: int | str, text: str) -> None:
                         'shares': holding_update['shares'],
                         'avg_cost': holding_update['avg_cost'],
                     },
+                    chat_id=chat_id,
                 )
                 send_message(chat_id, format_holding_update_response(payload, 'Updated', holding_update['symbol']))
                 return
             if holding_update['action'] == 'remove':
-                payload = api_delete(f"/portfolio/holdings/{holding_update['symbol']}")
+                payload = api_delete(f"/portfolio/holdings/{holding_update['symbol']}", chat_id=chat_id)
                 send_message(chat_id, format_holding_update_response(payload, 'Removed', holding_update['symbol']))
                 return
 
@@ -539,7 +577,17 @@ def handle_command(chat_id: int | str, text: str) -> None:
         if handle_note_message(chat_id, command):
             return
 
-        send_message(chat_id, format_query_response(api_post('/query', {'question': command})))
+        send_message(chat_id, format_query_response(api_post('/query', {'question': command}, chat_id=chat_id)))
+    except requests.HTTPError as exc:
+        status_code = exc.response.status_code if exc.response is not None else None
+        if status_code == 401:
+            send_message(
+                chat_id,
+                'Link this Telegram chat first. In FinSight Portfolio, generate a Telegram link code, then send /link YOUR_CODE here.',
+            )
+            return
+        print(f'[telegram_bot] Backend/request error for "{text}": {exc}')
+        send_message(chat_id, f'FinSight could not complete that command right now: {escape(str(exc))}')
     except requests.RequestException as exc:
         print(f'[telegram_bot] Backend/request error for "{text}": {exc}')
         send_message(chat_id, f'FinSight could not complete that command right now: {escape(str(exc))}')
@@ -565,14 +613,26 @@ def maybe_send_scheduled_brief(last_schedule_tick: str | None) -> str | None:
         return last_schedule_tick
 
     try:
-        payload = api_post('/portfolio/brief/send-telegram?scheduled=true')
-        if payload.get('sent'):
-            print(
-                '[telegram_bot] Scheduled daily brief sent '
-                f"for {payload.get('send_date')} with {payload.get('alert_count', 0)} alerts."
-            )
-        elif payload.get('reason') not in {'already_sent_today', 'disabled_in_preferences'}:
-            print(f'[telegram_bot] Scheduled daily brief skipped: {payload}')
+        links = (api_get('/telegram/links').get('links') or [])
+        if links:
+            for link in links:
+                payload = api_post('/portfolio/brief/send-telegram?scheduled=true', chat_id=link['chat_id'])
+                if payload.get('sent'):
+                    print(
+                        '[telegram_bot] Scheduled daily brief sent '
+                        f"for {payload.get('send_date')} to chat {link['chat_id']} with {payload.get('alert_count', 0)} alerts."
+                    )
+                elif payload.get('reason') not in {'already_sent_today', 'disabled_in_preferences'}:
+                    print(f"[telegram_bot] Scheduled daily brief skipped for chat {link['chat_id']}: {payload}")
+        else:
+            payload = api_post('/portfolio/brief/send-telegram?scheduled=true')
+            if payload.get('sent'):
+                print(
+                    '[telegram_bot] Scheduled daily brief sent '
+                    f"for {payload.get('send_date')} with {payload.get('alert_count', 0)} alerts."
+                )
+            elif payload.get('reason') not in {'already_sent_today', 'disabled_in_preferences'}:
+                print(f'[telegram_bot] Scheduled daily brief skipped: {payload}')
     except Exception as exc:
         print(f'[telegram_bot] Scheduled brief error: {exc}')
 
@@ -601,7 +661,7 @@ def main() -> None:
                 chat = message.get('chat') or {}
                 chat_id = chat.get('id')
                 if chat_id and text:
-                    handle_command(chat_id, text)
+                    handle_command(chat, text)
         except Exception as exc:
             print(f'[telegram_bot] Polling error: {exc}')
             time.sleep(5)

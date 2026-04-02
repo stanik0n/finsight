@@ -12,7 +12,8 @@ Provides:
 
 import json
 import os
-from datetime import datetime
+import secrets
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import duckdb
@@ -31,6 +32,7 @@ DEFAULT_ALERT_PREFERENCES = {
 }
 _CENTRAL_TZ = ZoneInfo('America/Chicago')
 _DEFAULT_PROFILE_ID = 1
+_TELEGRAM_LINK_CODE_TTL_MINUTES = int(os.environ.get('TELEGRAM_LINK_CODE_TTL_MINUTES', '15'))
 
 
 def _normalize_user_id(user_id: str | None) -> str | None:
@@ -216,6 +218,27 @@ def ensure_portfolio_tables() -> None:
             )
             """
         )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS app.telegram_chat_links (
+                user_id TEXT PRIMARY KEY,
+                chat_id TEXT NOT NULL UNIQUE,
+                telegram_username TEXT,
+                linked_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW()
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS app.telegram_link_codes (
+                code TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                expires_at TIMESTAMP NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW()
+            )
+            """
+        )
         conn.execute("ALTER TABLE app.portfolio_alerts ADD COLUMN IF NOT EXISTS source_scope TEXT DEFAULT 'portfolio'")
         conn.execute("ALTER TABLE app.ticker_notes ADD COLUMN IF NOT EXISTS note_type TEXT DEFAULT 'note'")
         conn.execute("ALTER TABLE app.ticker_notes ADD COLUMN IF NOT EXISTS note_title TEXT")
@@ -255,6 +278,10 @@ def ensure_portfolio_tables() -> None:
         )
     finally:
         conn.close()
+
+
+def _cleanup_expired_telegram_link_codes(conn: duckdb.DuckDBPyConnection) -> None:
+    conn.execute("DELETE FROM app.telegram_link_codes WHERE expires_at <= NOW()")
 
 
 def _ensure_user_alert_preferences(conn: duckdb.DuckDBPyConnection, user_id: str) -> None:
@@ -303,6 +330,185 @@ def _next_note_id(conn: duckdb.DuckDBPyConnection, user_id: str | None = None) -
     else:
         row = conn.execute("SELECT COALESCE(MAX(note_id), 0) + 1 FROM app.ticker_notes").fetchone()
     return int(row[0]) if row and row[0] is not None else 1
+
+
+def get_telegram_link_status(user_id: str) -> dict:
+    ensure_portfolio_tables()
+    normalized_user_id = _normalize_user_id(user_id)
+    if not normalized_user_id:
+        return {'linked': False}
+
+    conn = _connect()
+    try:
+        _cleanup_expired_telegram_link_codes(conn)
+        link_row = conn.execute(
+            """
+            SELECT chat_id, telegram_username, linked_at, updated_at
+            FROM app.telegram_chat_links
+            WHERE user_id = ?
+            """,
+            [normalized_user_id],
+        ).fetchone()
+        code_row = conn.execute(
+            """
+            SELECT code, expires_at, created_at
+            FROM app.telegram_link_codes
+            WHERE user_id = ?
+            ORDER BY created_at DESC
+            LIMIT 1
+            """,
+            [normalized_user_id],
+        ).fetchone()
+        return {
+            'linked': bool(link_row),
+            'chat_id': str(link_row[0]) if link_row else None,
+            'telegram_username': link_row[1] if link_row else None,
+            'linked_at': link_row[2].isoformat() if link_row and link_row[2] else None,
+            'updated_at': link_row[3].isoformat() if link_row and link_row[3] else None,
+            'pending_code': code_row[0] if code_row else None,
+            'pending_code_expires_at': code_row[1].isoformat() if code_row and code_row[1] else None,
+            'pending_code_created_at': code_row[2].isoformat() if code_row and code_row[2] else None,
+        }
+    finally:
+        conn.close()
+
+
+def create_telegram_link_code(user_id: str) -> dict:
+    ensure_portfolio_tables()
+    normalized_user_id = _normalize_user_id(user_id)
+    if not normalized_user_id:
+        raise ValueError('A signed-in user is required to generate a Telegram link code.')
+
+    conn = _connect()
+    try:
+        _cleanup_expired_telegram_link_codes(conn)
+        conn.execute("DELETE FROM app.telegram_link_codes WHERE user_id = ?", [normalized_user_id])
+        expires_at = datetime.now(_CENTRAL_TZ) + timedelta(minutes=_TELEGRAM_LINK_CODE_TTL_MINUTES)
+        code = ''
+        for _ in range(5):
+            candidate = f"FS-{secrets.token_hex(3).upper()}"
+            exists = conn.execute(
+                "SELECT 1 FROM app.telegram_link_codes WHERE code = ?",
+                [candidate],
+            ).fetchone()
+            if not exists:
+                code = candidate
+                break
+        if not code:
+            raise RuntimeError('Unable to generate a unique Telegram link code right now.')
+
+        conn.execute(
+            """
+            INSERT INTO app.telegram_link_codes (code, user_id, expires_at, created_at)
+            VALUES (?, ?, ?, NOW())
+            """,
+            [code, normalized_user_id, expires_at],
+        )
+        return get_telegram_link_status(normalized_user_id)
+    finally:
+        conn.close()
+
+
+def complete_telegram_link(code: str, chat_id: str | int, telegram_username: str | None = None) -> dict:
+    ensure_portfolio_tables()
+    normalized_code = (code or '').strip().upper()
+    normalized_chat_id = str(chat_id).strip()
+    if not normalized_code or not normalized_chat_id:
+        raise ValueError('Both a Telegram link code and chat id are required.')
+
+    username = (telegram_username or '').strip() or None
+    conn = _connect()
+    try:
+        _cleanup_expired_telegram_link_codes(conn)
+        row = conn.execute(
+            """
+            SELECT user_id
+            FROM app.telegram_link_codes
+            WHERE code = ? AND expires_at > NOW()
+            """,
+            [normalized_code],
+        ).fetchone()
+        if not row:
+            raise ValueError('That Telegram link code is invalid or has expired.')
+
+        user_id = row[0]
+        conn.execute(
+            "DELETE FROM app.telegram_chat_links WHERE user_id = ? OR chat_id = ?",
+            [user_id, normalized_chat_id],
+        )
+        conn.execute(
+            """
+            INSERT INTO app.telegram_chat_links (user_id, chat_id, telegram_username, linked_at, updated_at)
+            VALUES (?, ?, ?, NOW(), NOW())
+            """,
+            [user_id, normalized_chat_id, username],
+        )
+        conn.execute("DELETE FROM app.telegram_link_codes WHERE user_id = ?", [user_id])
+        return get_telegram_link_status(user_id)
+    finally:
+        conn.close()
+
+
+def unlink_telegram_chat_for_user(user_id: str) -> bool:
+    ensure_portfolio_tables()
+    normalized_user_id = _normalize_user_id(user_id)
+    if not normalized_user_id:
+        return False
+
+    conn = _connect()
+    try:
+        existing = conn.execute(
+            "SELECT 1 FROM app.telegram_chat_links WHERE user_id = ?",
+            [normalized_user_id],
+        ).fetchone()
+        conn.execute("DELETE FROM app.telegram_chat_links WHERE user_id = ?", [normalized_user_id])
+        conn.execute("DELETE FROM app.telegram_link_codes WHERE user_id = ?", [normalized_user_id])
+        return bool(existing)
+    finally:
+        conn.close()
+
+
+def resolve_user_id_for_telegram_chat(chat_id: str | int) -> str | None:
+    ensure_portfolio_tables()
+    normalized_chat_id = str(chat_id).strip()
+    if not normalized_chat_id:
+        return None
+
+    conn = _connect(read_only=True)
+    try:
+        row = conn.execute(
+            "SELECT user_id FROM app.telegram_chat_links WHERE chat_id = ?",
+            [normalized_chat_id],
+        ).fetchone()
+        return row[0] if row else None
+    finally:
+        conn.close()
+
+
+def list_telegram_chat_links() -> list[dict]:
+    ensure_portfolio_tables()
+    conn = _connect()
+    try:
+        _cleanup_expired_telegram_link_codes(conn)
+        rows = conn.execute(
+            """
+            SELECT user_id, chat_id, telegram_username, linked_at, updated_at
+            FROM app.telegram_chat_links
+            ORDER BY updated_at DESC
+            """
+        ).fetchall()
+        return [
+            {
+                'user_id': row[0],
+                'chat_id': str(row[1]),
+                'telegram_username': row[2],
+                'linked_at': row[3].isoformat() if row[3] else None,
+                'updated_at': row[4].isoformat() if row[4] else None,
+            }
+            for row in rows
+        ]
+    finally:
+        conn.close()
 
 
 def list_holdings(user_id: str | None = None) -> list[dict]:
