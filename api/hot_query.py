@@ -96,6 +96,30 @@ def hot_query(question: str) -> dict:
         cursor = conn.execute(sql)
         columns = [d[0] for d in cursor.description]
         rows = cursor.fetchall()
+
+        if not rows:
+            symbol_match = re.search(r"symbol\s*=\s*'([A-Z]+)'", sql, re.IGNORECASE)
+            wants_latest_price = bool(
+                symbol_match and re.search(r'\b(price|quote|trading|current|latest|right now|close)\b', question, re.IGNORECASE)
+            )
+
+            if wants_latest_price:
+                fallback_symbol = symbol_match.group(1).upper()
+                fallback_cursor = conn.execute(
+                    """
+                    SELECT symbol, timestamp, close, volume, vwap
+                    FROM intraday_bars
+                    WHERE symbol = ?
+                    ORDER BY timestamp DESC
+                    LIMIT 1
+                    """,
+                    [fallback_symbol],
+                )
+                fallback_columns = [d[0] for d in fallback_cursor.description]
+                fallback_rows = fallback_cursor.fetchall()
+                if fallback_rows:
+                    columns = fallback_columns
+                    rows = fallback_rows
     finally:
         conn.close()
 

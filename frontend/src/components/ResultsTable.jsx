@@ -1,57 +1,46 @@
 export default function ResultsTable({ results }) {
   if (!results || results.length === 0) {
-    return <p className="text-gray-500 text-sm text-center py-6">No results returned.</p>
+    return <p className="py-6 text-center text-sm text-slate-500">No results returned.</p>
   }
 
   const columns = Object.keys(results[0])
 
-  // Format cell values for display
-  function fmt(val) {
-    if (val === null || val === undefined) return <span className="text-gray-600">—</span>
-    if (typeof val === 'boolean') return val
-      ? <span className="text-green-400">✓</span>
-      : <span className="text-gray-600">✗</span>
-    if (typeof val === 'number') {
-      if (Number.isInteger(val)) return val.toLocaleString()
-      return val.toFixed(2)
-    }
-    return String(val)
+  function fmt(value) {
+    if (value === null || value === undefined) return <span className="text-slate-300">-</span>
+    if (typeof value === 'boolean') return value ? 'Yes' : 'No'
+    if (typeof value === 'number') return Number.isInteger(value) ? value.toLocaleString() : value.toFixed(2)
+    return String(value)
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-800">
-      <table className="w-full text-sm">
+    <div className="overflow-x-auto border border-outline/15 bg-white shadow-[0_1px_0_rgba(0,0,0,0.02)]">
+      <table className="w-full min-w-[640px] text-left">
         <thead>
-          <tr className="bg-gray-900 border-b border-gray-800">
-            {columns.map((col) => (
-              <th
-                key={col}
-                className="text-left px-4 py-2.5 text-xs font-medium text-gray-400 uppercase tracking-wider whitespace-nowrap"
-              >
-                {col}
+          <tr className="border-b border-outline/15 bg-surface-container-lowest">
+            {columns.map((column) => (
+              <th key={column} className="px-4 py-3 terminal-label text-outline">
+                {column}
               </th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {results.map((row, i) => (
+          {results.map((row, rowIndex) => (
             <tr
-              key={i}
-              className={`border-b border-gray-800 hover:bg-gray-900 transition ${
-                i % 2 === 0 ? '' : 'bg-gray-950'
-              }`}
+              key={rowIndex}
+              className="border-b border-outline/10 transition-colors hover:bg-surface-container-lowest"
             >
-              {columns.map((col) => (
-                <td key={col} className="px-4 py-2.5 text-gray-300 whitespace-nowrap font-mono text-xs">
-                  {fmt(row[col])}
+              {columns.map((column) => (
+                <td key={column} className="px-4 py-3 text-xs text-slate-700">
+                  {fmt(row[column])}
                 </td>
               ))}
             </tr>
           ))}
         </tbody>
       </table>
-      <div className="px-4 py-2 bg-gray-900 text-xs text-gray-500 border-t border-gray-800">
-        {results.length} row{results.length !== 1 ? 's' : ''}
+      <div className="border-t border-outline/10 bg-surface-container-lowest px-4 py-2 terminal-label text-outline">
+        {results.length} row{results.length === 1 ? '' : 's'}
       </div>
     </div>
   )

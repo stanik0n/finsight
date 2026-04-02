@@ -124,7 +124,13 @@ services:
     depends_on:
       - minio
     environment:
+      ALPACA_API_KEY: ${ALPACA_API_KEY}
+      ALPACA_SECRET_KEY: ${ALPACA_SECRET_KEY}
       GROQ_API_KEY: ${GROQ_API_KEY}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      TWELVE_DATA_API_KEY: ${TWELVE_DATA_API_KEY}
+      TWELVE_DATA_CACHE_MINUTES: ${TWELVE_DATA_CACHE_MINUTES:-15}
       DUCKDB_PATH: /data/finsight.duckdb
       INTRADAY_DUCKDB_PATH: /data/intraday.duckdb
     volumes:
@@ -138,16 +144,26 @@ services:
       retries: 3
     restart: unless-stopped
 
-  frontend:
-    image: node:20-alpine
-    working_dir: /app
-    volumes:
-      - ./frontend:/app
-    ports:
-      - '3000:3000'
-    command: sh -c "npm install && npm run dev"
+  telegram-bot:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    depends_on:
+      - api
     environment:
-      VITE_API_URL: http://localhost:8000
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      FINSIGHT_API_URL: http://api:8000
+    command: python telegram_bot.py
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - '3000:80'
+    environment:
+      VITE_LOGO_DEV_TOKEN: ${LOGO_DEV_PUBLISHABLE_KEY:-}
     depends_on:
       - api
     restart: unless-stopped

@@ -6,26 +6,19 @@ export default function SqlPanel({ sql, path }) {
   if (!sql) return null
 
   return (
-    <div className="border border-gray-800 rounded-lg overflow-hidden">
+    <div className="border border-outline/15 bg-white shadow-[0_1px_0_rgba(0,0,0,0.02)]">
       <button
-        onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between px-4 py-2.5 bg-gray-900 text-sm hover:bg-gray-800 transition"
+        onClick={() => setOpen((current) => !current)}
+        className="flex w-full items-center justify-between px-4 py-3 text-left transition-colors hover:bg-surface-container-low"
       >
-        <span className="flex items-center gap-2 text-gray-400">
-          <span className="text-green-400 font-mono text-xs">SQL</span>
-          Generated query
-          <span className={`text-xs px-1.5 py-0.5 rounded font-mono ${
-            path === 'hot'
-              ? 'bg-orange-900 text-orange-300'
-              : 'bg-blue-900 text-blue-300'
-          }`}>
-            {path === 'hot' ? '⚡ Hot' : '❄ Cold'}
-          </span>
+        <span className="flex items-center gap-2">
+          <span className="terminal-label text-slate-700">Generated SQL</span>
+          <span className="terminal-chip">{path === 'hot' ? 'Live route' : 'Gold route'}</span>
         </span>
-        <span className="text-gray-600 text-xs">{open ? '▲ hide' : '▼ show'}</span>
+        <span className="terminal-label text-outline">{open ? 'Hide' : 'Show'}</span>
       </button>
       {open && (
-        <pre className="px-4 py-3 bg-gray-950 text-sm font-mono text-green-300 overflow-x-auto whitespace-pre-wrap">
+        <pre className="overflow-x-auto border-t border-outline/15 bg-surface-container-lowest px-4 py-4 text-xs leading-6 text-slate-700">
           {sql}
         </pre>
       )}

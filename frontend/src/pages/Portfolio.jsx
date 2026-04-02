@@ -1,73 +1,84 @@
 import { useEffect, useRef, useState } from 'react'
-
-const API = ''
+import CompanyLogo from '../components/CompanyLogo'
 
 const TICKERS = [
-  { symbol: 'AAPL',  name: 'Apple Inc',                    sector: 'Technology' },
-  { symbol: 'MSFT',  name: 'Microsoft Corp',                sector: 'Technology' },
-  { symbol: 'NVDA',  name: 'NVIDIA Corp',                   sector: 'Technology' },
-  { symbol: 'GOOGL', name: 'Alphabet Inc',                  sector: 'Technology' },
-  { symbol: 'META',  name: 'Meta Platforms',                sector: 'Technology' },
-  { symbol: 'AMZN',  name: 'Amazon.com Inc',                sector: 'Technology' },
-  { symbol: 'TSLA',  name: 'Tesla Inc',                     sector: 'Technology' },
-  { symbol: 'AMD',   name: 'Advanced Micro Devices',        sector: 'Technology' },
-  { symbol: 'INTC',  name: 'Intel Corp',                    sector: 'Technology' },
-  { symbol: 'CRM',   name: 'Salesforce Inc',                sector: 'Technology' },
-  { symbol: 'JPM',   name: 'JPMorgan Chase',                sector: 'Financials' },
-  { symbol: 'BAC',   name: 'Bank of America',               sector: 'Financials' },
-  { symbol: 'GS',    name: 'Goldman Sachs',                 sector: 'Financials' },
-  { symbol: 'MS',    name: 'Morgan Stanley',                sector: 'Financials' },
-  { symbol: 'WFC',   name: 'Wells Fargo',                   sector: 'Financials' },
-  { symbol: 'C',     name: 'Citigroup Inc',                 sector: 'Financials' },
-  { symbol: 'BLK',   name: 'BlackRock Inc',                 sector: 'Financials' },
-  { symbol: 'AXP',   name: 'American Express',              sector: 'Financials' },
-  { symbol: 'USB',   name: 'US Bancorp',                    sector: 'Financials' },
-  { symbol: 'COF',   name: 'Capital One Financial',         sector: 'Financials' },
-  { symbol: 'XOM',   name: 'Exxon Mobil',                   sector: 'Energy' },
-  { symbol: 'CVX',   name: 'Chevron Corp',                  sector: 'Energy' },
-  { symbol: 'COP',   name: 'ConocoPhillips',                sector: 'Energy' },
-  { symbol: 'EOG',   name: 'EOG Resources',                 sector: 'Energy' },
-  { symbol: 'SLB',   name: 'SLB (Schlumberger)',            sector: 'Energy' },
-  { symbol: 'PSX',   name: 'Phillips 66',                   sector: 'Energy' },
-  { symbol: 'MPC',   name: 'Marathon Petroleum',            sector: 'Energy' },
-  { symbol: 'VLO',   name: 'Valero Energy',                 sector: 'Energy' },
-  { symbol: 'OXY',   name: 'Occidental Petroleum',          sector: 'Energy' },
-  { symbol: 'HAL',   name: 'Halliburton Co',                sector: 'Energy' },
-  { symbol: 'JNJ',   name: 'Johnson & Johnson',             sector: 'Healthcare' },
-  { symbol: 'UNH',   name: 'UnitedHealth Group',            sector: 'Healthcare' },
-  { symbol: 'PFE',   name: 'Pfizer Inc',                    sector: 'Healthcare' },
-  { symbol: 'ABBV',  name: 'AbbVie Inc',                    sector: 'Healthcare' },
-  { symbol: 'MRK',   name: 'Merck & Co',                    sector: 'Healthcare' },
-  { symbol: 'TMO',   name: 'Thermo Fisher Scientific',      sector: 'Healthcare' },
-  { symbol: 'ABT',   name: 'Abbott Laboratories',           sector: 'Healthcare' },
-  { symbol: 'DHR',   name: 'Danaher Corp',                  sector: 'Healthcare' },
-  { symbol: 'BMY',   name: 'Bristol-Myers Squibb',          sector: 'Healthcare' },
-  { symbol: 'AMGN',  name: 'Amgen Inc',                     sector: 'Healthcare' },
-  { symbol: 'HD',    name: 'Home Depot',                    sector: 'Consumer Discretionary' },
-  { symbol: 'MCD',   name: "McDonald's Corp",               sector: 'Consumer Discretionary' },
-  { symbol: 'NKE',   name: 'Nike Inc',                      sector: 'Consumer Discretionary' },
-  { symbol: 'SBUX',  name: 'Starbucks Corp',                sector: 'Consumer Discretionary' },
-  { symbol: 'TGT',   name: 'Target Corp',                   sector: 'Consumer Discretionary' },
-  { symbol: 'LOW',   name: "Lowe's Companies",              sector: 'Consumer Discretionary' },
-  { symbol: 'TJX',   name: 'TJX Companies',                 sector: 'Consumer Discretionary' },
-  { symbol: 'BKNG',  name: 'Booking Holdings',              sector: 'Consumer Discretionary' },
-  { symbol: 'MAR',   name: 'Marriott International',        sector: 'Consumer Discretionary' },
-  { symbol: 'COST',  name: 'Costco Wholesale',              sector: 'Consumer Discretionary' },
+  { symbol: 'AAPL', name: 'Apple Inc', sector: 'Technology' },
+  { symbol: 'MSFT', name: 'Microsoft Corp', sector: 'Technology' },
+  { symbol: 'NVDA', name: 'NVIDIA Corp', sector: 'Technology' },
+  { symbol: 'GOOGL', name: 'Alphabet Inc', sector: 'Technology' },
+  { symbol: 'META', name: 'Meta Platforms', sector: 'Technology' },
+  { symbol: 'AMZN', name: 'Amazon.com Inc', sector: 'Technology' },
+  { symbol: 'TSLA', name: 'Tesla Inc', sector: 'Technology' },
+  { symbol: 'AMD', name: 'Advanced Micro Devices', sector: 'Technology' },
+  { symbol: 'INTC', name: 'Intel Corp', sector: 'Technology' },
+  { symbol: 'CRM', name: 'Salesforce Inc', sector: 'Technology' },
+  { symbol: 'JPM', name: 'JPMorgan Chase', sector: 'Financials' },
+  { symbol: 'BAC', name: 'Bank of America', sector: 'Financials' },
+  { symbol: 'GS', name: 'Goldman Sachs', sector: 'Financials' },
+  { symbol: 'MS', name: 'Morgan Stanley', sector: 'Financials' },
+  { symbol: 'WFC', name: 'Wells Fargo', sector: 'Financials' },
+  { symbol: 'C', name: 'Citigroup Inc', sector: 'Financials' },
+  { symbol: 'BLK', name: 'BlackRock Inc', sector: 'Financials' },
+  { symbol: 'AXP', name: 'American Express', sector: 'Financials' },
+  { symbol: 'USB', name: 'US Bancorp', sector: 'Financials' },
+  { symbol: 'COF', name: 'Capital One Financial', sector: 'Financials' },
+  { symbol: 'XOM', name: 'Exxon Mobil', sector: 'Energy' },
+  { symbol: 'CVX', name: 'Chevron Corp', sector: 'Energy' },
+  { symbol: 'COP', name: 'ConocoPhillips', sector: 'Energy' },
+  { symbol: 'EOG', name: 'EOG Resources', sector: 'Energy' },
+  { symbol: 'SLB', name: 'SLB (Schlumberger)', sector: 'Energy' },
+  { symbol: 'PSX', name: 'Phillips 66', sector: 'Energy' },
+  { symbol: 'MPC', name: 'Marathon Petroleum', sector: 'Energy' },
+  { symbol: 'VLO', name: 'Valero Energy', sector: 'Energy' },
+  { symbol: 'OXY', name: 'Occidental Petroleum', sector: 'Energy' },
+  { symbol: 'HAL', name: 'Halliburton Co', sector: 'Energy' },
+  { symbol: 'JNJ', name: 'Johnson & Johnson', sector: 'Healthcare' },
+  { symbol: 'UNH', name: 'UnitedHealth Group', sector: 'Healthcare' },
+  { symbol: 'PFE', name: 'Pfizer Inc', sector: 'Healthcare' },
+  { symbol: 'ABBV', name: 'AbbVie Inc', sector: 'Healthcare' },
+  { symbol: 'MRK', name: 'Merck & Co', sector: 'Healthcare' },
+  { symbol: 'TMO', name: 'Thermo Fisher Scientific', sector: 'Healthcare' },
+  { symbol: 'ABT', name: 'Abbott Laboratories', sector: 'Healthcare' },
+  { symbol: 'DHR', name: 'Danaher Corp', sector: 'Healthcare' },
+  { symbol: 'BMY', name: 'Bristol-Myers Squibb', sector: 'Healthcare' },
+  { symbol: 'AMGN', name: 'Amgen Inc', sector: 'Healthcare' },
+  { symbol: 'HD', name: 'Home Depot', sector: 'Consumer Discretionary' },
+  { symbol: 'MCD', name: "McDonald's Corp", sector: 'Consumer Discretionary' },
+  { symbol: 'NKE', name: 'Nike Inc', sector: 'Consumer Discretionary' },
+  { symbol: 'SBUX', name: 'Starbucks Corp', sector: 'Consumer Discretionary' },
+  { symbol: 'TGT', name: 'Target Corp', sector: 'Consumer Discretionary' },
+  { symbol: 'LOW', name: "Lowe's Companies", sector: 'Consumer Discretionary' },
+  { symbol: 'TJX', name: 'TJX Companies', sector: 'Consumer Discretionary' },
+  { symbol: 'BKNG', name: 'Booking Holdings', sector: 'Consumer Discretionary' },
+  { symbol: 'MAR', name: 'Marriott International', sector: 'Consumer Discretionary' },
+  { symbol: 'COST', name: 'Costco Wholesale', sector: 'Consumer Discretionary' },
 ]
 
+const SECTOR_COLORS = ['#7dbda7', '#b5a8d6', '#d8a07a', '#9eb7cb', '#c7b48a', '#d68585']
 const EMPTY_FORM = { symbol: '', shares: '', avg_cost: '' }
-
-function fmt(n, decimals = 2) {
-  return Number(n).toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
+const EMPTY_WATCHLIST_FORM = { symbol: '' }
+const EMPTY_NOTE_FORM = { symbol: '', note_type: 'thesis', note_title: '', review_date: '', note_text: '' }
+const DEFAULT_PREFERENCES = {
+  concentration_alerts_enabled: true,
+  concentration_threshold_pct: 35,
+  rsi_alerts_enabled: true,
+  overbought_rsi_threshold: 70,
+  oversold_rsi_threshold: 30,
+  daily_move_alerts_enabled: true,
+  daily_move_threshold_pct: 5,
+  telegram_daily_brief_enabled: true,
+  telegram_alerts_enabled: true,
+}
+const NOTE_TYPE_LABELS = {
+  thesis: 'Thesis',
+  risk: 'Risk Rule',
+  exit: 'Exit Trigger',
+  review: 'Review Note',
+  note: 'General Note',
 }
 
-function PnlCell({ value }) {
-  const pos = value >= 0
-  return (
-    <span className={pos ? 'text-green-400' : 'text-red-400'}>
-      {pos ? '+' : ''}{fmt(value)}
-    </span>
-  )
+function fmt(n, d = 2) {
+  return Number(n).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d })
 }
 
 function TickerInput({ value, onChange }) {
@@ -75,58 +86,76 @@ function TickerInput({ value, onChange }) {
   const [highlighted, setHighlighted] = useState(0)
   const containerRef = useRef(null)
 
-  const suggestions = value.trim().length === 0 ? [] : TICKERS.filter((t) =>
-    t.symbol.startsWith(value.toUpperCase()) ||
-    t.name.toLowerCase().includes(value.toLowerCase())
-  ).slice(0, 8)
+  const suggestions =
+    value.trim().length === 0
+      ? []
+      : TICKERS.filter(
+          (ticker) =>
+            ticker.symbol.startsWith(value.toUpperCase()) ||
+            ticker.name.toLowerCase().includes(value.toLowerCase()),
+        ).slice(0, 8)
 
-  useEffect(() => { setHighlighted(0) }, [value])
-
-  // Close on outside click
   useEffect(() => {
-    function handler(e) {
-      if (containerRef.current && !containerRef.current.contains(e.target)) setOpen(false)
+    setHighlighted(0)
+  }, [value])
+
+  useEffect(() => {
+    function handler(event) {
+      if (containerRef.current && !containerRef.current.contains(event.target)) setOpen(false)
     }
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [])
 
-  function select(ticker) {
+  function selectTicker(ticker) {
     onChange(ticker.symbol)
     setOpen(false)
   }
 
-  function handleKey(e) {
+  function handleKey(event) {
     if (!open || !suggestions.length) return
-    if (e.key === 'ArrowDown') { e.preventDefault(); setHighlighted((i) => Math.min(i + 1, suggestions.length - 1)) }
-    if (e.key === 'ArrowUp')   { e.preventDefault(); setHighlighted((i) => Math.max(i - 1, 0)) }
-    if (e.key === 'Enter')     { e.preventDefault(); select(suggestions[highlighted]) }
-    if (e.key === 'Escape')    { setOpen(false) }
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      setHighlighted((current) => Math.min(current + 1, suggestions.length - 1))
+    }
+    if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      setHighlighted((current) => Math.max(current - 1, 0))
+    }
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      selectTicker(suggestions[highlighted])
+    }
+    if (event.key === 'Escape') setOpen(false)
   }
 
   return (
     <div ref={containerRef} className="relative">
       <input
-        className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 w-36 focus:outline-none focus:border-blue-500"
+        className="w-48 border border-outline/20 bg-white px-3 py-3 text-sm text-slate-700 focus:outline-none"
         placeholder="Ticker or name"
         value={value}
-        onChange={(e) => { onChange(e.target.value); setOpen(true) }}
+        onChange={(event) => {
+          onChange(event.target.value)
+          setOpen(true)
+        }}
         onFocus={() => setOpen(true)}
         onKeyDown={handleKey}
         autoComplete="off"
       />
       {open && suggestions.length > 0 && (
-        <ul className="absolute z-50 left-0 top-full mt-1 w-72 bg-gray-900 border border-gray-700 rounded-lg shadow-xl overflow-hidden">
-          {suggestions.map((t, i) => (
+        <ul className="absolute left-0 top-full z-50 mt-1 w-80 overflow-hidden border border-outline/15 bg-white shadow-[0_12px_30px_rgba(148,163,184,0.18)]">
+          {suggestions.map((ticker, index) => (
             <li
-              key={t.symbol}
-              onMouseDown={() => select(t)}
-              onMouseEnter={() => setHighlighted(i)}
-              className={`flex items-center gap-3 px-3 py-2 cursor-pointer text-sm ${i === highlighted ? 'bg-gray-800' : ''}`}
+              key={ticker.symbol}
+              onMouseDown={() => selectTicker(ticker)}
+              onMouseEnter={() => setHighlighted(index)}
+              className="flex cursor-pointer items-center gap-3 px-4 py-3 text-sm"
+              style={{ backgroundColor: index === highlighted ? '#f0f4f6' : '#ffffff' }}
             >
-              <span className="font-mono text-blue-300 w-14 shrink-0">{t.symbol}</span>
-              <span className="text-gray-300 truncate flex-1">{t.name}</span>
-              <span className="text-gray-600 text-xs shrink-0">{t.sector.split(' ')[0]}</span>
+              <span className="terminal-label min-w-[56px] text-slate-700">{ticker.symbol}</span>
+              <span className="flex-1 truncate text-slate-700">{ticker.name}</span>
+              <span className="terminal-label text-outline">{ticker.sector.split(' ')[0]}</span>
             </li>
           ))}
         </ul>
@@ -135,51 +164,175 @@ function TickerInput({ value, onChange }) {
   )
 }
 
-export default function Portfolio() {
-  const [holdings, setHoldings] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('finsight_holdings') || '[]') }
-    catch { return [] }
+function SectorDonut({ sectors }) {
+  if (!sectors?.length) return null
+  const circumference = 2 * Math.PI * 16
+  let cumulative = 0
+
+  return (
+    <svg className="h-full w-full -rotate-90" viewBox="0 0 36 36">
+      <circle cx="18" cy="18" r="16" fill="none" stroke="#e2e8ec" strokeWidth="3.5" />
+      {sectors.map((sector, index) => {
+        const dash = (sector.pct / 100) * circumference
+        const offset = -cumulative
+        cumulative += dash
+        return (
+          <circle
+            key={sector.sector}
+            cx="18"
+            cy="18"
+            r="16"
+            fill="none"
+            stroke={SECTOR_COLORS[index % SECTOR_COLORS.length]}
+            strokeDasharray={`${dash} ${circumference}`}
+            strokeDashoffset={offset}
+            strokeWidth="3.5"
+          />
+        )
+      })}
+    </svg>
+  )
+}
+
+function insightTone(value) {
+  return value >= 0 ? '#4f9f85' : '#c76d63'
+}
+
+function alertAccent(alert) {
+  if (alert.alert_type?.includes('oversold')) return '#545e76'
+  if (alert.severity === 'high') return '#b12d2a'
+  if (alert.alert_type?.includes('overbought')) return '#1c6b51'
+  return '#545e76'
+}
+
+function WatchlistSparkline({ points = [], up = true }) {
+  if (!points.length) {
+    return <div className="h-10 w-24 rounded-md bg-surface-container-low" />
+  }
+
+  const max = Math.max(...points)
+  const min = Math.min(...points)
+  const coords = points.map((value, index) => {
+    const x = (index / Math.max(points.length - 1, 1)) * 100
+    const y = 36 - ((value - min) / (max - min || 1)) * 24
+    return `${x},${y}`
   })
+
+  return (
+    <svg viewBox="0 0 100 40" className="h-10 w-24">
+      <polyline
+        fill="none"
+        stroke="#e2e8ec"
+        strokeWidth="1.25"
+        points="0,34 100,34"
+      />
+      <polyline
+        fill="none"
+        stroke={up ? '#74c9af' : '#d17b73'}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        points={coords.join(' ')}
+      />
+    </svg>
+  )
+}
+
+function noteAccent(noteType) {
+  switch (noteType) {
+    case 'thesis':
+      return '#5d85b3'
+    case 'risk':
+      return '#c76d63'
+    case 'exit':
+      return '#9a7bcb'
+    case 'review':
+      return '#7dbda7'
+    default:
+      return '#94a3b8'
+  }
+}
+
+export default function Portfolio() {
+  const [holdings, setHoldings] = useState([])
   const [form, setForm] = useState(EMPTY_FORM)
+  const [watchlistForm, setWatchlistForm] = useState(EMPTY_WATCHLIST_FORM)
+  const [noteForm, setNoteForm] = useState(EMPTY_NOTE_FORM)
   const [result, setResult] = useState(null)
+  const [preferences, setPreferences] = useState(DEFAULT_PREFERENCES)
+  const [watchlist, setWatchlist] = useState([])
+  const [watchlistSnapshot, setWatchlistSnapshot] = useState(null)
+  const [notes, setNotes] = useState([])
+  const [alerts, setAlerts] = useState({ portfolio: [], watchlist: [] })
   const [loading, setLoading] = useState(false)
+  const [savingPreferences, setSavingPreferences] = useState(false)
+  const [preferencesOpen, setPreferencesOpen] = useState(false)
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    localStorage.setItem('finsight_holdings', JSON.stringify(holdings))
-  }, [holdings])
+    loadPortfolio()
+  }, [])
 
-  function addHolding(e) {
-    e.preventDefault()
-    const sym = form.symbol.trim().toUpperCase()
-    const shares = parseFloat(form.shares)
-    const avg_cost = parseFloat(form.avg_cost)
-    if (!sym || isNaN(shares) || isNaN(avg_cost) || shares <= 0 || avg_cost <= 0) return
-    setHoldings((h) => [...h.filter((x) => x.symbol !== sym), { symbol: sym, shares, avg_cost }])
-    setForm(EMPTY_FORM)
-    setResult(null)
+  function applyAlertPayload(nextAlerts = []) {
+    setAlerts({
+      portfolio: nextAlerts.filter((alert) => (alert.source_scope || 'portfolio') === 'portfolio'),
+      watchlist: nextAlerts.filter((alert) => alert.source_scope === 'watchlist'),
+    })
   }
 
-  function removeHolding(sym) {
-    setHoldings((h) => h.filter((x) => x.symbol !== sym))
-    setResult(null)
-  }
-
-  async function calculate() {
-    if (!holdings.length) return
+  async function loadPortfolio() {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch(`${API}/portfolio`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ holdings }),
-      })
-      if (!res.ok) {
-        const d = await res.json().catch(() => ({ detail: res.statusText }))
-        throw new Error(d.detail || `HTTP ${res.status}`)
+      const [holdingsResponse, portfolioResponse, preferencesResponse, watchlistResponse, alertsResponse, notesResponse] = await Promise.all([
+        fetch('/portfolio/holdings'),
+        fetch('/portfolio'),
+        fetch('/portfolio/alert-preferences'),
+        fetch('/portfolio/watchlist'),
+        fetch('/portfolio/alerts'),
+        fetch('/notes'),
+      ])
+
+      if (!holdingsResponse.ok) {
+        const detail = await holdingsResponse.json().catch(() => ({ detail: holdingsResponse.statusText }))
+        throw new Error(detail.detail || `HTTP ${holdingsResponse.status}`)
       }
-      setResult(await res.json())
+
+      if (!portfolioResponse.ok) {
+        const detail = await portfolioResponse.json().catch(() => ({ detail: portfolioResponse.statusText }))
+        throw new Error(detail.detail || `HTTP ${portfolioResponse.status}`)
+      }
+
+      if (!preferencesResponse.ok) {
+        const detail = await preferencesResponse.json().catch(() => ({ detail: preferencesResponse.statusText }))
+        throw new Error(detail.detail || `HTTP ${preferencesResponse.status}`)
+      }
+      if (!watchlistResponse.ok) {
+        const detail = await watchlistResponse.json().catch(() => ({ detail: watchlistResponse.statusText }))
+        throw new Error(detail.detail || `HTTP ${watchlistResponse.status}`)
+      }
+      if (!alertsResponse.ok) {
+        const detail = await alertsResponse.json().catch(() => ({ detail: alertsResponse.statusText }))
+        throw new Error(detail.detail || `HTTP ${alertsResponse.status}`)
+      }
+      if (!notesResponse.ok) {
+        const detail = await notesResponse.json().catch(() => ({ detail: notesResponse.statusText }))
+        throw new Error(detail.detail || `HTTP ${notesResponse.status}`)
+      }
+
+      const holdingsJson = await holdingsResponse.json()
+      const portfolioJson = await portfolioResponse.json()
+      const preferencesJson = await preferencesResponse.json()
+      const watchlistJson = await watchlistResponse.json()
+      const alertsJson = await alertsResponse.json()
+      const notesJson = await notesResponse.json()
+      setHoldings(holdingsJson.holdings || [])
+      setResult(portfolioJson)
+      setPreferences({ ...DEFAULT_PREFERENCES, ...(preferencesJson || {}) })
+      setWatchlist(watchlistJson.watchlist || [])
+      setWatchlistSnapshot(watchlistJson.snapshot || null)
+      setAlerts(alertsJson.grouped_alerts || { portfolio: [], watchlist: [] })
+      setNotes(notesJson.notes || [])
     } catch (err) {
       setError(err.message)
     } finally {
@@ -187,138 +340,909 @@ export default function Portfolio() {
     }
   }
 
+  async function addHolding(event) {
+    event.preventDefault()
+    const symbol = form.symbol.trim().toUpperCase()
+    const shares = parseFloat(form.shares)
+    const avgCost = parseFloat(form.avg_cost)
+    if (!symbol || Number.isNaN(shares) || Number.isNaN(avgCost) || shares <= 0 || avgCost <= 0) return
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await fetch('/portfolio/holdings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symbol, shares, avg_cost: avgCost }),
+      })
+      if (!response.ok) {
+        const detail = await response.json().catch(() => ({ detail: response.statusText }))
+        throw new Error(detail.detail || `HTTP ${response.status}`)
+      }
+
+      const payload = await response.json()
+      setResult(payload.portfolio)
+      setHoldings(payload.portfolio?.holdings || [])
+      setForm(EMPTY_FORM)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function removeHolding(symbol) {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(`/portfolio/holdings/${symbol}`, {
+        method: 'DELETE',
+      })
+      if (!response.ok) {
+        const detail = await response.json().catch(() => ({ detail: response.statusText }))
+        throw new Error(detail.detail || `HTTP ${response.status}`)
+      }
+
+      const payload = await response.json()
+      setResult(payload.portfolio)
+      setHoldings(payload.portfolio?.holdings || [])
+      setAlerts((current) => ({
+        portfolio: (current.portfolio || []).filter((alert) => alert.symbol !== symbol),
+        watchlist: current.watchlist || [],
+      }))
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function calculate() {
+    if (!holdings.length) return
+    await loadPortfolio()
+  }
+
+  function updatePreference(key, value) {
+    setPreferences((current) => ({
+      ...current,
+      [key]: value,
+    }))
+  }
+
+  async function savePreferences() {
+    setSavingPreferences(true)
+    setError(null)
+    try {
+      const response = await fetch('/portfolio/alert-preferences', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(preferences),
+      })
+      if (!response.ok) {
+        const detail = await response.json().catch(() => ({ detail: response.statusText }))
+        throw new Error(detail.detail || `HTTP ${response.status}`)
+      }
+      const payload = await response.json()
+      setPreferences({ ...DEFAULT_PREFERENCES, ...(payload.preferences || {}) })
+      if (payload.count != null) applyAlertPayload(payload.alerts || [])
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSavingPreferences(false)
+    }
+  }
+
+  async function addWatchlistSymbol(event) {
+    event.preventDefault()
+    const symbol = watchlistForm.symbol.trim().toUpperCase()
+    if (!symbol) return
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await fetch('/portfolio/watchlist', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symbol }),
+      })
+      if (!response.ok) {
+        const detail = await response.json().catch(() => ({ detail: response.statusText }))
+        throw new Error(detail.detail || `HTTP ${response.status}`)
+      }
+      const payload = await response.json()
+      setWatchlist(payload.watchlist || [])
+      setWatchlistSnapshot(payload.snapshot || null)
+      applyAlertPayload(payload.alerts || [])
+      setWatchlistForm(EMPTY_WATCHLIST_FORM)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function removeWatchlistSymbol(symbol) {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(`/portfolio/watchlist/${symbol}`, { method: 'DELETE' })
+      if (!response.ok) {
+        const detail = await response.json().catch(() => ({ detail: response.statusText }))
+        throw new Error(detail.detail || `HTTP ${response.status}`)
+      }
+      const payload = await response.json()
+      setWatchlist(payload.watchlist || [])
+      setWatchlistSnapshot(payload.snapshot || null)
+      applyAlertPayload(payload.alerts || [])
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function addNote(event) {
+    event.preventDefault()
+    const symbol = noteForm.symbol.trim().toUpperCase()
+    const noteText = noteForm.note_text.trim()
+    const noteType = noteForm.note_type
+    const noteTitle = noteForm.note_title.trim()
+    const reviewDate = noteForm.review_date.trim()
+    if (!symbol || !noteText) return
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await fetch('/notes', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          symbol,
+          note_type: noteType,
+          note_title: noteTitle || null,
+          review_date: reviewDate || null,
+          note_text: noteText,
+        }),
+      })
+      if (!response.ok) {
+        const detail = await response.json().catch(() => ({ detail: response.statusText }))
+        throw new Error(detail.detail || `HTTP ${response.status}`)
+      }
+      const payload = await response.json()
+      setNotes((current) =>
+        [...(payload.notes || []), ...current.filter((note) => note.symbol !== symbol)]
+          .sort((a, b) => (b.note_id || 0) - (a.note_id || 0))
+      )
+      setNoteForm(EMPTY_NOTE_FORM)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function removeNote(noteId) {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(`/notes/${noteId}`, { method: 'DELETE' })
+      if (!response.ok) {
+        const detail = await response.json().catch(() => ({ detail: response.statusText }))
+        throw new Error(detail.detail || `HTTP ${response.status}`)
+      }
+      const payload = await response.json()
+      setNotes(payload.notes || [])
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const allAlerts = [...(alerts.portfolio || []), ...(alerts.watchlist || [])]
+  const topPosition = result?.portfolio_insights?.top_position
+  const topGainer = result?.portfolio_insights?.top_gainer
+  const topLoser = result?.portfolio_insights?.top_loser
+
   return (
-    <div className="max-w-5xl mx-auto px-6 py-8 space-y-8">
-
-      {/* Add holding form */}
-      <div>
-        <h2 className="text-sm font-semibold text-gray-400 mb-3 uppercase tracking-wider">Holdings</h2>
-        <form onSubmit={addHolding} className="flex gap-3 flex-wrap items-start">
-          <TickerInput value={form.symbol} onChange={(v) => setForm((f) => ({ ...f, symbol: v }))} />
-          <input
-            type="number" min="0" step="any"
-            className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 w-32 focus:outline-none focus:border-blue-500"
-            placeholder="Shares"
-            value={form.shares}
-            onChange={(e) => setForm((f) => ({ ...f, shares: e.target.value }))}
-          />
-          <input
-            type="number" min="0" step="any"
-            className="bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-gray-200 w-36 focus:outline-none focus:border-blue-500"
-            placeholder="Avg cost / share"
-            value={form.avg_cost}
-            onChange={(e) => setForm((f) => ({ ...f, avg_cost: e.target.value }))}
-          />
-          <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm rounded transition">
-            Add
-          </button>
-        </form>
-      </div>
-
-      {/* Holdings list */}
-      {holdings.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex flex-wrap gap-2">
-            {holdings.map((h) => (
-              <div key={h.symbol} className="flex items-center gap-2 bg-gray-900 border border-gray-700 rounded px-3 py-1.5 text-sm">
-                <span className="text-blue-300 font-mono font-medium">{h.symbol}</span>
-                <span className="text-gray-400">{h.shares} @ ${fmt(h.avg_cost)}</span>
-                <button onClick={() => removeHolding(h.symbol)} className="text-gray-600 hover:text-red-400 transition text-xs ml-1">✕</button>
-              </div>
-            ))}
-          </div>
-          <button
-            onClick={calculate}
-            disabled={loading}
-            className="px-5 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-sm rounded transition"
-          >
-            {loading ? 'Calculating…' : 'Calculate P&L'}
-          </button>
-        </div>
-      )}
-
-      {error && (
-        <div className="bg-red-950 border border-red-800 rounded-lg px-4 py-3 text-sm text-red-300">
-          <strong>Error:</strong> {error}
-        </div>
-      )}
-
-      {/* Results */}
-      {result && (
-        <div className="space-y-6">
-
-          {/* Summary bar */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {[
-              { label: 'Market Value', value: `$${fmt(result.total_value)}` },
-              { label: 'Total Cost', value: `$${fmt(result.total_cost)}` },
-              { label: 'Total P&L', value: <PnlCell value={result.total_pnl} /> },
-              { label: 'Return', value: <PnlCell value={result.total_pnl_pct} /> },
-            ].map(({ label, value }) => (
-              <div key={label} className="bg-gray-900 border border-gray-800 rounded-lg px-4 py-3">
-                <div className="text-xs text-gray-500 mb-1">{label}</div>
-                <div className="text-lg font-semibold text-gray-100">{value}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Positions table */}
+    <div className="min-h-screen bg-background px-8 py-10">
+      <div className="mx-auto max-w-[1500px]">
+        <div className="mb-10 flex items-start justify-between gap-6">
           <div>
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Positions</h3>
-            <div className="overflow-x-auto rounded-lg border border-gray-800">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-800 text-xs text-gray-500 uppercase">
-                    {['Symbol', 'Company', 'Sector', 'Shares', 'Avg Cost', 'Price', 'Value', 'P&L', 'Return'].map((h) => (
-                      <th key={h} className="px-3 py-2 text-left font-medium">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {result.positions.map((p) => (
-                    <tr key={p.symbol} className="border-b border-gray-900 hover:bg-gray-900/50">
-                      <td className="px-3 py-2 font-mono text-blue-300">{p.symbol}</td>
-                      <td className="px-3 py-2 text-gray-300">{p.company_name}</td>
-                      <td className="px-3 py-2 text-gray-400">{p.sector}</td>
-                      <td className="px-3 py-2 text-gray-300">{p.shares}</td>
-                      <td className="px-3 py-2 text-gray-300">${fmt(p.avg_cost)}</td>
-                      <td className="px-3 py-2 text-gray-300">${fmt(p.current_price)}</td>
-                      <td className="px-3 py-2 text-gray-200">${fmt(p.value)}</td>
-                      <td className="px-3 py-2"><PnlCell value={p.pnl} /></td>
-                      <td className="px-3 py-2"><PnlCell value={p.pnl_pct} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <h1 className="mt-3 font-headline text-5xl font-extrabold tracking-tight text-slate-900">
+              Portfolio
+            </h1>
+            <p className="mt-4 max-w-3xl text-base leading-8 text-slate-500">
+              Track positions, monitor portfolio risk, and keep your research memory attached to the names you already own or still plan to buy.
+            </p>
+          </div>
+          {result && (
+            <div className="flex items-center gap-3">
+              <span className="terminal-chip">Prices as of {result.as_of_date}</span>
+              <button
+                onClick={calculate}
+                disabled={loading}
+                className="rounded-lg bg-slate-700 px-4 py-3 terminal-label text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
+              >
+                {loading ? 'Refreshing' : 'Refresh'}
+              </button>
             </div>
-          </div>
+          )}
+        </div>
 
-          {/* Sector exposure */}
-          <div>
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Sector Exposure</h3>
-            <div className="space-y-2">
-              {result.sector_exposure.map((s) => (
-                <div key={s.sector} className="flex items-center gap-3">
-                  <span className="text-sm text-gray-400 w-48 shrink-0">{s.sector}</span>
-                  <div className="flex-1 bg-gray-900 rounded-full h-2">
-                    <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${s.pct}%` }} />
+        <div className="rounded-xl bg-surface-container-lowest px-6 py-6 shadow-[24px_0_40px_rgba(42,52,57,0.04)]">
+          <p className="terminal-label text-outline">Add position</p>
+          <form onSubmit={addHolding} className="mt-5 flex flex-wrap items-end gap-4">
+            <div>
+              <p className="terminal-label mb-2 text-outline">Ticker</p>
+              <TickerInput value={form.symbol} onChange={(value) => setForm((current) => ({ ...current, symbol: value }))} />
+            </div>
+            <div>
+              <p className="terminal-label mb-2 text-outline">Shares</p>
+              <input
+                type="number"
+                min="0"
+                step="any"
+                className="w-36 border border-outline/20 bg-white px-3 py-3 text-sm text-slate-700 focus:outline-none"
+                value={form.shares}
+                onChange={(event) => setForm((current) => ({ ...current, shares: event.target.value }))}
+                placeholder="0.00"
+              />
+            </div>
+            <div>
+              <p className="terminal-label mb-2 text-outline">Avg Cost</p>
+              <input
+                type="number"
+                min="0"
+                step="any"
+                className="w-40 border border-outline/20 bg-white px-3 py-3 text-sm text-slate-700 focus:outline-none"
+                value={form.avg_cost}
+                onChange={(event) => setForm((current) => ({ ...current, avg_cost: event.target.value }))}
+                placeholder="$0.00"
+              />
+            </div>
+            <button className="rounded-lg bg-slate-700 px-6 py-3 terminal-label text-white transition-colors hover:bg-slate-800">
+              Add Position
+            </button>
+          </form>
+        </div>
+
+        {holdings.length > 0 && (
+          <div className="mt-8 overflow-hidden rounded-xl bg-surface-container-lowest shadow-sm">
+            <div className="flex items-center justify-between px-6 py-5">
+              <h2 className="font-headline text-2xl font-bold text-slate-900">Primary Holdings</h2>
+              <span className="terminal-chip">{holdings.length} tracked</span>
+            </div>
+            <div className="grid grid-cols-12 gap-4 bg-surface-container-low px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-outline">
+              <div className="col-span-4">Asset &amp; symbol</div>
+              <div className="col-span-2 text-right">Shares</div>
+              <div className="col-span-2 text-right">Avg cost</div>
+              <div className="col-span-2 text-right">Last price</div>
+              <div className="col-span-2 text-right">Actions</div>
+            </div>
+            <div className="divide-y divide-surface-container">
+              {result?.positions?.map((position) => (
+                <div key={position.symbol} className="grid grid-cols-12 gap-4 px-6 py-5 hover:bg-surface-container-low/50">
+                  <div className="col-span-4 flex items-center gap-4">
+                    <CompanyLogo symbol={position.symbol} alt={`${position.symbol} logo`} size={40} />
+                    <div>
+                      <p className="font-semibold text-slate-900">{position.company_name}</p>
+                      <p className="text-xs text-slate-500">{position.sector} • {position.symbol}</p>
+                    </div>
                   </div>
-                  <span className="text-sm text-gray-300 w-16 text-right">{s.pct}%</span>
-                  <span className="text-sm text-gray-500 w-28 text-right">${fmt(s.value)}</span>
+                  <div className="col-span-2 text-right text-sm font-medium text-slate-700">{fmt(position.shares, 0)}</div>
+                  <div className="col-span-2 text-right text-sm text-slate-700">${fmt(position.avg_cost)}</div>
+                  <div className="col-span-2 text-right">
+                    <p className="font-semibold text-slate-900">${fmt(position.current_price)}</p>
+                    <p className="mt-1 text-xs font-medium" style={{ color: insightTone(position.pnl_pct) }}>
+                      {position.pnl_pct >= 0 ? '+' : ''}{fmt(position.pnl_pct)}%
+                    </p>
+                  </div>
+                  <div className="col-span-2 text-right">
+                    <button
+                      onClick={() => removeHolding(position.symbol)}
+                      className="material-symbols-outlined text-slate-400 transition-colors hover:text-[#c76d63]"
+                    >
+                      close
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
+        )}
 
-          <p className="text-xs text-gray-600">Prices as of {result.as_of_date} (end-of-day Gold data)</p>
-        </div>
-      )}
+        {error && (
+          <div className="mt-8 border border-[#d8b0aa] bg-[#fff4f2] px-5 py-4 text-sm text-[#9d4840]">
+            <strong>Error:</strong> {error}
+          </div>
+        )}
 
-      {holdings.length === 0 && (
-        <div className="text-center py-16 text-gray-600 text-sm">
-          Add your holdings above to calculate portfolio value and P&L.
-        </div>
-      )}
+        {result && (
+          <div className="mt-8 space-y-8">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
+              {[
+                { label: 'Total Value', value: `$${fmt(result.total_value)}`, sub: `${result.positions.length} positions` },
+                { label: 'Total Cost', value: `$${fmt(result.total_cost)}`, sub: 'Average cost basis' },
+                {
+                  label: 'Total P&L',
+                  value: `${result.total_pnl >= 0 ? '+' : ''}$${fmt(result.total_pnl)}`,
+                  sub: `${result.total_pnl_pct >= 0 ? '+' : ''}${fmt(result.total_pnl_pct)}% return`,
+                },
+                {
+                  label: 'Active Alerts',
+                  value: `${allAlerts.length}`,
+                  sub: 'Portfolio + watchlist',
+                },
+              ].map((card) => (
+                <div
+                  key={card.label}
+                  className={`bg-surface-container-lowest px-6 py-6 rounded-xl shadow-sm ${
+                    card.label === 'Total P&L'
+                      ? result.total_pnl >= 0
+                        ? 'border-b-4 border-secondary'
+                        : 'border-b-4 border-tertiary'
+                      : ''
+                  }`}
+                >
+                  <p className="terminal-label text-outline">{card.label}</p>
+                  <p className="mt-4 font-headline text-4xl font-bold text-slate-900">{card.value}</p>
+                  <p className="mt-2 text-sm text-slate-500">{card.sub}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="border border-outline/10 bg-white shadow-[0_1px_0_rgba(0,0,0,0.02)]">
+              <button
+                type="button"
+                onClick={() => setPreferencesOpen((current) => !current)}
+                className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
+              >
+                <div>
+                  <p className="terminal-label text-outline">Alert preferences</p>
+                  <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500">
+                    Tune how portfolio alerts fire and whether Telegram should send your daily brief or push urgent signals.
+                  </p>
+                </div>
+                <div className="flex items-center gap-4">
+                  <span className="terminal-chip">{preferencesOpen ? 'Expanded' : 'Collapsed'}</span>
+                  <span className="material-symbols-outlined text-slate-500">
+                    {preferencesOpen ? 'expand_less' : 'expand_more'}
+                  </span>
+                </div>
+              </button>
+
+              {preferencesOpen && (
+                <div className="border-t border-outline/10 px-6 py-6">
+                  <div className="flex justify-end">
+                    <button
+                      onClick={savePreferences}
+                      disabled={savingPreferences}
+                      className="bg-slate-700 px-5 py-2.5 terminal-label text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
+                    >
+                      {savingPreferences ? 'Saving' : 'Save Preferences'}
+                    </button>
+                  </div>
+
+                  <div className="mt-6 grid grid-cols-2 gap-5">
+                    <div className="border border-outline/10 bg-surface-container-lowest px-5 py-5">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="terminal-label text-outline">Concentration alerts</p>
+                          <p className="mt-2 text-sm text-slate-500">Warn when one position becomes too dominant.</p>
+                        </div>
+                        <label className="flex items-center gap-2 text-sm text-slate-700">
+                          <input
+                            type="checkbox"
+                            checked={preferences.concentration_alerts_enabled}
+                            onChange={(event) => updatePreference('concentration_alerts_enabled', event.target.checked)}
+                          />
+                          Enabled
+                        </label>
+                      </div>
+                      <div className="mt-4">
+                        <p className="terminal-label mb-2 text-outline">Threshold %</p>
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.1"
+                          className="w-32 border border-outline/20 bg-white px-3 py-3 text-sm text-slate-700 focus:outline-none"
+                          value={preferences.concentration_threshold_pct}
+                          onChange={(event) =>
+                            updatePreference('concentration_threshold_pct', Number(event.target.value || 0))
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    <div className="border border-outline/10 bg-surface-container-lowest px-5 py-5">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="terminal-label text-outline">Daily move alerts</p>
+                          <p className="mt-2 text-sm text-slate-500">Flag unusually large moves in owned names.</p>
+                        </div>
+                        <label className="flex items-center gap-2 text-sm text-slate-700">
+                          <input
+                            type="checkbox"
+                            checked={preferences.daily_move_alerts_enabled}
+                            onChange={(event) => updatePreference('daily_move_alerts_enabled', event.target.checked)}
+                          />
+                          Enabled
+                        </label>
+                      </div>
+                      <div className="mt-4">
+                        <p className="terminal-label mb-2 text-outline">Move threshold %</p>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.1"
+                          className="w-32 border border-outline/20 bg-white px-3 py-3 text-sm text-slate-700 focus:outline-none"
+                          value={preferences.daily_move_threshold_pct}
+                          onChange={(event) => updatePreference('daily_move_threshold_pct', Number(event.target.value || 0))}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="border border-outline/10 bg-surface-container-lowest px-5 py-5">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="terminal-label text-outline">RSI alerts</p>
+                          <p className="mt-2 text-sm text-slate-500">Surface overbought and oversold positions automatically.</p>
+                        </div>
+                        <label className="flex items-center gap-2 text-sm text-slate-700">
+                          <input
+                            type="checkbox"
+                            checked={preferences.rsi_alerts_enabled}
+                            onChange={(event) => updatePreference('rsi_alerts_enabled', event.target.checked)}
+                          />
+                          Enabled
+                        </label>
+                      </div>
+                      <div className="mt-4 grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="terminal-label mb-2 text-outline">Overbought RSI</p>
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="1"
+                            className="w-full border border-outline/20 bg-white px-3 py-3 text-sm text-slate-700 focus:outline-none"
+                            value={preferences.overbought_rsi_threshold}
+                            onChange={(event) =>
+                              updatePreference('overbought_rsi_threshold', Number(event.target.value || 0))
+                            }
+                          />
+                        </div>
+                        <div>
+                          <p className="terminal-label mb-2 text-outline">Oversold RSI</p>
+                          <input
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="1"
+                            className="w-full border border-outline/20 bg-white px-3 py-3 text-sm text-slate-700 focus:outline-none"
+                            value={preferences.oversold_rsi_threshold}
+                            onChange={(event) =>
+                              updatePreference('oversold_rsi_threshold', Number(event.target.value || 0))
+                            }
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border border-outline/10 bg-surface-container-lowest px-5 py-5">
+                      <p className="terminal-label text-outline">Telegram delivery</p>
+                      <p className="mt-2 text-sm text-slate-500">
+                        Control whether FinSight sends daily briefs and push alerts to your bot chat.
+                      </p>
+                      <div className="mt-5 space-y-4">
+                        <label className="flex items-center justify-between gap-4 text-sm text-slate-700">
+                          <span>Daily morning brief</span>
+                          <input
+                            type="checkbox"
+                            checked={preferences.telegram_daily_brief_enabled}
+                            onChange={(event) => updatePreference('telegram_daily_brief_enabled', event.target.checked)}
+                          />
+                        </label>
+                        <label className="flex items-center justify-between gap-4 text-sm text-slate-700">
+                          <span>Push alert delivery</span>
+                          <input
+                            type="checkbox"
+                            checked={preferences.telegram_alerts_enabled}
+                            onChange={(event) => updatePreference('telegram_alerts_enabled', event.target.checked)}
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-12 gap-8">
+              <div className="col-span-12 space-y-6 lg:col-span-8">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-headline text-2xl font-bold text-slate-900">Primary Watchlist</h2>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={loadPortfolio}
+                      className="rounded-lg bg-surface-container-low px-4 py-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-surface-container"
+                    >
+                      Edit List
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('portfolio-watchlist-input')?.focus()}
+                      className="rounded-lg bg-slate-700 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-slate-800"
+                    >
+                      Add Symbol
+                    </button>
+                  </div>
+                </div>
+                <div className="overflow-hidden rounded-xl bg-surface-container-lowest shadow-sm">
+                  <div className="grid grid-cols-12 gap-4 bg-surface-container-low px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-outline">
+                    <div className="col-span-5">Asset &amp; symbol</div>
+                    <div className="col-span-2 text-right">Last price</div>
+                    <div className="col-span-2 text-right">24h change</div>
+                    <div className="col-span-2 text-center">Trend</div>
+                    <div className="col-span-1 text-right">Actions</div>
+                  </div>
+                  <form onSubmit={addWatchlistSymbol} className="border-b border-surface-container px-6 py-4">
+                    <div className="flex items-end gap-3">
+                      <div className="flex-1">
+                        <TickerInput
+                          value={watchlistForm.symbol}
+                          onChange={(value) => setWatchlistForm({ symbol: value })}
+                          widthClass="w-full"
+                        />
+                      </div>
+                      <button className="rounded-lg bg-slate-700 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white transition-colors hover:bg-slate-800">
+                        Add
+                      </button>
+                    </div>
+                  </form>
+                  <div className="divide-y divide-surface-container">
+                    {watchlist.length ? watchlist.map((item) => {
+                      const liveItem = watchlistSnapshot?.items?.find((entry) => entry.symbol === item.symbol)
+                      const dailyChange = liveItem?.daily_pct_change ?? 0
+                      return (
+                        <div key={item.symbol} className="grid grid-cols-12 gap-4 px-6 py-5 hover:bg-surface-container-low/40">
+                          <div className="col-span-5 flex items-center gap-4">
+                            <CompanyLogo symbol={item.symbol} alt={`${item.symbol} logo`} size={40} />
+                            <div>
+                              <p className="font-semibold text-slate-900">{liveItem?.company_name || item.symbol}</p>
+                              <p className="text-xs text-slate-500">{liveItem?.sector || 'Tracked name'} • {item.symbol}</p>
+                            </div>
+                          </div>
+                          <div className="col-span-2 text-right font-semibold text-slate-900">
+                            {liveItem?.current_price != null ? `$${fmt(liveItem.current_price)}` : '--'}
+                          </div>
+                          <div className="col-span-2 text-right text-sm font-medium" style={{ color: insightTone(dailyChange) }}>
+                            {liveItem?.daily_pct_change != null ? `${dailyChange >= 0 ? '+' : ''}${fmt(dailyChange)}%` : '--'}
+                          </div>
+                          <div className="col-span-2 flex items-center justify-center">
+                            <WatchlistSparkline
+                              points={liveItem?.trend_points || []}
+                              up={dailyChange >= 0}
+                            />
+                          </div>
+                          <div className="col-span-1 text-right">
+                            <button
+                              onClick={() => removeWatchlistSymbol(item.symbol)}
+                              type="button"
+                              className="material-symbols-outlined text-slate-400 transition-colors hover:text-[#c76d63]"
+                            >
+                              close
+                            </button>
+                          </div>
+                        </div>
+                      )
+                    }) : (
+                      <div className="px-6 py-8 text-sm text-slate-500">No watchlist names yet. Add a ticker to start tracking it.</div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+                    <h3 className="terminal-label text-outline">Research memory</h3>
+                    <form onSubmit={addNote} className="mt-4 space-y-3">
+                      <TickerInput
+                        value={noteForm.symbol}
+                        onChange={(value) => setNoteForm((current) => ({ ...current, symbol: value }))}
+                      />
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <p className="terminal-label mb-2 text-outline">Memory Type</p>
+                          <select
+                            className="w-full rounded-lg border-0 bg-surface-container-low px-4 py-3 text-sm text-slate-700 focus:outline-none"
+                            value={noteForm.note_type}
+                            onChange={(event) => setNoteForm((current) => ({ ...current, note_type: event.target.value }))}
+                          >
+                            {Object.entries(NOTE_TYPE_LABELS).map(([value, label]) => (
+                              <option key={value} value={value}>{label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <p className="terminal-label mb-2 text-outline">Review Date</p>
+                          <input
+                            type="date"
+                            className="w-full rounded-lg border-0 bg-surface-container-low px-4 py-3 text-sm text-slate-700 focus:outline-none"
+                            value={noteForm.review_date}
+                            onChange={(event) => setNoteForm((current) => ({ ...current, review_date: event.target.value }))}
+                          />
+                        </div>
+                      </div>
+                      <input
+                        className="w-full rounded-lg border-0 bg-surface-container-low px-4 py-3 text-sm text-slate-700 focus:outline-none"
+                        placeholder="Optional title, like Initial thesis or Trim trigger."
+                        value={noteForm.note_title}
+                        onChange={(event) => setNoteForm((current) => ({ ...current, note_title: event.target.value }))}
+                      />
+                      <textarea
+                        className="min-h-[104px] w-full resize-none rounded-lg border-0 bg-surface-container-low px-4 py-3 text-sm text-slate-700 focus:outline-none"
+                        placeholder="Write the structured memory entry for this ticker."
+                        value={noteForm.note_text}
+                        onChange={(event) => setNoteForm((current) => ({ ...current, note_text: event.target.value }))}
+                      />
+                      <div className="flex items-center justify-between">
+                        <span className="terminal-label text-outline">{notes.length} notes</span>
+                        <button className="rounded-lg bg-slate-700 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-white transition-colors hover:bg-slate-800">
+                          Save Note
+                        </button>
+                      </div>
+                    </form>
+                    <div className="mt-4 space-y-3">
+                      {notes.length ? notes.slice(0, 3).map((note) => (
+                        <div
+                          key={note.note_id}
+                          className="rounded-lg bg-surface-container-low px-4 py-4"
+                          style={{ borderLeft: `4px solid ${noteAccent(note.note_type)}` }}
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="terminal-chip">{note.symbol}</span>
+                              <span className="terminal-chip">{NOTE_TYPE_LABELS[note.note_type] || 'General Note'}</span>
+                              {note.note_title && <span className="terminal-chip">{note.note_title}</span>}
+                            </div>
+                            <button
+                              onClick={() => removeNote(note.note_id)}
+                              type="button"
+                              className="material-symbols-outlined text-slate-400 transition-colors hover:text-[#c76d63]"
+                            >
+                              close
+                            </button>
+                          </div>
+                          {note.review_date && (
+                            <p className="mt-3 terminal-label text-outline">Review on {note.review_date}</p>
+                          )}
+                          <p className="mt-3 text-sm leading-7 text-slate-600">{note.note_text}</p>
+                        </div>
+                      )) : (
+                        <div className="rounded-lg bg-surface-container-low px-4 py-5 text-sm text-slate-500">
+                          No saved memory yet. Add a thesis, risk rule, exit trigger, or review note above.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+                    <h3 className="terminal-label text-outline">Position overview</h3>
+                    <div className="mt-5 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-slate-500">Largest position</span>
+                        <span className="font-semibold text-slate-900">{topPosition?.symbol || '--'}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-slate-500">Top winner</span>
+                        <span className="font-semibold" style={{ color: insightTone(topGainer?.pnl_pct || 0) }}>
+                          {topGainer?.symbol || '--'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-slate-500">Top loser</span>
+                        <span className="font-semibold" style={{ color: insightTone(topLoser?.pnl_pct || 0) }}>
+                          {topLoser?.symbol || '--'}
+                        </span>
+                      </div>
+                      <div className="pt-4">
+                        <p className="text-xs font-bold uppercase tracking-wider text-outline">Concentration profile</p>
+                        <p className="mt-3 font-headline text-4xl font-bold text-slate-900">
+                          {result.portfolio_insights?.concentration?.top_position_weight_pct != null
+                            ? `${fmt(result.portfolio_insights.concentration.top_position_weight_pct, 1)}%`
+                            : '--'}
+                        </p>
+                        <p className="mt-2 text-sm text-slate-500">
+                          {result.portfolio_insights?.concentration?.level || 'Balanced'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-span-12 space-y-6 lg:col-span-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-headline text-2xl font-bold text-slate-900">Portfolio Signals</h2>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-700 text-[10px] font-bold text-white">
+                    {allAlerts.length}
+                  </span>
+                </div>
+                <div className="space-y-4">
+                  {allAlerts.length ? allAlerts.map((alert) => (
+                    <div
+                      key={alert.alert_id}
+                      className="rounded-xl bg-surface-container-lowest p-5 shadow-sm"
+                      style={{ borderLeft: `4px solid ${alertAccent(alert)}` }}
+                    >
+                      <div className="mb-2 flex items-start justify-between gap-3">
+                        <span
+                          className="rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider"
+                          style={{ backgroundColor: `${alertAccent(alert)}14`, color: alertAccent(alert) }}
+                        >
+                          {alert.alert_type.replaceAll('_', ' ')}
+                        </span>
+                        <span className="text-[10px] font-medium text-outline">{alert.symbol || alert.source_scope}</span>
+                      </div>
+                      <p className="text-sm font-semibold text-slate-900">{alert.title}</p>
+                      <p className="mt-2 text-xs leading-6 text-slate-500">{alert.message}</p>
+                    </div>
+                  )) : (
+                    <div className="rounded-xl bg-surface-container-lowest p-5 text-sm text-slate-500 shadow-sm">
+                      No active alerts right now.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-5">
+              <div className="border border-outline/10 bg-white px-6 py-6 shadow-[0_1px_0_rgba(0,0,0,0.02)]">
+                <p className="terminal-label text-outline">Concentration Risk</p>
+                <p className="mt-4 font-headline text-4xl font-bold text-slate-900">
+                  {result.portfolio_insights?.concentration?.top_position_weight_pct != null
+                    ? `${fmt(result.portfolio_insights.concentration.top_position_weight_pct, 1)}%`
+                    : '--'}
+                </p>
+                <p className="mt-2 text-sm text-slate-500">
+                {result.portfolio_insights?.top_position
+                    ? `${result.portfolio_insights.top_position.symbol} is your largest position`
+                    : 'No positions yet'}
+                </p>
+                <p className="mt-3 terminal-label text-outline">
+                  {result.portfolio_insights?.concentration?.level || 'Balanced'}
+                </p>
+              </div>
+
+              <div className="border border-outline/10 bg-white px-6 py-6 shadow-[0_1px_0_rgba(0,0,0,0.02)]">
+                <p className="terminal-label text-outline">Top Winner</p>
+                <p className="mt-4 font-headline text-4xl font-bold text-slate-900">
+                  {result.portfolio_insights?.top_gainer?.symbol || '--'}
+                </p>
+                <p
+                  className="mt-2 text-sm font-semibold"
+                  style={{ color: insightTone(result.portfolio_insights?.top_gainer?.pnl_pct ?? 0) }}
+                >
+                  {result.portfolio_insights?.top_gainer
+                    ? `${result.portfolio_insights.top_gainer.pnl_pct >= 0 ? '+' : ''}${fmt(result.portfolio_insights.top_gainer.pnl_pct)}%`
+                    : 'No data yet'}
+                </p>
+                <p className="mt-3 text-sm text-slate-500">
+                  {result.portfolio_insights?.top_gainer?.company_name || 'Add holdings to calculate'}
+                </p>
+              </div>
+
+              <div className="border border-outline/10 bg-white px-6 py-6 shadow-[0_1px_0_rgba(0,0,0,0.02)]">
+                <p className="terminal-label text-outline">Top Loser</p>
+                <p className="mt-4 font-headline text-4xl font-bold text-slate-900">
+                  {result.portfolio_insights?.top_loser?.symbol || '--'}
+                </p>
+                <p
+                  className="mt-2 text-sm font-semibold"
+                  style={{ color: insightTone(result.portfolio_insights?.top_loser?.pnl_pct ?? 0) }}
+                >
+                  {result.portfolio_insights?.top_loser
+                    ? `${result.portfolio_insights.top_loser.pnl_pct >= 0 ? '+' : ''}${fmt(result.portfolio_insights.top_loser.pnl_pct)}%`
+                    : 'No data yet'}
+                </p>
+                <p className="mt-3 text-sm text-slate-500">
+                  {result.portfolio_insights?.top_loser?.company_name || 'Add holdings to calculate'}
+                </p>
+              </div>
+            </div>
+
+            {result.missing_symbols?.length > 0 && (
+              <div className="border border-[#d8b0aa] bg-[#fff7f5] px-5 py-4 text-sm text-[#9d4840]">
+                <strong>Missing symbols:</strong> {result.missing_symbols.join(', ')} could not be priced from the warehouse.
+              </div>
+            )}
+
+            <div className="grid grid-cols-12 gap-8">
+              <div className="col-span-4 border border-outline/10 bg-white px-6 py-6">
+                <p className="terminal-label text-outline">Sector allocation</p>
+                <div className="mt-6 flex items-center gap-6">
+                  <div className="relative h-32 w-32 shrink-0">
+                    <SectorDonut sectors={result.sector_exposure} />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <p className="font-headline text-2xl font-bold text-slate-900">{result.sector_exposure.length}</p>
+                      <p className="terminal-label text-outline">Sectors</p>
+                    </div>
+                  </div>
+                  <div className="flex-1 space-y-3">
+                    {result.sector_exposure.map((sector, index) => (
+                      <div key={sector.sector} className="flex items-center justify-between">
+                        <span className="flex items-center gap-2 text-sm text-slate-700">
+                          <span
+                            className="h-2.5 w-2.5 rounded-full"
+                            style={{ backgroundColor: SECTOR_COLORS[index % SECTOR_COLORS.length] }}
+                          />
+                          {sector.sector}
+                        </span>
+                        <span className="font-semibold text-slate-700">{sector.pct}%</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-span-8 border border-outline/10 bg-surface-container-lowest">
+                <div className="border-b border-outline/10 px-6 py-4">
+                  <p className="font-headline text-2xl font-bold text-slate-900">Detailed holdings</p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[760px]">
+                    <thead>
+                      <tr className="border-b border-outline/10 bg-surface-container-low">
+                        {['Ticker', 'Shares', 'Avg Cost', 'Price', 'P&L', 'Return'].map((heading) => (
+                          <th key={heading} className="px-6 py-3 text-left terminal-label text-outline">
+                            {heading}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {result.positions.map((position) => (
+                        <tr key={position.symbol} className="border-b border-outline/10 hover:bg-white">
+                          <td className="px-6 py-4">
+                            <div className="flex items-center gap-4">
+                              <CompanyLogo symbol={position.symbol} alt={`${position.symbol} logo`} size={40} />
+                              <div>
+                                <p className="font-headline text-lg font-bold text-slate-900">{position.company_name}</p>
+                                <p className="terminal-label text-outline">{position.sector}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 text-sm text-slate-700">{fmt(position.shares, 0)}</td>
+                          <td className="px-6 py-4 text-sm text-slate-700">${fmt(position.avg_cost)}</td>
+                          <td className="px-6 py-4 text-sm font-semibold text-slate-900">${fmt(position.current_price)}</td>
+                          <td className="px-6 py-4 text-sm font-semibold" style={{ color: position.pnl >= 0 ? '#4f9f85' : '#c76d63' }}>
+                            {position.pnl >= 0 ? '+' : ''}${fmt(position.pnl)}
+                          </td>
+                          <td className="px-6 py-4 text-sm font-semibold" style={{ color: position.pnl_pct >= 0 ? '#4f9f85' : '#c76d63' }}>
+                            {position.pnl_pct >= 0 ? '+' : ''}{fmt(position.pnl_pct)}%
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {holdings.length === 0 && (
+          <div className="mt-16 flex flex-col items-center justify-center border border-dashed border-outline/25 bg-surface-container-low px-8 py-20 text-center">
+            <div className="mb-6 flex h-16 w-16 items-center justify-center bg-surface-container-high text-slate-700">
+              <span className="material-symbols-outlined text-3xl">account_balance_wallet</span>
+            </div>
+            <p className="font-headline text-3xl font-bold text-slate-900">No Positions Yet</p>
+            <p className="mt-3 max-w-lg text-sm leading-7 text-slate-500">
+              Add your holdings above to calculate portfolio value, profit and loss, and sector exposure inside the terminal.
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

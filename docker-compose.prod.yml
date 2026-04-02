@@ -1,0 +1,20 @@
+services:
+  minio:
+    ports: []
+
+  kafka:
+    ports: []
+
+  prefect:
+    ports: []
+
+  api:
+    environment:
+      FINSIGHT_ENV: production
+      FINSIGHT_ALLOWED_ORIGINS: ${FINSIGHT_ALLOWED_ORIGINS:-https://your-domain.com}
+      FINSIGHT_ALLOWED_HOSTS: ${FINSIGHT_ALLOWED_HOSTS:-your-domain.com,localhost,127.0.0.1,api}
+    ports: []
+
+  frontend:
+    ports:
+      - '127.0.0.1:3000:80'
