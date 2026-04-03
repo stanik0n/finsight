@@ -383,7 +383,6 @@ def create_telegram_link_code(user_id: str) -> dict:
     try:
         _cleanup_expired_telegram_link_codes(conn)
         conn.execute("DELETE FROM app.telegram_link_codes WHERE user_id = ?", [normalized_user_id])
-        expires_at = (datetime.now(_CENTRAL_TZ) + timedelta(minutes=_TELEGRAM_LINK_CODE_TTL_MINUTES)).replace(tzinfo=None)
         code = ''
         for _ in range(5):
             candidate = f"FS-{secrets.token_hex(3).upper()}"
@@ -398,11 +397,11 @@ def create_telegram_link_code(user_id: str) -> dict:
             raise RuntimeError('Unable to generate a unique Telegram link code right now.')
 
         conn.execute(
-            """
+            f"""
             INSERT INTO app.telegram_link_codes (code, user_id, expires_at, created_at)
-            VALUES (?, ?, ?, CAST(NOW() AS TIMESTAMP))
+            VALUES (?, ?, CAST(NOW() AS TIMESTAMP) + INTERVAL '{_TELEGRAM_LINK_CODE_TTL_MINUTES} minutes', CAST(NOW() AS TIMESTAMP))
             """,
-            [code, normalized_user_id, expires_at],
+            [code, normalized_user_id],
         )
         return get_telegram_link_status(normalized_user_id)
     finally:
