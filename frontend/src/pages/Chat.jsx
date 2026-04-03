@@ -298,8 +298,8 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
   const sidebarCards = cards.slice(0, 3)
 
   return (
-    <div className="flex bg-background" style={{ height: 'calc(100vh - 64px)', overflow: 'hidden' }}>
-      <aside className="w-72 border-r border-outline/15 bg-surface-container-lowest">
+    <div className="flex min-h-[calc(100vh-56px-72px)] flex-col bg-background md:min-h-[calc(100vh-64px)] md:flex-row" style={{ overflow: 'hidden' }}>
+      <aside className="hidden w-72 border-r border-outline/15 bg-surface-container-lowest lg:block">
         <div className="flex h-full flex-col overflow-y-auto px-6 py-8">
           <div className="rounded-xl bg-white px-4 py-4 shadow-sm">
             <p className="terminal-label mb-3 text-outline">Analysis Modes</p>
@@ -379,18 +379,18 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
       </aside>
 
       <section className="flex-1 bg-surface">
-        <div className="mx-auto flex h-full max-w-[1500px]">
-          <div className="relative flex min-w-0 flex-1 flex-col border-r border-outline/15 px-8">
-            <div className="flex-1 overflow-y-auto pb-[250px] pt-10">
-              <div className="mb-10 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="mx-auto flex h-full max-w-[1500px] flex-col xl:flex-row">
+          <div className="relative flex min-w-0 flex-1 flex-col xl:border-r xl:border-outline/15 xl:px-8">
+            <div className="flex-1 overflow-y-auto px-4 pb-[180px] pt-6 sm:px-6 sm:pb-[220px] sm:pt-8 lg:px-8 lg:pb-[250px] lg:pt-10">
+              <div className="mb-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
                 <div>
                   <span className="border border-outline/15 px-4 py-1 terminal-label text-outline">
                     March 31, 2026
                   </span>
-                  <h1 className="mt-5 font-headline text-5xl font-extrabold tracking-tight text-slate-900">
+                  <h1 className="mt-5 font-headline text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
                     Analysis
                   </h1>
-                  <p className="font-headline text-5xl font-semibold tracking-tight text-slate-300">
+                  <p className="font-headline text-3xl font-semibold tracking-tight text-slate-300 sm:text-5xl">
                     Market and portfolio questions
                   </p>
                   <p className="mt-4 max-w-3xl text-sm leading-8 text-slate-500">
@@ -494,7 +494,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
               <div ref={messagesEndRef} />
             </div>
 
-            <div className="absolute inset-x-0 bottom-0 z-20 px-8 pb-8 pt-10">
+            <div className="absolute inset-x-0 bottom-0 z-20 px-4 pb-4 pt-6 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8 lg:pt-10">
               <div className="mx-auto max-w-5xl rounded-2xl border border-outline/10 bg-[rgba(248,250,251,0.96)] px-6 py-5 shadow-[0_-12px_30px_rgba(226,233,236,0.85)] backdrop-blur-md">
                 <form onSubmit={submitForm}>
                   <div className="flex items-center gap-4">
@@ -520,7 +520,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
             </div>
           </div>
 
-          <aside className="w-80 shrink-0 bg-surface-container-low px-8 py-8">
+          <aside className="hidden w-80 shrink-0 bg-surface-container-low px-8 py-8 xl:block">
             <div className="space-y-6">
               <div className="rounded-xl bg-white px-6 py-6 shadow-sm">
                 <div className="flex items-start justify-between gap-6">

@@ -463,14 +463,14 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
   }
 
   return (
-    <div className="min-h-screen bg-background px-8 py-10">
+    <div className="min-h-screen bg-background px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
       <div className="mx-auto max-w-[1500px]">
         <div className="mb-10 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
           <div>
-            <h1 className="mt-3 font-headline text-5xl font-extrabold tracking-tight text-slate-900">
+            <h1 className="mt-3 font-headline text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
               Markets
             </h1>
-            <p className="font-headline text-5xl font-semibold tracking-tight text-slate-300">
+            <p className="font-headline text-3xl font-semibold tracking-tight text-slate-300 sm:text-5xl">
               Live market overview
             </p>
             <p className="mt-4 max-w-3xl text-base leading-8 text-slate-500">

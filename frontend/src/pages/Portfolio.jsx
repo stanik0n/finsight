@@ -620,11 +620,11 @@ export default function Portfolio() {
   const topLoser = result?.portfolio_insights?.top_loser
 
   return (
-    <div className="min-h-screen bg-background px-8 py-10">
+    <div className="min-h-screen bg-background px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
       <div className="mx-auto max-w-[1500px]">
-        <div className="mb-10 flex items-start justify-between gap-6">
+        <div className="mb-10 flex flex-col items-start justify-between gap-6 md:flex-row md:items-start">
           <div>
-            <h1 className="mt-3 font-headline text-5xl font-extrabold tracking-tight text-slate-900">
+            <h1 className="mt-3 font-headline text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
               Portfolio
             </h1>
             <p className="mt-4 max-w-3xl text-base leading-8 text-slate-500">
@@ -632,7 +632,7 @@ export default function Portfolio() {
             </p>
           </div>
           {result && (
-            <div className="flex items-center gap-3">
+            <div className="flex w-full flex-wrap items-center gap-3 md:w-auto">
               <span className="terminal-chip">Prices as of {result.as_of_date}</span>
               <button
                 onClick={calculate}
