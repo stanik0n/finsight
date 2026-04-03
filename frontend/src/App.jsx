@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/react'
 import { useFinsightAuth } from './lib/finsight-auth'
+import { authedFetch } from './lib/api'
 import Chat from './pages/Chat'
 import Portfolio from './pages/Portfolio'
 import Dashboard from './pages/Dashboard'
@@ -43,11 +44,8 @@ export default function App() {
     if (!authEnabled || !isSignedIn) return
     setTelegramBusy(true)
     try {
-      const response = await fetch('/telegram/link-code', {
+      const response = await authedFetch(getToken, '/telegram/link-code', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${await getToken()}`,
-        },
       })
       const payload = await response.json().catch(() => ({}))
       if (!response.ok) {
@@ -124,20 +122,18 @@ export default function App() {
                   </div>
                 </Show>
                 <Show when="signed-in">
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        void generateTelegramLinkCodeFromProfile()
-                      }}
-                      disabled={telegramBusy}
-                      className="rounded-lg border border-outline/20 bg-white px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-700 transition-colors hover:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {telegramBusy ? 'Working' : 'Telegram Code'}
-                    </button>
-                    <div className="rounded-full border border-outline/15 bg-white p-1">
-                      <UserButton appearance={{ elements: { avatarBox: 'h-8 w-8' } }} />
-                    </div>
+                  <div className="rounded-full border border-outline/15 bg-white p-1">
+                    <UserButton appearance={{ elements: { avatarBox: 'h-8 w-8' } }}>
+                      <UserButton.MenuItems>
+                        <UserButton.Action
+                          label={telegramBusy ? 'Generating Telegram Code...' : 'Generate Telegram Code'}
+                          labelIcon={<span className="material-symbols-outlined text-[16px]">sms</span>}
+                          onClick={() => {
+                            void generateTelegramLinkCodeFromProfile()
+                          }}
+                        />
+                      </UserButton.MenuItems>
+                    </UserButton>
                   </div>
                 </Show>
               </>
