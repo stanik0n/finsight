@@ -1748,6 +1748,7 @@ class AlertPreferencesUpsert(BaseModel):
 class TickerNoteUpsert(BaseModel):
     symbol: str
     note_text: str
+    note_id: int | None = None
     note_type: str | None = 'note'
     note_title: str | None = None
     review_date: str | None = None
