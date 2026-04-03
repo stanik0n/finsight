@@ -133,9 +133,9 @@ function TickerInput({ value, onChange }) {
   }
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className="relative w-full sm:w-auto">
       <input
-        className="w-48 border border-outline/20 bg-white px-3 py-3 text-sm text-slate-700 focus:outline-none"
+        className="w-full border border-outline/20 bg-white px-3 py-3 text-sm text-slate-700 focus:outline-none sm:w-48"
         placeholder="Ticker or name"
         value={value}
         onChange={(event) => {
@@ -147,7 +147,7 @@ function TickerInput({ value, onChange }) {
         autoComplete="off"
       />
       {open && suggestions.length > 0 && (
-        <ul className="absolute left-0 top-full z-50 mt-1 w-80 overflow-hidden border border-outline/15 bg-white shadow-[0_12px_30px_rgba(148,163,184,0.18)]">
+        <ul className="absolute left-0 top-full z-50 mt-1 w-full overflow-hidden border border-outline/15 bg-white shadow-[0_12px_30px_rgba(148,163,184,0.18)] sm:w-80">
           {suggestions.map((ticker, index) => (
             <li
               key={ticker.symbol}
@@ -648,32 +648,32 @@ export default function Portfolio() {
         <div className="rounded-xl bg-surface-container-lowest px-6 py-6 shadow-[24px_0_40px_rgba(42,52,57,0.04)]">
           <p className="terminal-label text-outline">Add position</p>
           <form onSubmit={addHolding} className="mt-5 flex flex-wrap items-end gap-4">
-            <div>
+            <div className="w-full sm:w-auto">
               <p className="terminal-label mb-2 text-outline">Ticker</p>
               <div className={portfolioLocked ? 'pointer-events-none opacity-60' : ''}>
                 <TickerInput value={form.symbol} onChange={(value) => setForm((current) => ({ ...current, symbol: value }))} />
               </div>
             </div>
-            <div>
+            <div className="w-full sm:w-auto">
               <p className="terminal-label mb-2 text-outline">Shares</p>
               <input
                 type="number"
                 min="0"
                 step="any"
-                className="w-36 border border-outline/20 bg-white px-3 py-3 text-sm text-slate-700 focus:outline-none"
+                className="w-full border border-outline/20 bg-white px-3 py-3 text-sm text-slate-700 focus:outline-none sm:w-36"
                 value={form.shares}
                 disabled={portfolioLocked}
                 onChange={(event) => setForm((current) => ({ ...current, shares: event.target.value }))}
                 placeholder="0.00"
               />
             </div>
-            <div>
+            <div className="w-full sm:w-auto">
               <p className="terminal-label mb-2 text-outline">Avg Cost</p>
               <input
                 type="number"
                 min="0"
                 step="any"
-                className="w-40 border border-outline/20 bg-white px-3 py-3 text-sm text-slate-700 focus:outline-none"
+                className="w-full border border-outline/20 bg-white px-3 py-3 text-sm text-slate-700 focus:outline-none sm:w-40"
                 value={form.avg_cost}
                 disabled={portfolioLocked}
                 onChange={(event) => setForm((current) => ({ ...current, avg_cost: event.target.value }))}
@@ -682,7 +682,7 @@ export default function Portfolio() {
             </div>
             <button
               disabled={portfolioLocked}
-              className="rounded-lg bg-slate-700 px-6 py-3 terminal-label text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="w-full rounded-lg bg-slate-700 px-6 py-3 terminal-label text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
             >
               {portfolioLocked ? 'Sign In To Add' : 'Add Position'}
             </button>
@@ -721,7 +721,7 @@ export default function Portfolio() {
               <h2 className="font-headline text-2xl font-bold text-slate-900">Primary Holdings</h2>
               <span className="terminal-chip">{holdings.length} tracked</span>
             </div>
-            <div className="grid grid-cols-12 gap-4 bg-surface-container-low px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-outline">
+            <div className="hidden grid-cols-12 gap-4 bg-surface-container-low px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-outline md:grid">
               <div className="col-span-4">Asset &amp; symbol</div>
               <div className="col-span-2 text-right">Shares</div>
               <div className="col-span-2 text-right">Avg cost</div>
@@ -730,23 +730,32 @@ export default function Portfolio() {
             </div>
             <div className="divide-y divide-surface-container">
               {result?.positions?.map((position) => (
-                <div key={position.symbol} className="grid grid-cols-12 gap-4 px-6 py-5 hover:bg-surface-container-low/50">
-                  <div className="col-span-4 flex items-center gap-4">
+                <div key={position.symbol} className="grid grid-cols-1 gap-4 px-6 py-5 hover:bg-surface-container-low/50 md:grid-cols-12">
+                  <div className="flex items-center gap-4 md:col-span-4">
                     <CompanyLogo symbol={position.symbol} alt={`${position.symbol} logo`} size={40} />
                     <div>
                       <p className="font-semibold text-slate-900">{position.company_name}</p>
                       <p className="text-xs text-slate-500">{position.sector} • {position.symbol}</p>
                     </div>
                   </div>
-                  <div className="col-span-2 text-right text-sm font-medium text-slate-700">{fmt(position.shares, 0)}</div>
-                  <div className="col-span-2 text-right text-sm text-slate-700">${fmt(position.avg_cost)}</div>
-                  <div className="col-span-2 text-right">
+                  <div className="flex items-center justify-between text-sm font-medium text-slate-700 md:col-span-2 md:block md:text-right">
+                    <span className="terminal-label text-outline md:hidden">Shares</span>
+                    <span>{fmt(position.shares, 0)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm text-slate-700 md:col-span-2 md:block md:text-right">
+                    <span className="terminal-label text-outline md:hidden">Avg cost</span>
+                    <span>${fmt(position.avg_cost)}</span>
+                  </div>
+                  <div className="flex items-center justify-between md:col-span-2 md:block md:text-right">
+                    <span className="terminal-label text-outline md:hidden">Last price</span>
+                    <div className="text-right">
                     <p className="font-semibold text-slate-900">${fmt(position.current_price)}</p>
                     <p className="mt-1 text-xs font-medium" style={{ color: insightTone(position.pnl_pct) }}>
                       {position.pnl_pct >= 0 ? '+' : ''}{fmt(position.pnl_pct)}%
                     </p>
+                    </div>
                   </div>
-                  <div className="col-span-2 text-right">
+                  <div className="flex justify-end md:col-span-2 md:text-right">
                     <button
                       onClick={() => removeHolding(position.symbol)}
                       className="material-symbols-outlined text-slate-400 transition-colors hover:text-[#c76d63]"
@@ -832,7 +841,7 @@ export default function Portfolio() {
                     </button>
                   </div>
 
-                  <div className="mt-6 grid grid-cols-2 gap-5">
+                  <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
                     <div className="border border-outline/10 bg-surface-container-lowest px-5 py-5">
                       <div className="flex items-center justify-between gap-3">
                         <div>
@@ -968,9 +977,9 @@ export default function Portfolio() {
               )}
             </div>
 
-            <div className="grid grid-cols-12 gap-8">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
               <div className="col-span-12 space-y-6 lg:col-span-8">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
                   <h2 className="font-headline text-2xl font-bold text-slate-900">Primary Watchlist</h2>
                   <div className="flex gap-2">
                     <button
@@ -990,7 +999,7 @@ export default function Portfolio() {
                   </div>
                 </div>
                 <div className="overflow-hidden rounded-xl bg-surface-container-lowest shadow-sm">
-                  <div className="grid grid-cols-12 gap-4 bg-surface-container-low px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-outline">
+                  <div className="hidden grid-cols-12 gap-4 bg-surface-container-low px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-outline md:grid">
                     <div className="col-span-5">Asset &amp; symbol</div>
                     <div className="col-span-2 text-right">Last price</div>
                     <div className="col-span-2 text-right">24h change</div>
@@ -998,7 +1007,7 @@ export default function Portfolio() {
                     <div className="col-span-1 text-right">Actions</div>
                   </div>
                   <form onSubmit={addWatchlistSymbol} className="border-b border-surface-container px-6 py-4">
-                    <div className="flex items-end gap-3">
+                    <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-end">
                       <div className="flex-1">
                         <TickerInput
                           value={watchlistForm.symbol}
@@ -1006,7 +1015,7 @@ export default function Portfolio() {
                           widthClass="w-full"
                         />
                       </div>
-                      <button className="rounded-lg bg-slate-700 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white transition-colors hover:bg-slate-800">
+                      <button className="rounded-lg bg-slate-700 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white transition-colors hover:bg-slate-800 sm:w-auto">
                         Add
                       </button>
                     </div>
@@ -1016,27 +1025,30 @@ export default function Portfolio() {
                       const liveItem = watchlistSnapshot?.items?.find((entry) => entry.symbol === item.symbol)
                       const dailyChange = liveItem?.daily_pct_change ?? 0
                       return (
-                        <div key={item.symbol} className="grid grid-cols-12 gap-4 px-6 py-5 hover:bg-surface-container-low/40">
-                          <div className="col-span-5 flex items-center gap-4">
+                        <div key={item.symbol} className="grid grid-cols-1 gap-4 px-6 py-5 hover:bg-surface-container-low/40 md:grid-cols-12">
+                          <div className="flex items-center gap-4 md:col-span-5">
                             <CompanyLogo symbol={item.symbol} alt={`${item.symbol} logo`} size={40} />
                             <div>
                               <p className="font-semibold text-slate-900">{liveItem?.company_name || item.symbol}</p>
                               <p className="text-xs text-slate-500">{liveItem?.sector || 'Tracked name'} • {item.symbol}</p>
                             </div>
                           </div>
-                          <div className="col-span-2 text-right font-semibold text-slate-900">
-                            {liveItem?.current_price != null ? `$${fmt(liveItem.current_price)}` : '--'}
+                          <div className="flex items-center justify-between font-semibold text-slate-900 md:col-span-2 md:block md:text-right">
+                            <span className="terminal-label text-outline md:hidden">Last price</span>
+                            <span>{liveItem?.current_price != null ? `$${fmt(liveItem.current_price)}` : '--'}</span>
                           </div>
-                          <div className="col-span-2 text-right text-sm font-medium" style={{ color: insightTone(dailyChange) }}>
-                            {liveItem?.daily_pct_change != null ? `${dailyChange >= 0 ? '+' : ''}${fmt(dailyChange)}%` : '--'}
+                          <div className="flex items-center justify-between text-sm font-medium md:col-span-2 md:block md:text-right" style={{ color: insightTone(dailyChange) }}>
+                            <span className="terminal-label text-outline md:hidden">24h change</span>
+                            <span>{liveItem?.daily_pct_change != null ? `${dailyChange >= 0 ? '+' : ''}${fmt(dailyChange)}%` : '--'}</span>
                           </div>
-                          <div className="col-span-2 flex items-center justify-center">
+                          <div className="flex items-center justify-between md:col-span-2 md:justify-center">
+                            <span className="terminal-label text-outline md:hidden">Trend</span>
                             <WatchlistSparkline
                               points={liveItem?.trend_points || []}
                               up={dailyChange >= 0}
                             />
                           </div>
-                          <div className="col-span-1 text-right">
+                          <div className="flex justify-end md:col-span-1 md:text-right">
                             <button
                               onClick={() => removeWatchlistSymbol(item.symbol)}
                               type="button"
@@ -1061,7 +1073,7 @@ export default function Portfolio() {
                         value={noteForm.symbol}
                         onChange={(value) => setNoteForm((current) => ({ ...current, symbol: value }))}
                       />
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div>
                           <p className="terminal-label mb-2 text-outline">Memory Type</p>
                           <select
@@ -1272,7 +1284,7 @@ export default function Portfolio() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
               <div className="border border-outline/10 bg-white px-6 py-6 shadow-[0_1px_0_rgba(0,0,0,0.02)]">
                 <p className="terminal-label text-outline">Concentration Risk</p>
                 <p className="mt-4 font-headline text-4xl font-bold text-slate-900">
@@ -1333,10 +1345,10 @@ export default function Portfolio() {
               </div>
             )}
 
-            <div className="grid grid-cols-12 gap-8">
-              <div className="col-span-4 border border-outline/10 bg-white px-6 py-6">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+              <div className="border border-outline/10 bg-white px-6 py-6 lg:col-span-4">
                 <p className="terminal-label text-outline">Sector allocation</p>
-                <div className="mt-6 flex items-center gap-6">
+                <div className="mt-6 flex flex-col items-start gap-6 sm:flex-row sm:items-center">
                   <div className="relative h-32 w-32 shrink-0">
                     <SectorDonut sectors={result.sector_exposure} />
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -1361,7 +1373,7 @@ export default function Portfolio() {
                 </div>
               </div>
 
-              <div className="col-span-8 border border-outline/10 bg-surface-container-lowest">
+              <div className="border border-outline/10 bg-surface-container-lowest lg:col-span-8">
                 <div className="border-b border-outline/10 px-6 py-4">
                   <p className="font-headline text-2xl font-bold text-slate-900">Detailed holdings</p>
                 </div>

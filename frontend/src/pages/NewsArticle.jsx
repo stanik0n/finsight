@@ -66,8 +66,8 @@ function buildArticleParagraphs(article) {
 export default function NewsArticle({ article, onBack }) {
   if (!article) {
     return (
-      <div className="min-h-screen bg-background px-8 py-10">
-        <div className="mx-auto max-w-5xl rounded-xl bg-white px-8 py-10 shadow-sm">
+      <div className="min-h-screen bg-background px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+        <div className="mx-auto max-w-5xl rounded-xl bg-white px-6 py-8 shadow-sm sm:px-8 sm:py-10">
           <p className="font-headline text-3xl font-bold text-slate-900">No article selected</p>
           <p className="mt-3 text-sm leading-7 text-slate-500">
             Go back to Markets and select a story from the news rail.
@@ -85,7 +85,7 @@ export default function NewsArticle({ article, onBack }) {
   }
 
   return (
-    <div className="min-h-screen bg-background px-8 py-10">
+    <div className="min-h-screen bg-background px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
       <div className="mx-auto max-w-5xl space-y-6">
         <button
           type="button"
@@ -96,7 +96,7 @@ export default function NewsArticle({ article, onBack }) {
           Back to Markets
         </button>
 
-        <article className="rounded-2xl bg-white px-10 py-10 shadow-sm">
+        <article className="rounded-2xl bg-white px-6 py-8 shadow-sm sm:px-10 sm:py-10">
           <div className="mb-8 flex flex-wrap items-center gap-3">
             <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
               {article.source || 'News'}
@@ -107,7 +107,7 @@ export default function NewsArticle({ article, onBack }) {
             <span className="terminal-label text-outline">{formatArticleDate(article.datetime)}</span>
           </div>
 
-          <h1 className="max-w-4xl font-headline text-5xl font-extrabold tracking-tight text-slate-900">
+          <h1 className="max-w-4xl font-headline text-3xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
             {formatArticleTitle(article.title)}
           </h1>
 

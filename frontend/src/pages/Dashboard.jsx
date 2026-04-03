@@ -511,9 +511,9 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
           </div>
         </div>
 
-        <div className="grid grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
           <div className="col-span-12 space-y-8 lg:col-span-8">
-            <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {benchmarkCards.map((index) => (
                 <div
                   key={index.label}
@@ -534,7 +534,7 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
             </div>
 
             <div>
-              <div className="mb-4 flex items-center justify-between">
+              <div className="mb-4 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
                 <h2 className="font-headline text-2xl font-bold text-slate-900">Watchlist</h2>
                 <div className="flex gap-2">
                   <button
@@ -555,7 +555,7 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
               </div>
 
               <div className="overflow-hidden rounded-xl bg-surface-container-lowest shadow-sm">
-                <div className="grid grid-cols-12 gap-4 bg-surface-container-low px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-outline">
+                <div className="hidden grid-cols-12 gap-4 bg-surface-container-low px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-outline md:grid">
                   <div className="col-span-5">Asset &amp; symbol</div>
                   <div className="col-span-2 text-right">Last price</div>
                   <div className="col-span-2 text-right">24h change</div>
@@ -563,7 +563,7 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
                 </div>
                 {watchlistEditing && (
                   <div className="border-b border-surface-container px-6 py-4">
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
                       <TickerInput
                         value={watchlistDraft}
                         onChange={setWatchlistDraft}
@@ -584,19 +584,22 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
                   {watchlistCards.map((signal) => (
                     <div
                       key={signal.symbol}
-                      className="grid grid-cols-12 gap-4 px-6 py-5 text-left transition-colors hover:bg-surface-container-low/40"
+                      className="grid grid-cols-1 gap-4 px-6 py-5 text-left transition-colors hover:bg-surface-container-low/40 md:grid-cols-12"
                     >
-                      <div className="col-span-5">
+                      <div className="md:col-span-5">
                         <p className="font-semibold text-slate-900">{signal.company_name}</p>
                         <p className="text-xs text-slate-500">Mega-cap tech • {signal.symbol}</p>
                       </div>
-                      <div className="col-span-2 text-right font-semibold text-slate-900">
-                        {signal.close != null ? `$${fmt(signal.close)}` : '--'}
+                      <div className="flex items-center justify-between font-semibold text-slate-900 md:col-span-2 md:block md:text-right">
+                        <span className="terminal-label text-outline md:hidden">Last price</span>
+                        <span>{signal.close != null ? `$${fmt(signal.close)}` : '--'}</span>
                       </div>
-                      <div className="col-span-2 text-right text-sm font-medium" style={{ color: signal.pct_change >= 0 ? '#1c6b51' : '#b12d2a' }}>
-                        {signal.pct_change >= 0 ? '+' : ''}{signal.pct_change?.toFixed?.(2) ?? signal.pct_change}%
+                      <div className="flex items-center justify-between text-sm font-medium md:col-span-2 md:block md:text-right" style={{ color: signal.pct_change >= 0 ? '#1c6b51' : '#b12d2a' }}>
+                        <span className="terminal-label text-outline md:hidden">24h change</span>
+                        <span>{signal.pct_change >= 0 ? '+' : ''}{signal.pct_change?.toFixed?.(2) ?? signal.pct_change}%</span>
                       </div>
-                      <div className="col-span-3 flex items-center justify-center">
+                      <div className="flex items-center justify-between md:col-span-3 md:justify-center">
+                        <span className="terminal-label text-outline md:hidden">Trend</span>
                         <div className="w-24">
                           <LineStrip points={signal.points || FALLBACK_POINTS[signal.symbol] || FALLBACK_POINTS.SPY} up={signal.pct_change >= 0} />
                         </div>
@@ -619,7 +622,7 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               {sectorCards.map((index) => (
                 <div key={index.label} className="rounded-xl bg-surface-container-lowest px-5 py-5 shadow-sm">
                   <p className="terminal-label text-outline">{index.label}</p>
@@ -635,8 +638,8 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
               ))}
             </div>
 
-            <div className="rounded-xl bg-surface-container-lowest p-8 shadow-sm">
-              <div className="mb-8 flex items-start justify-between gap-6">
+            <div className="rounded-xl bg-surface-container-lowest p-6 shadow-sm sm:p-8">
+              <div className="mb-8 flex flex-col items-start justify-between gap-6 lg:flex-row">
                 <div>
                   <h2 className="font-headline text-2xl font-bold text-slate-900">Aggregated Volatility Matrix</h2>
                   <p className="mt-2 text-sm text-slate-500">
@@ -655,15 +658,17 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
                 </div>
               </div>
 
-              <div className="relative h-[360px] overflow-hidden bg-surface-container-low">
+              <div className="relative overflow-x-auto bg-surface-container-low">
                 {matrixSectors.length ? (
-                  <SectorMatrixChart sectors={matrixSectors} />
+                  <div className="min-w-[640px]">
+                    <SectorMatrixChart sectors={matrixSectors} />
+                  </div>
                 ) : (
-                  <div className="flex h-full items-center justify-center text-sm text-slate-500">
+                  <div className="flex h-[360px] items-center justify-center text-sm text-slate-500">
                     Sector data unavailable.
                   </div>
                 )}
-                <div className="absolute right-14 top-16 rounded-lg bg-white px-5 py-4 shadow-[0_8px_24px_rgba(148,163,184,0.12)]">
+                <div className="absolute right-4 top-4 rounded-lg bg-white px-4 py-3 shadow-[0_8px_24px_rgba(148,163,184,0.12)] sm:right-14 sm:top-16 sm:px-5 sm:py-4">
                   <p className="terminal-label text-outline">Highest RSI</p>
                   <p className="mt-2 font-headline text-3xl font-bold text-slate-900">
                     {peakSector ? `${fmt(peakSector.avg_rsi)} RSI` : '...'}
@@ -675,7 +680,7 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
               </div>
             </div>
 
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {(footerLeaders.length ? footerLeaders : [
                 { symbol: 'AAPL', company_name: 'No data', pct_change: 0 },
                 { symbol: 'NVDA', company_name: 'No data', pct_change: 0 },
