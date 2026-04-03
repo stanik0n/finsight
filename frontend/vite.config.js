@@ -15,6 +15,7 @@ export default defineConfig({
       '/market-news':   'http://api:8000',
       '/notes':         'http://api:8000',
       '/portfolio':     'http://api:8000',
+      '/telegram':      'http://api:8000',
       '/stream-status': 'http://api:8000',
     },
   },
