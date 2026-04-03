@@ -256,7 +256,16 @@ function noteAccent(noteType) {
   }
 }
 
-export default function Portfolio() {
+function noteUrgency(title) {
+  const normalized = (title || '').trim().toLowerCase()
+  if (!normalized) return null
+  if (/^(p0|p1|urgent|now)\b/.test(normalized)) return { label: 'Urgent', color: '#c76d63' }
+  if (/^(p2|next|soon)\b/.test(normalized)) return { label: 'Next', color: '#d59a5a' }
+  if (/^(p3|p4|later|backlog)\b/.test(normalized)) return { label: 'Later', color: '#7b8aa0' }
+  return null
+}
+
+export default function Portfolio({ setHeaderAction = () => {} }) {
   const { getToken, authEnabled, isSignedIn } = useFinsightAuth()
   const portfolioLocked = authEnabled && !isSignedIn
   const [holdings, setHoldings] = useState([])
@@ -292,6 +301,23 @@ export default function Portfolio() {
 
     loadPortfolio()
   }, [portfolioLocked])
+
+  useEffect(() => {
+    if (!authEnabled || !isSignedIn) {
+      setHeaderAction(null)
+      return () => setHeaderAction(null)
+    }
+
+    setHeaderAction({
+      label: telegramBusy ? 'Working' : telegramLink.pending_code ? 'Regenerate Code' : 'Generate Code',
+      disabled: telegramBusy,
+      onClick: () => {
+        void generateTelegramLinkCode()
+      },
+    })
+
+    return () => setHeaderAction(null)
+  }, [authEnabled, isSignedIn, telegramBusy, telegramLink.pending_code, setHeaderAction])
 
   function applyAlertPayload(nextAlerts = []) {
     setAlerts({
@@ -629,8 +655,20 @@ export default function Portfolio() {
               Portfolio
             </h1>
             <p className="mt-4 max-w-3xl text-base leading-8 text-slate-500">
-              Track positions, monitor portfolio risk, and keep your research memory attached to the names you already own or still plan to buy.
+              Track positions, monitor portfolio risk, and keep your notes attached to the names you already own or still plan to buy.
             </p>
+            {authEnabled && isSignedIn && (
+              <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-slate-500">
+                <span className="terminal-chip">
+                  {telegramLink.linked ? 'Telegram linked' : telegramLink.pending_code ? 'Link code ready' : 'Telegram ready'}
+                </span>
+                <span>
+                  {telegramLink.linked
+                    ? `Linked ${telegramLink.telegram_username ? `to @${telegramLink.telegram_username}` : 'to your FinSight bot chat'}.`
+                    : 'Generate a code from the header, then send /link CODE to your FinSight bot.'}
+                </span>
+              </div>
+            )}
           </div>
           {result && (
             <div className="flex w-full flex-wrap items-center gap-3 md:w-auto">
@@ -1066,160 +1104,120 @@ export default function Portfolio() {
                   </div>
                 </div>
 
-                <div className={`grid gap-6 ${authEnabled ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}>
-                  <div className="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
-                    <h3 className="terminal-label text-outline">Research memory</h3>
-                    <form onSubmit={handleNoteSubmit} className="mt-4 space-y-3" noValidate>
-                      <TickerInput
-                        value={noteForm.symbol}
-                        onChange={(value) => setNoteForm((current) => ({ ...current, symbol: value }))}
-                      />
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <div>
-                          <p className="terminal-label mb-2 text-outline">Memory Type</p>
-                          <select
-                            className="w-full rounded-lg border-0 bg-surface-container-low px-4 py-3 text-sm text-slate-700 focus:outline-none"
-                            value={noteForm.note_type}
-                            onChange={(event) => setNoteForm((current) => ({ ...current, note_type: event.target.value }))}
-                          >
-                            {Object.entries(NOTE_TYPE_LABELS).map(([value, label]) => (
-                              <option key={value} value={value}>{label}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <p className="terminal-label mb-2 text-outline">Review Date</p>
-                          <input
-                            type="date"
-                            className="w-full rounded-lg border-0 bg-surface-container-low px-4 py-3 text-sm text-slate-700 focus:outline-none"
-                            value={noteForm.review_date}
-                            onChange={(event) => setNoteForm((current) => ({ ...current, review_date: event.target.value }))}
-                          />
-                        </div>
+                <div className="grid gap-6 lg:grid-cols-3">
+                  <div className="rounded-xl bg-surface-container-lowest p-6 shadow-sm lg:col-span-2">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                      <div>
+                        <h3 className="terminal-label text-outline">Notes</h3>
+                        <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500">
+                          Use titles like <span className="font-mono text-slate-700">P1 now</span>, <span className="font-mono text-slate-700">P2 next</span>, or <span className="font-mono text-slate-700">P3 later</span> to mirror kanban urgency right inside each note.
+                        </p>
                       </div>
-                      <input
-                        className="w-full rounded-lg border-0 bg-surface-container-low px-4 py-3 text-sm text-slate-700 focus:outline-none"
-                        placeholder="Optional title, like Initial thesis or Trim trigger."
-                        value={noteForm.note_title}
-                        onChange={(event) => setNoteForm((current) => ({ ...current, note_title: event.target.value }))}
-                      />
-                      <textarea
-                        className="min-h-[104px] w-full resize-none rounded-lg border-0 bg-surface-container-low px-4 py-3 text-sm text-slate-700 focus:outline-none"
-                        placeholder="Write the structured memory entry for this ticker."
-                        value={noteForm.note_text}
-                        onChange={(event) => setNoteForm((current) => ({ ...current, note_text: event.target.value }))}
-                      />
-                      <div className="flex items-center justify-between">
-                        <span className="terminal-label text-outline">{notes.length} notes</span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            void addNote()
-                          }}
-                          className="rounded-lg bg-slate-700 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-white transition-colors hover:bg-slate-800"
-                        >
-                          Save Note
-                        </button>
-                      </div>
-                    </form>
-                    <div className="mt-4 space-y-3">
-                      {notes.length ? notes.slice(0, 3).map((note) => (
-                        <div
-                          key={note.note_id}
-                          className="rounded-lg bg-surface-container-low px-4 py-4"
-                          style={{ borderLeft: `4px solid ${noteAccent(note.note_type)}` }}
-                        >
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="terminal-chip">{note.symbol}</span>
-                              <span className="terminal-chip">{NOTE_TYPE_LABELS[note.note_type] || 'General Note'}</span>
-                              {note.note_title && <span className="terminal-chip">{note.note_title}</span>}
-                            </div>
-                            <button
-                              onClick={() => removeNote(note.note_id)}
-                              type="button"
-                              className="material-symbols-outlined text-slate-400 transition-colors hover:text-[#c76d63]"
-                            >
-                              close
-                            </button>
-                          </div>
-                          {note.review_date && (
-                            <p className="mt-3 terminal-label text-outline">Review on {note.review_date}</p>
-                          )}
-                          <p className="mt-3 text-sm leading-7 text-slate-600">{note.note_text}</p>
-                        </div>
-                      )) : (
-                        <div className="rounded-lg bg-surface-container-low px-4 py-5 text-sm text-slate-500">
-                          No saved memory yet. Add a thesis, risk rule, exit trigger, or review note above.
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {authEnabled && (
-                    <div className="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
-                      <h3 className="terminal-label text-outline">Telegram</h3>
-                      <div className="mt-5 space-y-4">
-                        <div>
-                          <p className="text-sm font-semibold text-slate-900">
-                            {telegramLink.linked ? 'Chat linked' : 'Link your Telegram chat'}
-                          </p>
-                          <p className="mt-1 text-sm leading-6 text-slate-500">
-                            {telegramLink.linked
-                              ? 'Portfolio, watchlist, notes, and alert commands now resolve to your signed-in account.'
-                              : 'Generate a one-time code here, then send /link CODE to your FinSight Telegram bot.'}
-                          </p>
-                        </div>
-
-                        {telegramLink.linked ? (
-                          <div className="rounded-lg border border-surface-container bg-surface-container-low px-4 py-4">
-                            <p className="terminal-label text-outline">Linked chat</p>
-                            <p className="mt-2 text-sm text-slate-700">
-                              {telegramLink.telegram_username ? `@${telegramLink.telegram_username}` : telegramLink.chat_id}
-                            </p>
-                            <p className="mt-1 text-xs text-slate-500">{telegramLink.chat_id}</p>
-                          </div>
-                        ) : telegramLink.pending_code ? (
-                          <div className="rounded-lg border border-surface-container bg-surface-container-low px-4 py-4">
-                            <p className="terminal-label text-outline">One-time code</p>
-                            <p className="mt-2 font-mono text-lg font-semibold tracking-[0.2em] text-slate-900">
-                              {telegramLink.pending_code}
-                            </p>
-                            <p className="mt-2 text-xs text-slate-500">
-                              Expires {telegramLink.pending_code_expires_at ? new Date(telegramLink.pending_code_expires_at).toLocaleString() : 'soon'}.
-                            </p>
-                          </div>
-                        ) : null}
-
-                        <div className="space-y-2 rounded-lg border border-dashed border-outline/20 px-4 py-4 text-sm text-slate-500">
-                          <p>1. Generate a code here.</p>
-                          <p>2. Open your FinSight bot in Telegram.</p>
-                          <p>3. Send <span className="font-mono text-slate-700">/link CODE</span>.</p>
-                        </div>
-
-                        <div className="flex flex-wrap gap-3">
+                      <div className="flex items-center gap-3">
+                        <span className="terminal-chip">{notes.length} notes saved</span>
+                        {authEnabled && isSignedIn && telegramLink.linked && (
                           <button
                             type="button"
-                            onClick={generateTelegramLinkCode}
+                            onClick={unlinkTelegram}
                             disabled={telegramBusy}
-                            className="rounded-lg bg-slate-700 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
+                            className="rounded-lg bg-surface-container-low px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-slate-600 transition-colors hover:bg-surface-container disabled:opacity-50"
                           >
-                            {telegramBusy ? 'Working' : telegramLink.pending_code ? 'Regenerate Code' : 'Generate Code'}
+                            Unlink Telegram
                           </button>
-                          {telegramLink.linked && (
-                            <button
-                              type="button"
-                              onClick={unlinkTelegram}
-                              disabled={telegramBusy}
-                              className="rounded-lg bg-surface-container-low px-4 py-3 text-xs font-semibold uppercase tracking-wider text-slate-600 transition-colors hover:bg-surface-container disabled:opacity-50"
-                            >
-                              Unlink
-                            </button>
-                          )}
-                        </div>
+                        )}
                       </div>
                     </div>
-                  )}
+                    <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.35fr)]">
+                      <form onSubmit={handleNoteSubmit} className="space-y-3" noValidate>
+                        <TickerInput
+                          value={noteForm.symbol}
+                          onChange={(value) => setNoteForm((current) => ({ ...current, symbol: value }))}
+                        />
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          <div>
+                            <p className="terminal-label mb-2 text-outline">Note Lane</p>
+                            <select
+                              className="w-full rounded-lg border-0 bg-surface-container-low px-4 py-3 text-sm text-slate-700 focus:outline-none"
+                              value={noteForm.note_type}
+                              onChange={(event) => setNoteForm((current) => ({ ...current, note_type: event.target.value }))}
+                            >
+                              {Object.entries(NOTE_TYPE_LABELS).map(([value, label]) => (
+                                <option key={value} value={value}>{label}</option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <p className="terminal-label mb-2 text-outline">Review Date</p>
+                            <input
+                              type="date"
+                              className="w-full rounded-lg border-0 bg-surface-container-low px-4 py-3 text-sm text-slate-700 focus:outline-none"
+                              value={noteForm.review_date}
+                              onChange={(event) => setNoteForm((current) => ({ ...current, review_date: event.target.value }))}
+                            />
+                          </div>
+                        </div>
+                        <input
+                          className="w-full rounded-lg border-0 bg-surface-container-low px-4 py-3 text-sm text-slate-700 focus:outline-none"
+                          placeholder="Optional title, like P1 now | Trim if guidance slips."
+                          value={noteForm.note_title}
+                          onChange={(event) => setNoteForm((current) => ({ ...current, note_title: event.target.value }))}
+                        />
+                        <textarea
+                          className="min-h-[148px] w-full resize-none rounded-lg border-0 bg-surface-container-low px-4 py-3 text-sm text-slate-700 focus:outline-none"
+                          placeholder="Capture the note, trigger, or decision you want attached to this ticker."
+                          value={noteForm.note_text}
+                          onChange={(event) => setNoteForm((current) => ({ ...current, note_text: event.target.value }))}
+                        />
+                        <div className="flex items-center justify-end">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              void addNote()
+                            }}
+                            className="rounded-lg bg-slate-700 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-white transition-colors hover:bg-slate-800"
+                          >
+                            Save Note
+                          </button>
+                        </div>
+                      </form>
+                      <div className="space-y-3">
+                        {notes.length ? notes.slice(0, 6).map((note) => {
+                          const urgency = noteUrgency(note.note_title)
+                          return (
+                            <div
+                              key={note.note_id}
+                              className="rounded-lg bg-surface-container-low px-4 py-4"
+                              style={{ borderLeft: `4px solid ${urgency?.color || noteAccent(note.note_type)}` }}
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="terminal-chip">{note.symbol}</span>
+                                  <span className="terminal-chip">{NOTE_TYPE_LABELS[note.note_type] || 'General Note'}</span>
+                                  {urgency && <span className="terminal-chip">{urgency.label}</span>}
+                                  {note.note_title && <span className="terminal-chip">{note.note_title}</span>}
+                                </div>
+                                <button
+                                  onClick={() => removeNote(note.note_id)}
+                                  type="button"
+                                  className="material-symbols-outlined text-slate-400 transition-colors hover:text-[#c76d63]"
+                                >
+                                  close
+                                </button>
+                              </div>
+                              {note.review_date && (
+                                <p className="mt-3 terminal-label text-outline">Review on {note.review_date}</p>
+                              )}
+                              <p className="mt-3 text-sm leading-7 text-slate-600">{note.note_text}</p>
+                            </div>
+                          )
+                        }) : (
+                          <div className="rounded-lg bg-surface-container-low px-4 py-5 text-sm text-slate-500">
+                            No saved notes yet. Add a thesis, risk rule, exit trigger, or review note above.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
 
                   <div className="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
                     <h3 className="terminal-label text-outline">Position overview</h3>

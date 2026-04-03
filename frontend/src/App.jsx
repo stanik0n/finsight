@@ -18,6 +18,7 @@ export default function App() {
   const [analysisQuestion, setAnalysisQuestion] = useState('')
   const [headerSearch, setHeaderSearch] = useState('')
   const [selectedNewsArticle, setSelectedNewsArticle] = useState(null)
+  const [portfolioHeaderAction, setPortfolioHeaderAction] = useState(null)
 
   function openAnalysisWithQuestion(question) {
     setAnalysisQuestion(question)
@@ -75,6 +76,16 @@ export default function App() {
                 />
               </div>
             </form>
+            {page === 'portfolio' && portfolioHeaderAction && (
+              <button
+                type="button"
+                onClick={portfolioHeaderAction.onClick}
+                disabled={portfolioHeaderAction.disabled}
+                className="hidden rounded-lg bg-slate-700 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 xl:block"
+              >
+                {portfolioHeaderAction.label}
+              </button>
+            )}
             {authEnabled && (
               <>
                 <Show when="signed-out">
@@ -132,7 +143,7 @@ export default function App() {
         >
           {page === 'dashboard' && <Dashboard onSearch={openAnalysisWithQuestion} onOpenNews={openNewsArticle} />}
           {page === 'chat' && <Chat initialQuestion={analysisQuestion} onInitialQuestionHandled={() => setAnalysisQuestion('')} />}
-          {page === 'portfolio' && <Portfolio />}
+          {page === 'portfolio' && <Portfolio setHeaderAction={setPortfolioHeaderAction} />}
           {page === 'news' && <NewsArticle article={selectedNewsArticle} onBack={() => setPage('dashboard')} />}
         </main>
 
