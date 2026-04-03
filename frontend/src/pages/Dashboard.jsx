@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { SignInButton } from '@clerk/react'
 import { authedFetch } from '../lib/api'
 import { useFinsightAuth } from '../lib/finsight-auth'
 
@@ -287,7 +288,8 @@ function SectorMatrixChart({ sectors }) {
 }
 
 export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }) {
-  const { getToken } = useFinsightAuth()
+  const { getToken, authEnabled, isSignedIn } = useFinsightAuth()
+  const watchlistLocked = authEnabled && !isSignedIn
   const [data, setData] = useState(null)
   const [snapshot, setSnapshot] = useState(null)
   const [news, setNews] = useState(null)
@@ -536,22 +538,30 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
             <div>
               <div className="mb-4 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
                 <h2 className="font-headline text-2xl font-bold text-slate-900">Watchlist</h2>
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setWatchlistEditing((current) => !current)}
-                    className="rounded-lg bg-surface-container-low px-4 py-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-surface-container"
-                  >
-                    {watchlistEditing ? 'Done' : 'Edit List'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setWatchlistEditing(true)}
-                    className="rounded-lg bg-slate-700 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-slate-800"
-                  >
-                    Add Symbol
-                  </button>
-                </div>
+                {watchlistLocked ? (
+                  <SignInButton mode="modal">
+                    <button className="rounded-lg bg-slate-800 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-slate-900">
+                      Sign In
+                    </button>
+                  </SignInButton>
+                ) : (
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setWatchlistEditing((current) => !current)}
+                      className="rounded-lg bg-surface-container-low px-4 py-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-surface-container"
+                    >
+                      {watchlistEditing ? 'Done' : 'Edit List'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setWatchlistEditing(true)}
+                      className="rounded-lg bg-slate-700 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-slate-800"
+                    >
+                      Add Symbol
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="overflow-hidden rounded-xl bg-surface-container-lowest shadow-sm">
@@ -561,7 +571,12 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
                   <div className="col-span-2 text-right">24h change</div>
                   <div className="col-span-3 text-center">Trend</div>
                 </div>
-                {watchlistEditing && (
+                {watchlistLocked && (
+                  <div className="border-b border-surface-container px-6 py-4 text-sm text-slate-500">
+                    Sign in to edit your personal watchlist. Public visitors can still browse the live market snapshot.
+                  </div>
+                )}
+                {!watchlistLocked && watchlistEditing && (
                   <div className="border-b border-surface-container px-6 py-4">
                     <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
                       <TickerInput
@@ -604,7 +619,7 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
                           <LineStrip points={signal.points || FALLBACK_POINTS[signal.symbol] || FALLBACK_POINTS.SPY} up={signal.pct_change >= 0} />
                         </div>
                       </div>
-                      {watchlistEditing && (
+                      {!watchlistLocked && watchlistEditing && (
                         <div className="col-span-12 flex justify-end pt-1">
                           <button
                             type="button"
