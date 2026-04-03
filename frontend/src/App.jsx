@@ -55,14 +55,12 @@ export default function App() {
         await navigator.clipboard.writeText(payload.pending_code)
       }
       window.dispatchEvent(new CustomEvent('finsight:telegram-link-updated', { detail: payload }))
-      setPage('portfolio')
     } catch (error) {
       window.dispatchEvent(
         new CustomEvent('finsight:telegram-link-error', {
           detail: error instanceof Error ? error.message : 'Unable to generate Telegram code.',
         })
       )
-      setPage('portfolio')
     } finally {
       setTelegramBusy(false)
     }
