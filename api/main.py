@@ -1920,7 +1920,7 @@ async def put_ticker_note(req: TickerNoteUpsert, user_id: str | None = Depends(g
             review_date=req.review_date,
             user_id=user_id,
         )
-        notes = list_ticker_notes(req.symbol, user_id=user_id)
+        notes = list_ticker_notes(user_id=user_id)
         return {
             'note': note,
             'notes': notes,

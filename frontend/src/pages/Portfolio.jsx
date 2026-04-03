@@ -518,8 +518,7 @@ export default function Portfolio() {
     }
   }
 
-  async function addNote(event) {
-    event.preventDefault()
+  async function addNote() {
     const symbol = noteForm.symbol.trim().toUpperCase()
     const noteText = noteForm.note_text.trim()
     const noteType = noteForm.note_type
@@ -545,16 +544,18 @@ export default function Portfolio() {
         throw new Error(detail.detail || `HTTP ${response.status}`)
       }
       const payload = await response.json()
-      setNotes((current) =>
-        [...(payload.notes || []), ...current.filter((note) => note.symbol !== symbol)]
-          .sort((a, b) => (b.note_id || 0) - (a.note_id || 0))
-      )
+      setNotes(payload.notes || [])
       setNoteForm(EMPTY_NOTE_FORM)
     } catch (err) {
       setError(err.message)
     } finally {
       setLoading(false)
     }
+  }
+
+  async function handleNoteSubmit(event) {
+    event.preventDefault()
+    await addNote()
   }
 
   async function removeNote(noteId) {
@@ -1068,7 +1069,7 @@ export default function Portfolio() {
                 <div className={`grid gap-6 ${authEnabled ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}>
                   <div className="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
                     <h3 className="terminal-label text-outline">Research memory</h3>
-                    <form onSubmit={addNote} className="mt-4 space-y-3">
+                    <form onSubmit={handleNoteSubmit} className="mt-4 space-y-3" noValidate>
                       <TickerInput
                         value={noteForm.symbol}
                         onChange={(value) => setNoteForm((current) => ({ ...current, symbol: value }))}
@@ -1110,7 +1111,13 @@ export default function Portfolio() {
                       />
                       <div className="flex items-center justify-between">
                         <span className="terminal-label text-outline">{notes.length} notes</span>
-                        <button className="rounded-lg bg-slate-700 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-white transition-colors hover:bg-slate-800">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void addNote()
+                          }}
+                          className="rounded-lg bg-slate-700 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-white transition-colors hover:bg-slate-800"
+                        >
                           Save Note
                         </button>
                       </div>
