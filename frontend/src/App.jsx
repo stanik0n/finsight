@@ -264,31 +264,8 @@ export default function App() {
           </div>
         </header>
 
-        <aside className="fixed left-0 top-16 hidden h-[calc(100vh-64px)] w-64 flex-col border-r border-outline/15 bg-surface-container-low py-8 md:flex">
-          <nav className="flex-1 space-y-1">
-            {NAV.map((item) => {
-              const active = page === item.id
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => navigateTo(item.id)}
-                  className="flex w-full items-center gap-3 px-6 py-3 text-left transition-all"
-                  style={{
-                    backgroundColor: active ? '#ffffff' : 'transparent',
-                    borderLeft: active ? '2px solid #556067' : '2px solid transparent',
-                    color: active ? '#243036' : '#66737a',
-                  }}
-                >
-                  <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
-                  <span className="terminal-label text-[11px]">{item.label}</span>
-                </button>
-              )
-            })}
-          </nav>
-        </aside>
-
         <main
-          className="bg-background pb-20 pt-14 md:ml-64 md:pb-0 md:pt-16"
+          className="bg-background pb-20 pt-14 md:pb-0 md:pt-16"
           style={{
             minHeight: '100vh',
           }}
