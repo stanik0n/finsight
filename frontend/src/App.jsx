@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/react'
 import { useFinsightAuth } from './lib/finsight-auth'
 import { authedFetch } from './lib/api'
@@ -13,31 +13,135 @@ const NAV = [
   { id: 'portfolio', label: 'Portfolio', icon: 'account_balance_wallet' },
 ]
 
+const NEWS_STORAGE_KEY = 'finsight:selected-news-article'
+
+function readNewsFromStorage() {
+  try {
+    const raw = window.sessionStorage.getItem(NEWS_STORAGE_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+function writeNewsToStorage(article) {
+  try {
+    if (article) {
+      window.sessionStorage.setItem(NEWS_STORAGE_KEY, JSON.stringify(article))
+    } else {
+      window.sessionStorage.removeItem(NEWS_STORAGE_KEY)
+    }
+  } catch {
+    return null
+  }
+}
+
+function routeFromHash() {
+  if (typeof window === 'undefined') {
+    return { page: 'dashboard', params: new URLSearchParams() }
+  }
+
+  const rawHash = window.location.hash || '#/markets'
+  const normalized = rawHash.startsWith('#') ? rawHash.slice(1) : rawHash
+  const [pathname, search = ''] = normalized.split('?')
+  const params = new URLSearchParams(search)
+
+  switch (pathname) {
+    case '':
+    case '/':
+    case '/markets':
+      return { page: 'dashboard', params }
+    case '/analysis':
+      return { page: 'chat', params }
+    case '/portfolio':
+      return { page: 'portfolio', params }
+    case '/news':
+      return { page: 'news', params }
+    default:
+      return { page: 'dashboard', params: new URLSearchParams() }
+  }
+}
+
+function buildHash(page, params = new URLSearchParams()) {
+  const base =
+    page === 'chat'
+      ? '/analysis'
+      : page === 'portfolio'
+        ? '/portfolio'
+        : page === 'news'
+          ? '/news'
+          : '/markets'
+
+  const query = params.toString()
+  return `#${base}${query ? `?${query}` : ''}`
+}
+
 export default function App() {
   const { authEnabled, getToken, isSignedIn } = useFinsightAuth()
-  const [page, setPage] = useState('dashboard')
-  const [analysisQuestion, setAnalysisQuestion] = useState('')
+  const [route, setRoute] = useState(() => routeFromHash())
   const [headerSearch, setHeaderSearch] = useState('')
-  const [selectedNewsArticle, setSelectedNewsArticle] = useState(null)
   const [telegramBusy, setTelegramBusy] = useState(false)
+  const [selectedNewsArticle, setSelectedNewsArticle] = useState(() => readNewsFromStorage())
+
+  const page = route.page
+
+  const newsArticle = useMemo(() => {
+    if (selectedNewsArticle) return selectedNewsArticle
+    return route.page === 'news' ? readNewsFromStorage() : null
+  }, [route.page, selectedNewsArticle])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined
+    if (!window.location.hash) {
+      window.history.replaceState(null, '', buildHash('dashboard'))
+    }
+
+    function syncRoute() {
+      setRoute(routeFromHash())
+      if (routeFromHash().page === 'news') {
+        setSelectedNewsArticle(readNewsFromStorage())
+      }
+    }
+
+    syncRoute()
+    window.addEventListener('hashchange', syncRoute)
+    return () => window.removeEventListener('hashchange', syncRoute)
+  }, [])
 
   useEffect(() => {
     function handleOpenPortfolio() {
-      setPage('portfolio')
+      navigateTo('portfolio')
     }
 
     window.addEventListener('finsight:open-portfolio', handleOpenPortfolio)
     return () => window.removeEventListener('finsight:open-portfolio', handleOpenPortfolio)
   }, [])
 
+  function navigateTo(nextPage, { params, replace = false, article = null } = {}) {
+    if (article !== null) {
+      writeNewsToStorage(article)
+      setSelectedNewsArticle(article)
+    } else if (nextPage !== 'news') {
+      setSelectedNewsArticle(null)
+    }
+
+    const nextHash = buildHash(nextPage, params)
+    if (replace) {
+      window.history.replaceState(null, '', nextHash)
+      setRoute(routeFromHash())
+      return
+    }
+    window.location.hash = nextHash
+  }
+
   function openAnalysisWithQuestion(question) {
-    setAnalysisQuestion(question)
-    setPage('chat')
+    const params = new URLSearchParams()
+    params.set('q', question)
+    navigateTo('chat', { params })
   }
 
   function openNewsArticle(article) {
-    setSelectedNewsArticle(article)
-    setPage('news')
+    navigateTo('news', { article })
   }
 
   function submitHeaderSearch(e) {
@@ -78,19 +182,28 @@ export default function App() {
     }
   }
 
+  function clearAnalysisQuestionFromRoute() {
+    if (page !== 'chat' || !route.params.get('q')) return
+    navigateTo('chat', { replace: true })
+  }
+
   function AppChrome() {
     return (
       <div className="min-h-screen bg-background text-on-surface">
         <header className="fixed inset-x-0 top-0 z-50 flex h-14 items-center justify-between border-b border-outline/20 bg-white/80 px-4 backdrop-blur-xl sm:h-16 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4 sm:gap-10">
-            <span className="font-headline text-lg font-extrabold tracking-tight text-slate-900 sm:text-xl">
+            <button
+              type="button"
+              onClick={() => navigateTo('dashboard')}
+              className="font-headline text-lg font-extrabold tracking-tight text-slate-900 sm:text-xl"
+            >
               FINSIGHT
-            </span>
+            </button>
             <nav className="hidden items-center gap-7 md:flex">
               {NAV.map((item) => (
                 <button
                   key={item.id}
-                  onClick={() => setPage(item.id)}
+                  onClick={() => navigateTo(item.id)}
                   className="border-b pb-1 text-[11px] font-bold uppercase tracking-[0.24em] transition-colors"
                   style={{
                     borderColor: page === item.id ? '#556067' : 'transparent',
@@ -158,7 +271,7 @@ export default function App() {
               return (
                 <button
                   key={item.id}
-                  onClick={() => setPage(item.id)}
+                  onClick={() => navigateTo(item.id)}
                   className="flex w-full items-center gap-3 px-6 py-3 text-left transition-all"
                   style={{
                     backgroundColor: active ? '#ffffff' : 'transparent',
@@ -181,9 +294,14 @@ export default function App() {
           }}
         >
           {page === 'dashboard' && <Dashboard onSearch={openAnalysisWithQuestion} onOpenNews={openNewsArticle} />}
-          {page === 'chat' && <Chat initialQuestion={analysisQuestion} onInitialQuestionHandled={() => setAnalysisQuestion('')} />}
+          {page === 'chat' && (
+            <Chat
+              initialQuestion={route.params.get('q') || ''}
+              onInitialQuestionHandled={clearAnalysisQuestionFromRoute}
+            />
+          )}
           {page === 'portfolio' && <Portfolio />}
-          {page === 'news' && <NewsArticle article={selectedNewsArticle} onBack={() => setPage('dashboard')} />}
+          {page === 'news' && <NewsArticle article={newsArticle} onBack={() => navigateTo('dashboard')} />}
         </main>
 
         <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-3 border-t border-outline/20 bg-white/95 px-2 py-2 backdrop-blur md:hidden">
@@ -192,7 +310,7 @@ export default function App() {
             return (
               <button
                 key={item.id}
-                onClick={() => setPage(item.id)}
+                onClick={() => navigateTo(item.id)}
                 className="flex flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-center transition-colors"
                 style={{
                   backgroundColor: active ? '#eef3f6' : 'transparent',
