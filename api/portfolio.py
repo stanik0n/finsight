@@ -281,7 +281,7 @@ def ensure_portfolio_tables() -> None:
 
 
 def _cleanup_expired_telegram_link_codes(conn: duckdb.DuckDBPyConnection) -> None:
-    conn.execute("DELETE FROM app.telegram_link_codes WHERE expires_at <= NOW()")
+    conn.execute("DELETE FROM app.telegram_link_codes WHERE expires_at <= CAST(NOW() AS TIMESTAMP)")
 
 
 def _ensure_user_alert_preferences(conn: duckdb.DuckDBPyConnection, user_id: str) -> None:
@@ -424,7 +424,7 @@ def complete_telegram_link(code: str, chat_id: str | int, telegram_username: str
             """
             SELECT user_id
             FROM app.telegram_link_codes
-            WHERE code = ? AND expires_at > NOW()
+            WHERE code = ? AND expires_at > CAST(NOW() AS TIMESTAMP)
             """,
             [normalized_code],
         ).fetchone()
