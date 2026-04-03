@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { SignInButton, SignUpButton } from '@clerk/react'
 import CompanyLogo from '../components/CompanyLogo'
 import { authedFetch } from '../lib/api'
 import { useFinsightAuth } from '../lib/finsight-auth'
@@ -257,6 +258,7 @@ function noteAccent(noteType) {
 
 export default function Portfolio() {
   const { getToken, authEnabled, isSignedIn } = useFinsightAuth()
+  const portfolioLocked = authEnabled && !isSignedIn
   const [holdings, setHoldings] = useState([])
   const [form, setForm] = useState(EMPTY_FORM)
   const [watchlistForm, setWatchlistForm] = useState(EMPTY_WATCHLIST_FORM)
@@ -275,8 +277,21 @@ export default function Portfolio() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
+    if (portfolioLocked) {
+      setLoading(false)
+      setError(null)
+      setHoldings([])
+      setResult(null)
+      setWatchlist([])
+      setWatchlistSnapshot(null)
+      setNotes([])
+      setAlerts({ portfolio: [], watchlist: [] })
+      setTelegramLink({ linked: false, pending_code: null })
+      return
+    }
+
     loadPortfolio()
-  }, [])
+  }, [portfolioLocked])
 
   function applyAlertPayload(nextAlerts = []) {
     setAlerts({
@@ -635,7 +650,9 @@ export default function Portfolio() {
           <form onSubmit={addHolding} className="mt-5 flex flex-wrap items-end gap-4">
             <div>
               <p className="terminal-label mb-2 text-outline">Ticker</p>
-              <TickerInput value={form.symbol} onChange={(value) => setForm((current) => ({ ...current, symbol: value }))} />
+              <div className={portfolioLocked ? 'pointer-events-none opacity-60' : ''}>
+                <TickerInput value={form.symbol} onChange={(value) => setForm((current) => ({ ...current, symbol: value }))} />
+              </div>
             </div>
             <div>
               <p className="terminal-label mb-2 text-outline">Shares</p>
@@ -645,6 +662,7 @@ export default function Portfolio() {
                 step="any"
                 className="w-36 border border-outline/20 bg-white px-3 py-3 text-sm text-slate-700 focus:outline-none"
                 value={form.shares}
+                disabled={portfolioLocked}
                 onChange={(event) => setForm((current) => ({ ...current, shares: event.target.value }))}
                 placeholder="0.00"
               />
@@ -657,15 +675,45 @@ export default function Portfolio() {
                 step="any"
                 className="w-40 border border-outline/20 bg-white px-3 py-3 text-sm text-slate-700 focus:outline-none"
                 value={form.avg_cost}
+                disabled={portfolioLocked}
                 onChange={(event) => setForm((current) => ({ ...current, avg_cost: event.target.value }))}
                 placeholder="$0.00"
               />
             </div>
-            <button className="rounded-lg bg-slate-700 px-6 py-3 terminal-label text-white transition-colors hover:bg-slate-800">
-              Add Position
+            <button
+              disabled={portfolioLocked}
+              className="rounded-lg bg-slate-700 px-6 py-3 terminal-label text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {portfolioLocked ? 'Sign In To Add' : 'Add Position'}
             </button>
           </form>
         </div>
+
+        {portfolioLocked && (
+          <div className="mt-8 rounded-xl border border-outline/15 bg-surface-container-lowest px-6 py-6 shadow-sm">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="max-w-3xl">
+                <p className="terminal-label text-outline">Private workspace</p>
+                <h2 className="mt-3 font-headline text-2xl font-bold text-slate-900">Browse the product, then sign in to save your portfolio</h2>
+                <p className="mt-3 text-sm leading-7 text-slate-500">
+                  Markets and Analysis stay open to explore. Holdings, watchlists, notes, alerts, and Telegram linking are tied to your account and only load after sign-in.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <SignInButton mode="modal">
+                  <button className="rounded-lg border border-outline/20 bg-white px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700 transition-colors hover:bg-surface-container-low">
+                    Sign In
+                  </button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <button className="rounded-lg bg-slate-800 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:bg-slate-900">
+                    Create Account
+                  </button>
+                </SignUpButton>
+              </div>
+            </div>
+          </div>
+        )}
 
         {holdings.length > 0 && (
           <div className="mt-8 overflow-hidden rounded-xl bg-surface-container-lowest shadow-sm">
@@ -712,13 +760,13 @@ export default function Portfolio() {
           </div>
         )}
 
-        {error && (
+        {!portfolioLocked && error && (
           <div className="mt-8 border border-[#d8b0aa] bg-[#fff4f2] px-5 py-4 text-sm text-[#9d4840]">
             <strong>Error:</strong> {error}
           </div>
         )}
 
-        {result && (
+        {!portfolioLocked && result && (
           <div className="mt-8 space-y-8">
             <div className="grid grid-cols-1 gap-5 md:grid-cols-4">
               {[

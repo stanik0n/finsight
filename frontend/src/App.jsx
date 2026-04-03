@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/react'
+import { useFinsightAuth } from './lib/finsight-auth'
 import Chat from './pages/Chat'
 import Portfolio from './pages/Portfolio'
 import Dashboard from './pages/Dashboard'
@@ -12,6 +13,7 @@ const NAV = [
 ]
 
 export default function App() {
+  const { authEnabled, isSignedIn } = useFinsightAuth()
   const [page, setPage] = useState('dashboard')
   const [analysisQuestion, setAnalysisQuestion] = useState('')
   const [headerSearch, setHeaderSearch] = useState('')
@@ -35,8 +37,6 @@ export default function App() {
     openAnalysisWithQuestion(normalized)
     setHeaderSearch('')
   }
-
-  const authEnabled = Boolean(import.meta.env.VITE_CLERK_PUBLISHABLE_KEY)
 
   function AppChrome() {
     return (
@@ -76,9 +76,27 @@ export default function App() {
               </div>
             </form>
             {authEnabled && (
-              <div className="rounded-full border border-outline/15 bg-white p-1">
-                <UserButton appearance={{ elements: { avatarBox: 'h-8 w-8' } }} />
-              </div>
+              <>
+                <Show when="signed-out">
+                  <div className="flex items-center gap-2">
+                    <SignInButton mode="modal">
+                      <button className="rounded-lg border border-outline/20 bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700 transition-colors hover:bg-surface-container-low">
+                        Sign In
+                      </button>
+                    </SignInButton>
+                    <SignUpButton mode="modal">
+                      <button className="rounded-lg bg-slate-800 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:bg-slate-900">
+                        Create Account
+                      </button>
+                    </SignUpButton>
+                  </div>
+                </Show>
+                <Show when="signed-in">
+                  <div className="rounded-full border border-outline/15 bg-white p-1">
+                    <UserButton appearance={{ elements: { avatarBox: 'h-8 w-8' } }} />
+                  </div>
+                </Show>
+              </>
             )}
           </div>
         </header>
@@ -124,46 +142,9 @@ export default function App() {
     )
   }
 
-  function SignedOutView() {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-[linear-gradient(180deg,#f7fafb_0%,#eef3f5_100%)] px-6">
-        <div className="w-full max-w-xl border border-outline/15 bg-white p-10 shadow-[0_30px_80px_rgba(148,163,184,0.12)]">
-          <p className="terminal-label text-outline">Private Workspace</p>
-          <h1 className="mt-5 font-headline text-5xl font-extrabold tracking-tight text-slate-900">
-            FinSight
-          </h1>
-          <p className="mt-5 max-w-lg text-base leading-8 text-slate-600">
-            Sign in to open your private market workspace. Holdings, watchlists, notes, and alerts stay tied to your account instead of one shared portfolio.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <SignInButton mode="modal">
-              <button className="rounded-lg bg-slate-800 px-5 py-3 text-sm font-semibold text-white">
-                Sign In
-              </button>
-            </SignInButton>
-            <SignUpButton mode="modal">
-              <button className="rounded-lg border border-outline/20 bg-white px-5 py-3 text-sm font-semibold text-slate-700">
-                Create Account
-              </button>
-            </SignUpButton>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   if (!authEnabled) {
     return <AppChrome />
   }
 
-  return (
-    <>
-      <Show when="signed-out">
-        <SignedOutView />
-      </Show>
-      <Show when="signed-in">
-        <AppChrome />
-      </Show>
-    </>
-  )
+  return <AppChrome />
 }
