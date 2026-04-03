@@ -265,7 +265,7 @@ function noteUrgency(title) {
   return null
 }
 
-export default function Portfolio({ setHeaderAction = () => {} }) {
+export default function Portfolio() {
   const { getToken, authEnabled, isSignedIn } = useFinsightAuth()
   const portfolioLocked = authEnabled && !isSignedIn
   const [holdings, setHoldings] = useState([])
@@ -303,21 +303,22 @@ export default function Portfolio({ setHeaderAction = () => {} }) {
   }, [portfolioLocked])
 
   useEffect(() => {
-    if (!authEnabled || !isSignedIn) {
-      setHeaderAction(null)
-      return () => setHeaderAction(null)
+    function handleTelegramLinkUpdated(event) {
+      setTelegramLink(event.detail || { linked: false, pending_code: null })
+      setError(null)
     }
 
-    setHeaderAction({
-      label: telegramBusy ? 'Working' : telegramLink.pending_code ? 'Regenerate Code' : 'Generate Code',
-      disabled: telegramBusy,
-      onClick: () => {
-        void generateTelegramLinkCode()
-      },
-    })
+    function handleTelegramLinkError(event) {
+      setError(event.detail || 'Unable to generate Telegram link code.')
+    }
 
-    return () => setHeaderAction(null)
-  }, [authEnabled, isSignedIn, telegramBusy, telegramLink.pending_code, setHeaderAction])
+    window.addEventListener('finsight:telegram-link-updated', handleTelegramLinkUpdated)
+    window.addEventListener('finsight:telegram-link-error', handleTelegramLinkError)
+    return () => {
+      window.removeEventListener('finsight:telegram-link-updated', handleTelegramLinkUpdated)
+      window.removeEventListener('finsight:telegram-link-error', handleTelegramLinkError)
+    }
+  }, [])
 
   function applyAlertPayload(nextAlerts = []) {
     setAlerts({
@@ -665,7 +666,7 @@ export default function Portfolio({ setHeaderAction = () => {} }) {
                 <span>
                   {telegramLink.linked
                     ? `Linked ${telegramLink.telegram_username ? `to @${telegramLink.telegram_username}` : 'to your FinSight bot chat'}.`
-                    : 'Generate a code from the header, then send /link CODE to your FinSight bot.'}
+                    : 'Use the Telegram Code button beside your profile, then send /link CODE to your FinSight bot.'}
                 </span>
               </div>
             )}
@@ -673,18 +674,6 @@ export default function Portfolio({ setHeaderAction = () => {} }) {
           {result && (
             <div className="flex w-full flex-wrap items-center gap-3 md:w-auto md:justify-end">
               <span className="terminal-chip">Prices as of {result.as_of_date}</span>
-              {authEnabled && isSignedIn && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    void generateTelegramLinkCode()
-                  }}
-                  disabled={telegramBusy}
-                  className="rounded-lg bg-slate-700 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 lg:hidden"
-                >
-                  {telegramBusy ? 'Working' : telegramLink.pending_code ? 'Regenerate Code' : 'Generate Code'}
-                </button>
-              )}
               <button
                 onClick={calculate}
                 disabled={loading}

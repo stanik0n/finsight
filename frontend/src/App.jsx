@@ -13,12 +13,12 @@ const NAV = [
 ]
 
 export default function App() {
-  const { authEnabled } = useFinsightAuth()
+  const { authEnabled, getToken, isSignedIn } = useFinsightAuth()
   const [page, setPage] = useState('dashboard')
   const [analysisQuestion, setAnalysisQuestion] = useState('')
   const [headerSearch, setHeaderSearch] = useState('')
   const [selectedNewsArticle, setSelectedNewsArticle] = useState(null)
-  const [portfolioHeaderAction, setPortfolioHeaderAction] = useState(null)
+  const [telegramBusy, setTelegramBusy] = useState(false)
 
   function openAnalysisWithQuestion(question) {
     setAnalysisQuestion(question)
@@ -37,6 +37,37 @@ export default function App() {
     const normalized = /\b(price|quote|trading|stock)\b/i.test(value) ? value : `${value} price`
     openAnalysisWithQuestion(normalized)
     setHeaderSearch('')
+  }
+
+  async function generateTelegramLinkCodeFromProfile() {
+    if (!authEnabled || !isSignedIn) return
+    setTelegramBusy(true)
+    try {
+      const response = await fetch('/telegram/link-code', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${await getToken()}`,
+        },
+      })
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        throw new Error(payload.detail || `HTTP ${response.status}`)
+      }
+      if (payload.pending_code && typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(payload.pending_code)
+      }
+      window.dispatchEvent(new CustomEvent('finsight:telegram-link-updated', { detail: payload }))
+      setPage('portfolio')
+    } catch (error) {
+      window.dispatchEvent(
+        new CustomEvent('finsight:telegram-link-error', {
+          detail: error instanceof Error ? error.message : 'Unable to generate Telegram code.',
+        })
+      )
+      setPage('portfolio')
+    } finally {
+      setTelegramBusy(false)
+    }
   }
 
   function AppChrome() {
@@ -76,16 +107,6 @@ export default function App() {
                 />
               </div>
             </form>
-            {page === 'portfolio' && portfolioHeaderAction && (
-              <button
-                type="button"
-                onClick={portfolioHeaderAction.onClick}
-                disabled={portfolioHeaderAction.disabled}
-                className="hidden min-w-[148px] rounded-lg bg-slate-700 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 lg:block"
-              >
-                {portfolioHeaderAction.label}
-              </button>
-            )}
             {authEnabled && (
               <>
                 <Show when="signed-out">
@@ -103,8 +124,20 @@ export default function App() {
                   </div>
                 </Show>
                 <Show when="signed-in">
-                  <div className="rounded-full border border-outline/15 bg-white p-1">
-                    <UserButton appearance={{ elements: { avatarBox: 'h-8 w-8' } }} />
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void generateTelegramLinkCodeFromProfile()
+                      }}
+                      disabled={telegramBusy}
+                      className="rounded-lg border border-outline/20 bg-white px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-700 transition-colors hover:bg-surface-container-low disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {telegramBusy ? 'Working' : 'Telegram Code'}
+                    </button>
+                    <div className="rounded-full border border-outline/15 bg-white p-1">
+                      <UserButton appearance={{ elements: { avatarBox: 'h-8 w-8' } }} />
+                    </div>
                   </div>
                 </Show>
               </>
@@ -143,7 +176,7 @@ export default function App() {
         >
           {page === 'dashboard' && <Dashboard onSearch={openAnalysisWithQuestion} onOpenNews={openNewsArticle} />}
           {page === 'chat' && <Chat initialQuestion={analysisQuestion} onInitialQuestionHandled={() => setAnalysisQuestion('')} />}
-          {page === 'portfolio' && <Portfolio setHeaderAction={setPortfolioHeaderAction} />}
+          {page === 'portfolio' && <Portfolio />}
           {page === 'news' && <NewsArticle article={selectedNewsArticle} onBack={() => setPage('dashboard')} />}
         </main>
 
