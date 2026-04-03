@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/react'
 import { useFinsightAuth } from './lib/finsight-auth'
 import { authedFetch } from './lib/api'
@@ -21,6 +21,15 @@ export default function App() {
   const [selectedNewsArticle, setSelectedNewsArticle] = useState(null)
   const [telegramBusy, setTelegramBusy] = useState(false)
 
+  useEffect(() => {
+    function handleOpenPortfolio() {
+      setPage('portfolio')
+    }
+
+    window.addEventListener('finsight:open-portfolio', handleOpenPortfolio)
+    return () => window.removeEventListener('finsight:open-portfolio', handleOpenPortfolio)
+  }, [])
+
   function openAnalysisWithQuestion(question) {
     setAnalysisQuestion(question)
     setPage('chat')
@@ -42,6 +51,8 @@ export default function App() {
 
   async function generateTelegramLinkCodeFromProfile() {
     if (!authEnabled || !isSignedIn) return
+    window.dispatchEvent(new CustomEvent('finsight:open-portfolio'))
+    window.dispatchEvent(new CustomEvent('finsight:telegram-link-busy', { detail: true }))
     setTelegramBusy(true)
     try {
       const response = await authedFetch(getToken, '/telegram/link-code', {
@@ -62,6 +73,7 @@ export default function App() {
         })
       )
     } finally {
+      window.dispatchEvent(new CustomEvent('finsight:telegram-link-busy', { detail: false }))
       setTelegramBusy(false)
     }
   }

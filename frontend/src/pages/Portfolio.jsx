@@ -312,11 +312,17 @@ export default function Portfolio() {
       setError(event.detail || 'Unable to generate Telegram link code.')
     }
 
+    function handleTelegramLinkBusy(event) {
+      setTelegramBusy(Boolean(event.detail))
+    }
+
     window.addEventListener('finsight:telegram-link-updated', handleTelegramLinkUpdated)
     window.addEventListener('finsight:telegram-link-error', handleTelegramLinkError)
+    window.addEventListener('finsight:telegram-link-busy', handleTelegramLinkBusy)
     return () => {
       window.removeEventListener('finsight:telegram-link-updated', handleTelegramLinkUpdated)
       window.removeEventListener('finsight:telegram-link-error', handleTelegramLinkError)
+      window.removeEventListener('finsight:telegram-link-busy', handleTelegramLinkBusy)
     }
   }, [])
 
@@ -684,6 +690,85 @@ export default function Portfolio() {
             </div>
           )}
         </div>
+
+        {!portfolioLocked && authEnabled && isSignedIn && (
+          <div className="mb-8 rounded-xl border border-outline/10 bg-surface-container-lowest p-6 shadow-sm">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="max-w-3xl">
+                <p className="terminal-label text-outline">Telegram</p>
+                <h2 className="mt-3 font-headline text-2xl font-bold text-slate-900">Generate a link code for your bot</h2>
+                <p className="mt-3 text-sm leading-7 text-slate-500">
+                  Open your FinSight bot in Telegram and send <span className="font-mono text-slate-700">/link CODE</span>. If you generate a new code, the previous unused one is replaced.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    void generateTelegramLinkCode()
+                  }}
+                  disabled={telegramBusy}
+                  className="rounded-lg bg-slate-700 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
+                >
+                  {telegramBusy ? 'Generating' : 'Generate Code'}
+                </button>
+                {telegramLink.linked && (
+                  <button
+                    type="button"
+                    onClick={unlinkTelegram}
+                    disabled={telegramBusy}
+                    className="rounded-lg bg-surface-container-low px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-slate-600 transition-colors hover:bg-surface-container disabled:opacity-50"
+                  >
+                    Unlink Telegram
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(280px,0.8fr)]">
+              <div className="rounded-xl border border-outline/10 bg-surface-container-low px-5 py-5">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="terminal-chip">
+                    {telegramLink.linked ? 'Connected' : telegramLink.pending_code ? 'Code ready' : 'Waiting to generate'}
+                  </span>
+                  {telegramLink.pending_code_expires_at && (
+                    <span className="terminal-chip">Expires {telegramLink.pending_code_expires_at}</span>
+                  )}
+                </div>
+                {telegramLink.linked ? (
+                  <p className="mt-4 text-sm leading-7 text-slate-600">
+                    Linked {telegramLink.telegram_username ? `to @${telegramLink.telegram_username}` : 'to your Telegram chat'}.
+                  </p>
+                ) : telegramLink.pending_code ? (
+                  <div className="mt-4 space-y-3">
+                    <div className="rounded-lg bg-white px-4 py-4">
+                      <p className="terminal-label text-outline">Current code</p>
+                      <p className="mt-3 font-mono text-2xl font-bold tracking-[0.24em] text-slate-900">
+                        {telegramLink.pending_code}
+                      </p>
+                    </div>
+                    <p className="text-sm leading-7 text-slate-600">
+                      Next step: send <span className="font-mono text-slate-700">/link {telegramLink.pending_code}</span> to your FinSight bot.
+                    </p>
+                  </div>
+                ) : (
+                  <p className="mt-4 text-sm leading-7 text-slate-600">
+                    Generate a code here or from your profile menu, then send it to the bot to attach Telegram to this account.
+                  </p>
+                )}
+              </div>
+
+              <div className="rounded-xl border border-outline/10 bg-white px-5 py-5">
+                <p className="terminal-label text-outline">How it works</p>
+                <ol className="mt-4 space-y-3 text-sm leading-7 text-slate-600">
+                  <li>1. Generate a fresh code.</li>
+                  <li>2. Open your FinSight Telegram bot.</li>
+                  <li>3. Send <span className="font-mono text-slate-700">/link CODE</span>.</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="rounded-xl bg-surface-container-lowest px-6 py-6 shadow-[24px_0_40px_rgba(42,52,57,0.04)]">
           <p className="terminal-label text-outline">Add position</p>
@@ -1116,16 +1201,6 @@ export default function Portfolio() {
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="terminal-chip">{notes.length} notes saved</span>
-                        {authEnabled && isSignedIn && telegramLink.linked && (
-                          <button
-                            type="button"
-                            onClick={unlinkTelegram}
-                            disabled={telegramBusy}
-                            className="rounded-lg bg-surface-container-low px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-slate-600 transition-colors hover:bg-surface-container disabled:opacity-50"
-                          >
-                            Unlink Telegram
-                          </button>
-                        )}
                       </div>
                     </div>
                     <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.35fr)]">
