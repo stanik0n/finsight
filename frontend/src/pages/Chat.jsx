@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { SignInButton } from '@clerk/react'
 import CommentaryPanel from '../components/CommentaryPanel'
 import { authedFetch } from '../lib/api'
 import { useFinsightAuth } from '../lib/finsight-auth'
@@ -203,7 +204,7 @@ function fallbackCommentary(entry) {
 }
 
 export default function Chat({ initialQuestion = '', onInitialQuestionHandled = () => {} }) {
-  const { getToken } = useFinsightAuth()
+  const { getToken, authEnabled, isSignedIn } = useFinsightAuth()
   const [history, setHistory] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -212,6 +213,30 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
   const [inputPlaceholder, setInputPlaceholder] = useState('Ask about the market...')
   const inputRef = useRef(null)
   const messagesEndRef = useRef(null)
+
+  const chatLockedToPublic = authEnabled && !isSignedIn
+
+  function questionNeedsAccount(question) {
+    const q = (question || '').toLowerCase()
+    return (
+      /\bportfolio\b/.test(q) ||
+      /\bwatchlist\b/.test(q) ||
+      /\bmy holdings\b/.test(q) ||
+      /\bmy positions\b/.test(q) ||
+      /\bmy notes\b/.test(q) ||
+      /\bhow is my portfolio\b/.test(q)
+    )
+  }
+
+  const visibleModes = useMemo(
+    () => ANALYSIS_MODES.filter((item) => !chatLockedToPublic || !['Portfolio', 'Watchlist'].includes(item.label)),
+    [chatLockedToPublic],
+  )
+
+  const visibleExamples = useMemo(
+    () => EXAMPLES.filter((example) => !chatLockedToPublic || !questionNeedsAccount(example)),
+    [chatLockedToPublic],
+  )
 
   useEffect(() => {
     authedFetch(getToken, '/stream-status').then((r) => r.json()).then(setStreamStatus).catch(() => null)
@@ -229,6 +254,10 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
 
   async function handleQuestion(question) {
     if (!question.trim()) return
+    if (chatLockedToPublic && questionNeedsAccount(question)) {
+      setError('Sign in to ask about your portfolio, watchlist, or saved notes. Public market and news analysis still works.')
+      return
+    }
     setLoading(true)
     setError(null)
     try {
@@ -304,7 +333,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
           <div className="rounded-xl bg-white px-4 py-4 shadow-sm">
             <p className="terminal-label mb-3 text-outline">Analysis Modes</p>
             <div className="space-y-1">
-                {ANALYSIS_MODES.map((item, index) => (
+                {visibleModes.map((item, index) => (
                   <button
                     key={item.label}
                     type="button"
@@ -362,7 +391,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
           <div className="mt-6 rounded-xl bg-white px-4 py-4 shadow-sm">
             <p className="terminal-label text-outline">Session shortcuts</p>
             <div className="mt-3 space-y-2">
-              {EXAMPLES.slice(0, 3).map((example) => (
+              {visibleExamples.slice(0, 3).map((example) => (
                 <button
                   key={example}
                   type="button"
@@ -374,6 +403,22 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
               ))}
             </div>
           </div>
+
+          {chatLockedToPublic && (
+            <div className="mt-6 rounded-xl border border-outline/10 bg-white px-4 py-4 shadow-sm">
+              <p className="terminal-label text-outline">Private account features</p>
+              <p className="mt-2 text-xs leading-relaxed text-slate-500">
+                Sign in to ask about your saved portfolio, watchlist, notes, and Telegram-linked data.
+              </p>
+              <div className="mt-3">
+                <SignInButton mode="modal">
+                  <button className="rounded-lg bg-slate-800 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-slate-900">
+                    Sign In
+                  </button>
+                </SignInButton>
+              </div>
+            </div>
+          )}
 
         </div>
       </aside>
@@ -402,7 +447,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
                 <div className="rounded-xl bg-white p-6 shadow-sm">
                   <p className="terminal-label text-outline">Suggested questions</p>
                   <div className="mt-4 space-y-3">
-                    {EXAMPLES.slice(0, 3).map((example) => (
+                    {visibleExamples.slice(0, 3).map((example) => (
                       <button
                         key={example}
                         type="button"
