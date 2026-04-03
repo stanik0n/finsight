@@ -81,7 +81,7 @@ export default function App() {
                 type="button"
                 onClick={portfolioHeaderAction.onClick}
                 disabled={portfolioHeaderAction.disabled}
-                className="hidden rounded-lg bg-slate-700 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 xl:block"
+                className="hidden min-w-[148px] rounded-lg bg-slate-700 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 lg:block"
               >
                 {portfolioHeaderAction.label}
               </button>

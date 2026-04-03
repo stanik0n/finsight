@@ -671,8 +671,20 @@ export default function Portfolio({ setHeaderAction = () => {} }) {
             )}
           </div>
           {result && (
-            <div className="flex w-full flex-wrap items-center gap-3 md:w-auto">
+            <div className="flex w-full flex-wrap items-center gap-3 md:w-auto md:justify-end">
               <span className="terminal-chip">Prices as of {result.as_of_date}</span>
+              {authEnabled && isSignedIn && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    void generateTelegramLinkCode()
+                  }}
+                  disabled={telegramBusy}
+                  className="rounded-lg bg-slate-700 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 lg:hidden"
+                >
+                  {telegramBusy ? 'Working' : telegramLink.pending_code ? 'Regenerate Code' : 'Generate Code'}
+                </button>
+              )}
               <button
                 onClick={calculate}
                 disabled={loading}
@@ -1104,8 +1116,8 @@ export default function Portfolio({ setHeaderAction = () => {} }) {
                   </div>
                 </div>
 
-                <div className="grid gap-6 lg:grid-cols-3">
-                  <div className="rounded-xl bg-surface-container-lowest p-6 shadow-sm lg:col-span-2">
+                <div className="grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(300px,0.85fr)]">
+                  <div className="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                       <div>
                         <h3 className="terminal-label text-outline">Notes</h3>
