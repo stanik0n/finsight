@@ -243,6 +243,9 @@ def ensure_portfolio_tables() -> None:
         conn.execute("ALTER TABLE app.ticker_notes ADD COLUMN IF NOT EXISTS note_type TEXT DEFAULT 'note'")
         conn.execute("ALTER TABLE app.ticker_notes ADD COLUMN IF NOT EXISTS note_title TEXT")
         conn.execute("ALTER TABLE app.ticker_notes ADD COLUMN IF NOT EXISTS review_date DATE")
+        conn.execute("ALTER TABLE app.user_ticker_notes ADD COLUMN IF NOT EXISTS note_type TEXT DEFAULT 'note'")
+        conn.execute("ALTER TABLE app.user_ticker_notes ADD COLUMN IF NOT EXISTS note_title TEXT")
+        conn.execute("ALTER TABLE app.user_ticker_notes ADD COLUMN IF NOT EXISTS review_date DATE")
         conn.execute(
             """
             INSERT INTO app.portfolio_alert_preferences (
