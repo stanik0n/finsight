@@ -801,7 +801,7 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
                       className="rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white"
                       style={{ backgroundColor: index === 0 ? '#1f8f54' : index === 1 ? '#2a63f6' : '#d14f59' }}
                     >
-                      Press release
+                      Market news
                     </span>
                     <span className="text-[10px] font-medium text-outline">{story.symbol}</span>
                   </div>

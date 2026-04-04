@@ -16,7 +16,7 @@ import re
 import time
 from datetime import datetime, timedelta
 from difflib import get_close_matches
-from html import unescape
+from urllib.parse import urlparse
 from zoneinfo import ZoneInfo
 
 import duckdb
@@ -168,7 +168,7 @@ INTRADAY_DUCKDB_PATH = os.environ.get('INTRADAY_DUCKDB_PATH', '/data/intraday.du
 _BENCHMARK_CACHE: dict[str, object] = {'ts': 0.0, 'data': []}
 _BENCHMARK_TTL_SECONDS = 300
 _ETF_CACHE_MINUTES = int(os.environ.get('TWELVE_DATA_CACHE_MINUTES', '15'))
-_MARKET_NEWS_CACHE: dict[str, object] = {'ts': 0.0, 'data': []}
+_MARKET_NEWS_CACHE: dict[str, dict[str, object]] = {}
 _MARKET_NEWS_TTL_SECONDS = 900
 _CENTRAL_TZ = ZoneInfo('America/Chicago')
 
@@ -1269,21 +1269,102 @@ def _get_proxy_benchmarks(conn: duckdb.DuckDBPyConnection, latest_date) -> list[
     ]
 
 
-def _strip_html(value: str | None) -> str:
+def _market_news_query(symbol: str | None = None) -> str:
+    base_query = os.environ.get(
+        'BRAVE_NEWS_QUERY',
+        'latest finance news stocks trading markets federal reserve earnings',
+    ).strip()
+    if symbol:
+        return f'{symbol} stock trading finance news'
+    return base_query
+
+
+def _story_timestamp(value: object) -> datetime:
     if not value:
-        return ''
-    text = re.sub(r'<[^>]+>', ' ', value)
-    text = unescape(text)
-    return re.sub(r'\s+', ' ', text).strip()
+        return datetime.min.replace(tzinfo=ZoneInfo('UTC'))
+    try:
+        normalized = str(value).replace('Z', '+00:00')
+        parsed = datetime.fromisoformat(normalized)
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=ZoneInfo('UTC'))
+        return parsed
+    except ValueError:
+        return datetime.min.replace(tzinfo=ZoneInfo('UTC'))
 
 
-def _market_news_symbols() -> list[str]:
-    return ['AAPL', 'MSFT', 'NVDA', 'META', 'AMZN', 'GOOGL', 'TSLA', 'JPM']
+def _infer_story_symbol(title: str, summary: str) -> str | None:
+    combined = f'{title} {summary}'
+    symbol = _extract_symbol(combined)
+    if symbol:
+        return symbol
+
+    lowered = combined.lower()
+    for alias, mapped_symbol in _COMPANY_ALIASES.items():
+        if alias in lowered:
+            return mapped_symbol
+    return None
+
+
+def _format_story_source(item: dict) -> str:
+    meta = item.get('meta_url')
+    if isinstance(meta, dict):
+        hostname = meta.get('hostname') or meta.get('netloc')
+        if hostname:
+            return str(hostname).replace('www.', '')
+
+    provider = item.get('provider')
+    if isinstance(provider, dict):
+        provider_name = provider.get('name')
+        if provider_name:
+            return str(provider_name)
+
+    url = item.get('url')
+    if url:
+        hostname = urlparse(str(url)).netloc.replace('www.', '')
+        if hostname:
+            return hostname
+
+    return 'Brave News'
+
+
+def _normalize_brave_story(item: dict, requested_symbol: str | None = None) -> dict | None:
+    title = str(item.get('title') or '').strip()
+    description = str(item.get('description') or item.get('snippet') or '').strip()
+    extra_snippets = item.get('extra_snippets') or []
+    if isinstance(extra_snippets, list):
+        snippet_tail = ' '.join(str(snippet).strip() for snippet in extra_snippets[:2] if str(snippet).strip())
+    else:
+        snippet_tail = ''
+
+    body_text = ' '.join(part for part in [description, snippet_tail] if part).strip()
+    if not title:
+        return None
+
+    story_symbol = requested_symbol or _infer_story_symbol(title, body_text)
+    publish_value = (
+        item.get('page_age')
+        or item.get('age')
+        or item.get('published')
+        or item.get('published_at')
+        or item.get('date')
+    )
+    summary = description or snippet_tail or title
+
+    return {
+        'id': str(item.get('url') or f"{story_symbol or 'market'}-{publish_value}-{title}"),
+        'symbol': story_symbol,
+        'title': title,
+        'summary': (summary[:220] + '...') if len(summary) > 220 else summary,
+        'body_text': body_text or summary,
+        'datetime': str(publish_value) if publish_value else None,
+        'source': _format_story_source(item),
+        'url': item.get('url'),
+    }
 
 
 def _run_news_query(question: str) -> dict:
-    stories = _get_market_news()
     symbol = _extract_symbol(question)
+    stories = _get_market_news(symbol=symbol)
 
     if symbol:
         symbol_stories = [story for story in stories if story.get('symbol') == symbol]
@@ -1312,69 +1393,65 @@ def _run_news_query(question: str) -> dict:
     )
     return {
         'question': question,
-        'sql': 'news: latest Twelve Data market stories',
+        'sql': 'news: latest Brave News finance stories',
         'results': top_stories,
         'path': 'news',
         'commentary': commentary,
     }
 
 
-def _get_market_news() -> list[dict]:
+def _get_market_news(symbol: str | None = None) -> list[dict]:
     now = time.time()
-    cached = _MARKET_NEWS_CACHE.get('data')
-    if cached and now - float(_MARKET_NEWS_CACHE.get('ts', 0.0)) < _MARKET_NEWS_TTL_SECONDS:
-        return cached  # type: ignore[return-value]
+    cache_key = symbol or '__market__'
+    cached_entry = _MARKET_NEWS_CACHE.get(cache_key)
+    if cached_entry and now - float(cached_entry.get('ts', 0.0)) < _MARKET_NEWS_TTL_SECONDS:
+        return cached_entry.get('data', [])  # type: ignore[return-value]
 
-    api_key = os.environ.get('TWELVE_DATA_API_KEY', '').strip()
+    api_key = os.environ.get('BRAVE_SEARCH_API_KEY', '').strip()
     if not api_key:
         return []
 
+    story_count = max(1, min(int(os.environ.get('BRAVE_NEWS_COUNT', '10')), 10))
+    freshness = os.environ.get('BRAVE_NEWS_FRESHNESS', 'pd').strip() or 'pd'
+    country = os.environ.get('BRAVE_NEWS_COUNTRY', 'US').strip() or 'US'
+    search_lang = os.environ.get('BRAVE_NEWS_SEARCH_LANG', 'en').strip() or 'en'
+
+    response = requests.get(
+        'https://api.search.brave.com/res/v1/news/search',
+        headers={'X-Subscription-Token': api_key},
+        params={
+            'q': _market_news_query(symbol=symbol),
+            'count': story_count,
+            'offset': 0,
+            'freshness': freshness,
+            'country': country,
+            'search_lang': search_lang,
+            'extra_snippets': 'true',
+            'safesearch': 'moderate',
+        },
+        timeout=15,
+    )
+    response.raise_for_status()
+    payload = response.json()
+    items = payload.get('results') or payload.get('items') or []
+
     stories: list[dict] = []
     seen_ids: set[str] = set()
-
-    for symbol in _market_news_symbols():
-        try:
-            resp = requests.get(
-                'https://api.twelvedata.com/press_releases',
-                params={'symbol': symbol, 'apikey': api_key},
-                timeout=10,
-            )
-            resp.raise_for_status()
-            payload = resp.json()
-            items = payload.get('press_releases') or []
-            for item in items[:2]:
-                story_id = str(item.get('id') or f"{symbol}-{item.get('datetime')}-{item.get('title')}")
-                if story_id in seen_ids:
-                    continue
-                seen_ids.add(story_id)
-                summary = _strip_html(item.get('body'))
-                stories.append(
-                    {
-                        'id': story_id,
-                        'symbol': symbol,
-                        'title': item.get('title') or f'{symbol} press release',
-                        'summary': (summary[:220] + '...') if len(summary) > 220 else summary,
-                        'body_text': summary,
-                        'datetime': item.get('datetime'),
-                        'source': 'Twelve Data',
-                    }
-                )
-        except Exception:
+    for item in items:
+        if not isinstance(item, dict):
             continue
+        normalized = _normalize_brave_story(item, requested_symbol=symbol)
+        if not normalized:
+            continue
+        story_id = str(normalized.get('id'))
+        if story_id in seen_ids:
+            continue
+        seen_ids.add(story_id)
+        stories.append(normalized)
 
-    def sort_key(item: dict):
-        value = item.get('datetime')
-        if not value:
-            return datetime.min.replace(tzinfo=ZoneInfo('UTC'))
-        try:
-            return datetime.fromisoformat(str(value).replace('Z', '+00:00'))
-        except ValueError:
-            return datetime.min.replace(tzinfo=ZoneInfo('UTC'))
-
-    stories.sort(key=sort_key, reverse=True)
-    trimmed = stories[:5]
-    _MARKET_NEWS_CACHE['ts'] = now
-    _MARKET_NEWS_CACHE['data'] = trimmed
+    stories.sort(key=lambda item: _story_timestamp(item.get('datetime')), reverse=True)
+    trimmed = stories[:story_count]
+    _MARKET_NEWS_CACHE[cache_key] = {'ts': now, 'data': trimmed}
     return trimmed
 
 
@@ -1700,14 +1777,14 @@ async def market_snapshot():
 
 @app.get('/market-news')
 async def market_news():
-    """Return cached market news / press releases for a broad general-market symbol basket."""
+    """Return cached Brave News stories for the latest finance and trading flow."""
     try:
         news = _get_market_news()
         return {
             'stories': news,
             'count': len(news),
-            'source': 'twelve_data_press_releases',
-            'symbols': _market_news_symbols(),
+            'source': 'brave_news_search',
+            'query': _market_news_query(),
         }
     except requests.RequestException as e:
         raise HTTPException(status_code=502, detail=f'News fetch failed: {e}')
