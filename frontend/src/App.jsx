@@ -5,12 +5,14 @@ import { authedFetch } from './lib/api'
 import Chat from './pages/Chat'
 import Portfolio from './pages/Portfolio'
 import Dashboard from './pages/Dashboard'
+import NewsFeed from './pages/NewsFeed'
 import NewsArticle from './pages/NewsArticle'
 
 const NAV = [
   { id: 'dashboard', label: 'Markets', icon: 'grid_view' },
   { id: 'chat', label: 'Analysis', icon: 'analytics' },
   { id: 'portfolio', label: 'Portfolio', icon: 'account_balance_wallet' },
+  { id: 'news-feed', label: 'News', icon: 'newspaper' },
 ]
 
 const TICKER_STRIP = [
@@ -65,6 +67,8 @@ function routeFromHash() {
     case '/portfolio':
       return { page: 'portfolio', params }
     case '/news':
+      return { page: 'news-feed', params }
+    case '/news/article':
       return { page: 'news', params }
     default:
       return { page: 'dashboard', params: new URLSearchParams() }
@@ -77,8 +81,10 @@ function buildHash(page, params = new URLSearchParams()) {
       ? '/analysis'
       : page === 'portfolio'
         ? '/portfolio'
-        : page === 'news'
+        : page === 'news-feed'
           ? '/news'
+        : page === 'news'
+          ? '/news/article'
           : '/markets'
 
   const query = params.toString()
@@ -457,10 +463,11 @@ export default function App() {
             />
           )}
           {page === 'portfolio' && <Portfolio />}
-          {page === 'news' && <NewsArticle article={newsArticle} onBack={() => navigateTo('dashboard')} />}
+          {page === 'news-feed' && <NewsFeed onOpenArticle={openNewsArticle} />}
+          {page === 'news' && <NewsArticle article={newsArticle} onBack={() => navigateTo('news-feed')} />}
         </main>
 
-        <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-3 border-t-2 border-[#14181c] bg-white/95 px-2 py-2 backdrop-blur md:hidden">
+        <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t-2 border-[#14181c] bg-white/95 px-2 py-2 backdrop-blur md:hidden">
           {NAV.map((item) => {
             const active = page === item.id
             return (
