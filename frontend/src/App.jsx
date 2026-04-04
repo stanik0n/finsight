@@ -13,6 +13,15 @@ const NAV = [
   { id: 'portfolio', label: 'Portfolio', icon: 'account_balance_wallet' },
 ]
 
+const TICKER_STRIP = [
+  { label: 'Nasdaq', value: '16,379.46', change: '+1.12%' },
+  { label: 'BTC/USD', value: '67,842.10', change: '-2.15%' },
+  { label: 'Gold', value: '2,362.10', change: '+0.06%' },
+  { label: 'AAPL', value: '182.52', change: '+0.98%' },
+  { label: 'S&P 500', value: '5,241.53', change: '+0.42%' },
+  { label: 'VIX', value: '13.42', change: '-2.15%' },
+]
+
 const NEWS_STORAGE_KEY = 'finsight:selected-news-article'
 
 function readNewsFromStorage() {
@@ -340,87 +349,102 @@ export default function App() {
   function AppChrome() {
     return (
       <div className="min-h-screen bg-background text-on-surface">
-        <header className="fixed inset-x-0 top-0 z-50 flex h-14 items-center justify-between border-b border-outline/20 bg-white/80 px-4 backdrop-blur-xl sm:h-16 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-4 sm:gap-10">
-            <button
-              type="button"
-              onClick={() => navigateTo('dashboard')}
-              className="font-headline text-lg font-extrabold tracking-tight text-slate-900 sm:text-xl"
-            >
-              FINSIGHT
-            </button>
-            <nav className="hidden items-center gap-7 md:flex">
-              {NAV.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => navigateTo(item.id)}
-                  className="border-b pb-1 text-[11px] font-bold uppercase tracking-[0.24em] transition-colors"
-                  style={{
-                    borderColor: page === item.id ? '#556067' : 'transparent',
-                    color: page === item.id ? '#243036' : '#87939a',
-                  }}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </nav>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-4">
-            <form onSubmit={submitHeaderSearch} className="hidden xl:block">
-              <div className="flex items-center gap-3 border border-outline/20 bg-surface-container-lowest px-4 py-2">
-                <span className="material-symbols-outlined text-[18px] text-slate-500">search</span>
-                <input
-                  value={headerSearch}
-                  onChange={(e) => setHeaderSearch(e.target.value)}
-                  className="w-64 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
-                  placeholder="Search stocks..."
-                  autoComplete="off"
-                />
+        <div className="fixed inset-x-0 top-0 z-50 bg-[#eef2f4] px-2 pb-2 pt-2 sm:px-4">
+          <div className="terminal-shell overflow-hidden rounded-[22px] border-2 border-[#14181c] bg-white shadow-[4px_4px_0_rgba(20,24,28,0.95)]">
+            <div className="terminal-ticker-strip">
+              <div className="terminal-ticker-run">
+                {[...TICKER_STRIP, ...TICKER_STRIP].map((item, index) => (
+                  <div key={`${item.label}-${index}`} className="terminal-ticker-item">
+                    <span className="text-[#4f5964]">{item.label}</span>
+                    <span className="text-[#14181c]">{item.value}</span>
+                    <span style={{ color: item.change.startsWith('-') ? '#d14f59' : '#1f8f54' }}>{item.change}</span>
+                  </div>
+                ))}
               </div>
-            </form>
-            {authEnabled && (
-              <>
-                <Show when="signed-out">
-                  <div className="flex items-center gap-2">
-                    <SignInButton mode="modal">
-                      <button className="rounded-lg border border-outline/20 bg-white px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-700 transition-colors hover:bg-surface-container-low sm:px-4 sm:text-xs sm:tracking-[0.18em]">
-                        Sign In
-                      </button>
-                    </SignInButton>
-                    <SignUpButton mode="modal">
-                      <button className="hidden rounded-lg bg-slate-800 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:bg-slate-900 sm:block">
-                        Create Account
-                      </button>
-                    </SignUpButton>
+            </div>
+            <header className="flex h-16 items-center justify-between px-4 sm:h-[74px] sm:px-6 lg:px-8">
+              <div className="flex items-center gap-4 sm:gap-10">
+                <button
+                  type="button"
+                  onClick={() => navigateTo('dashboard')}
+                  className="font-headline text-lg font-extrabold tracking-tight text-slate-900 sm:text-[1.55rem]"
+                >
+                  FINSIGHT
+                </button>
+                <nav className="hidden items-center gap-7 md:flex">
+                  {NAV.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => navigateTo(item.id)}
+                      className="border-b-[3px] pb-1 text-[11px] font-bold uppercase tracking-[0.24em] transition-colors"
+                      style={{
+                        borderColor: page === item.id ? '#14181c' : 'transparent',
+                        color: page === item.id ? '#14181c' : '#7e8891',
+                      }}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </nav>
+              </div>
+              <div className="flex items-center gap-2 sm:gap-4">
+                <form onSubmit={submitHeaderSearch} className="hidden xl:block">
+                  <div className="flex items-center gap-3 border-2 border-[#14181c] bg-[#fbfcfc] px-4 py-2">
+                    <span className="material-symbols-outlined text-[18px] text-slate-500">search</span>
+                    <input
+                      value={headerSearch}
+                      onChange={(e) => setHeaderSearch(e.target.value)}
+                      className="w-64 bg-transparent text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
+                      placeholder="Search stocks..."
+                      autoComplete="off"
+                    />
                   </div>
-                </Show>
-                <Show when="signed-in">
-                  <div className="rounded-full border border-outline/15 bg-white p-1">
-                    <UserButton appearance={{ elements: { avatarBox: 'h-8 w-8' } }}>
-                      <UserButton.MenuItems>
-                        <UserButton.Action
-                          label="Telegram"
-                          labelIcon={<span className="material-symbols-outlined text-[16px]">sms</span>}
-                          open="telegram"
-                        />
-                      </UserButton.MenuItems>
-                      <UserButton.UserProfilePage
-                        label="Telegram"
-                        url="telegram"
-                        labelIcon={<span className="material-symbols-outlined text-[16px]">sms</span>}
-                      >
-                        <TelegramProfilePage />
-                      </UserButton.UserProfilePage>
-                    </UserButton>
-                  </div>
-                </Show>
-              </>
-            )}
+                </form>
+                {authEnabled && (
+                  <>
+                    <Show when="signed-out">
+                      <div className="flex items-center gap-2">
+                        <SignInButton mode="modal">
+                          <button className="terminal-button terminal-button-secondary px-3 py-2 sm:px-4">
+                            Sign In
+                          </button>
+                        </SignInButton>
+                        <SignUpButton mode="modal">
+                          <button className="terminal-button hidden px-4 py-2 sm:inline-flex">
+                            Create Account
+                          </button>
+                        </SignUpButton>
+                      </div>
+                    </Show>
+                    <Show when="signed-in">
+                      <div className="rounded-full border-2 border-[#14181c] bg-white p-1 shadow-[2px_2px_0_rgba(20,24,28,0.95)]">
+                        <UserButton appearance={{ elements: { avatarBox: 'h-8 w-8' } }}>
+                          <UserButton.MenuItems>
+                            <UserButton.Action
+                              label="Telegram"
+                              labelIcon={<span className="material-symbols-outlined text-[16px]">sms</span>}
+                              open="telegram"
+                            />
+                          </UserButton.MenuItems>
+                          <UserButton.UserProfilePage
+                            label="Telegram"
+                            url="telegram"
+                            labelIcon={<span className="material-symbols-outlined text-[16px]">sms</span>}
+                          >
+                            <TelegramProfilePage />
+                          </UserButton.UserProfilePage>
+                        </UserButton>
+                      </div>
+                    </Show>
+                  </>
+                )}
+              </div>
+            </header>
           </div>
-        </header>
+        </div>
 
         <main
-          className="bg-background pb-20 pt-14 md:pb-0 md:pt-16"
+          className="bg-background pb-20 pt-[104px] md:pb-0 md:pt-[112px]"
           style={{
             minHeight: '100vh',
           }}
@@ -436,17 +460,17 @@ export default function App() {
           {page === 'news' && <NewsArticle article={newsArticle} onBack={() => navigateTo('dashboard')} />}
         </main>
 
-        <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-3 border-t border-outline/20 bg-white/95 px-2 py-2 backdrop-blur md:hidden">
+        <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-3 border-t-2 border-[#14181c] bg-white/95 px-2 py-2 backdrop-blur md:hidden">
           {NAV.map((item) => {
             const active = page === item.id
             return (
               <button
                 key={item.id}
                 onClick={() => navigateTo(item.id)}
-                className="flex flex-col items-center justify-center gap-1 rounded-xl px-2 py-2 text-center transition-colors"
+                className="flex flex-col items-center justify-center gap-1 rounded-none px-2 py-2 text-center transition-colors"
                 style={{
                   backgroundColor: active ? '#eef3f6' : 'transparent',
-                  color: active ? '#243036' : '#7b8790',
+                  color: active ? '#14181c' : '#7b8790',
                 }}
               >
                 <span className="material-symbols-outlined text-[20px]">{item.icon}</span>

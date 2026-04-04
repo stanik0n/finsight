@@ -690,11 +690,12 @@ export default function Portfolio() {
   const topLoser = result?.portfolio_insights?.top_loser
 
   return (
-    <div className="min-h-screen bg-background px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-      <div className="mx-auto max-w-[1500px]">
+    <div className="min-h-screen bg-background px-3 py-5 sm:px-5 sm:py-7 lg:px-8 lg:py-8">
+      <div className="terminal-shell">
         <div className="mb-10 flex flex-col items-start justify-between gap-6 md:flex-row md:items-start">
-          <div>
-            <h1 className="mt-3 font-headline text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
+          <div className="terminal-panel w-full px-6 py-6 sm:px-8 sm:py-8">
+            <p className="terminal-label text-outline">Portfolio terminal // personal workspace</p>
+            <h1 className="mt-4 font-headline text-4xl font-extrabold uppercase tracking-tight text-slate-900 sm:text-[4rem]">
               Portfolio
             </h1>
             <p className="mt-4 max-w-3xl text-base leading-8 text-slate-500">
@@ -715,7 +716,7 @@ export default function Portfolio() {
           )}
         </div>
 
-        <div className="rounded-xl bg-surface-container-lowest px-6 py-6 shadow-[24px_0_40px_rgba(42,52,57,0.04)]">
+        <div className="terminal-panel px-6 py-6 shadow-none">
           <p className="terminal-label text-outline">Add position</p>
           <form onSubmit={addHolding} className="mt-5 flex flex-wrap items-end gap-4">
             <div className="w-full sm:w-auto">
@@ -1135,7 +1136,7 @@ export default function Portfolio() {
                   </div>
                 </div>
 
-                <div className="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+                <div className="terminal-panel p-6 shadow-none">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                       <h3 className="terminal-label text-outline">Notes Board</h3>
@@ -1148,7 +1149,7 @@ export default function Portfolio() {
                     </div>
                   </div>
                   <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(320px,0.78fr)_minmax(0,1.9fr)]">
-                    <form onSubmit={handleNoteSubmit} className="space-y-3" noValidate>
+                    <form onSubmit={handleNoteSubmit} className="terminal-panel-soft space-y-3 px-4 py-4" noValidate>
                       <TickerInput
                         value={noteForm.symbol}
                         onChange={(value) => setNoteForm((current) => ({ ...current, symbol: value }))}
@@ -1194,7 +1195,7 @@ export default function Portfolio() {
                           onClick={() => {
                             void addNote()
                           }}
-                          className="rounded-lg bg-slate-700 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-white transition-colors hover:bg-slate-800"
+                          className="terminal-button px-4 py-2.5"
                         >
                           Save Note
                         </button>
@@ -1204,16 +1205,13 @@ export default function Portfolio() {
                     <div className="overflow-x-auto pb-2">
                       <div className="grid min-w-[980px] gap-4 xl:grid-cols-5">
                         {NOTE_LANE_ORDER.map((lane, laneIndex) => (
-                          <div key={lane} className="rounded-xl bg-surface-container-low p-4">
-                            <div className="flex items-center justify-between gap-3">
+                          <div key={lane} className="rounded-xl bg-transparent p-1">
+                            <div className="terminal-lane-header" style={{ backgroundColor: `${noteAccent(lane)}22` }}>
                               <div>
-                                <p className="terminal-label text-outline">{NOTE_TYPE_LABELS[lane]}</p>
-                                <p className="mt-2 text-sm text-slate-500">{notesByLane[lane].length} cards</p>
+                                <p className="terminal-label text-[#14181c]">{NOTE_TYPE_LABELS[lane]}</p>
+                                <p className="mt-2 text-sm text-slate-600">{notesByLane[lane].length} cards</p>
                               </div>
-                              <span
-                                className="h-3 w-3 rounded-full"
-                                style={{ backgroundColor: noteAccent(lane) }}
-                              />
+                              <span className="terminal-chip border-[#14181c]/20 bg-white text-[#14181c]">{String(notesByLane[lane].length).padStart(2, '0')}</span>
                             </div>
 
                             <div className="mt-4 space-y-3">
@@ -1222,7 +1220,7 @@ export default function Portfolio() {
                                 return (
                                   <div
                                     key={note.note_id}
-                                    className="rounded-lg bg-white px-4 py-4 shadow-sm"
+                                    className="terminal-note-card px-4 py-4"
                                     style={{ borderTop: `3px solid ${urgency?.color || noteAccent(note.note_type)}` }}
                                   >
                                     <div className="flex items-start justify-between gap-3">
@@ -1270,7 +1268,7 @@ export default function Portfolio() {
                                   </div>
                                 )
                               }) : (
-                                <div className="rounded-lg border border-dashed border-outline/15 bg-white px-4 py-5 text-sm text-slate-500">
+                                <div className="terminal-note-dropzone px-4 py-5 text-sm text-slate-500">
                                   No notes in this lane yet.
                                 </div>
                               )}
@@ -1294,7 +1292,7 @@ export default function Portfolio() {
                   {allAlerts.length ? allAlerts.map((alert) => (
                     <div
                       key={alert.alert_id}
-                      className="rounded-xl bg-surface-container-lowest p-5 shadow-sm"
+                      className="terminal-panel p-5 shadow-none"
                       style={{ borderLeft: `4px solid ${alertAccent(alert)}` }}
                     >
                       <div className="mb-2 flex items-start justify-between gap-3">
@@ -1310,13 +1308,13 @@ export default function Portfolio() {
                       <p className="mt-2 text-xs leading-6 text-slate-500">{alert.message}</p>
                     </div>
                   )) : (
-                    <div className="rounded-xl bg-surface-container-lowest p-5 text-sm text-slate-500 shadow-sm">
+                    <div className="terminal-panel p-5 text-sm text-slate-500 shadow-none">
                       No active alerts right now.
                     </div>
                   )}
                 </div>
 
-                <div className="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+                <div className="terminal-panel p-6 shadow-none">
                   <h3 className="terminal-label text-outline">Position overview</h3>
                   <div className="mt-5 space-y-4">
                     <div className="flex items-center justify-between">

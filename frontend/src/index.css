@@ -3,17 +3,21 @@
 @tailwind utilities;
 
 :root {
-  --background: #f8fafb;
-  --surface: #f8fafb;
+  --background: #eef2f4;
+  --surface: #f3f5f6;
   --surface-lowest: #ffffff;
-  --surface-low: #f0f4f6;
-  --surface-high: #e1eaed;
-  --surface-highest: #d9e4e8;
-  --outline: #a9b4b7;
-  --outline-strong: #87939a;
-  --text-main: #2a3437;
-  --text-soft: #5d666c;
-  --brand: #5d666c;
+  --surface-low: #edf1f3;
+  --surface-high: #dbe2e7;
+  --surface-highest: #cfd8de;
+  --outline: #a4afb7;
+  --outline-strong: #55606a;
+  --text-main: #181d22;
+  --text-soft: #5d6872;
+  --brand: #1b55e2;
+  --accent-green: #1f8f54;
+  --accent-red: #d14f59;
+  --accent-yellow: #f4c62a;
+  --accent-blue: #2a63f6;
 }
 
 html,
@@ -24,13 +28,15 @@ body,
 
 body {
   margin: 0;
-  font-family: 'Inter', sans-serif;
-  background: var(--background);
+  font-family: 'IBM Plex Sans', 'Inter', sans-serif;
+  background:
+    radial-gradient(circle at 1px 1px, rgba(24, 29, 34, 0.08) 1px, transparent 0) 0 0 / 18px 18px,
+    var(--background);
   color: var(--text-main);
 }
 
 .font-headline {
-  font-family: 'Manrope', sans-serif;
+  font-family: 'Space Grotesk', 'Manrope', sans-serif;
 }
 
 .bg-background {
@@ -115,14 +121,122 @@ body {
 .terminal-chip {
   display: inline-flex;
   align-items: center;
-  border: 1px solid rgba(169, 180, 183, 0.2);
-  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(24, 29, 34, 0.12);
+  background: rgba(255, 255, 255, 0.94);
   padding: 0.35rem 0.6rem;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--outline-strong);
+}
+
+.terminal-shell {
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.terminal-panel {
+  background: #fff;
+  border: 2px solid #14181c;
+  box-shadow: 4px 4px 0 rgba(20, 24, 28, 0.95);
+}
+
+.terminal-panel-soft {
+  background: #fff;
+  border: 1px solid rgba(20, 24, 28, 0.14);
+  box-shadow: 0 1px 0 rgba(20, 24, 28, 0.05);
+}
+
+.terminal-panel-dark {
+  background: #14181c;
+  border: 2px solid #14181c;
+  color: #fff;
+  box-shadow: 4px 4px 0 rgba(20, 24, 28, 0.95);
+}
+
+.terminal-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #14181c;
+  background: #1b55e2;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  box-shadow: 3px 3px 0 rgba(20, 24, 28, 0.9);
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+.terminal-button:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 rgba(20, 24, 28, 0.9);
+}
+
+.terminal-button-secondary {
+  background: #fff;
+  color: #14181c;
+}
+
+.terminal-divider {
+  border-top: 2px solid #14181c;
+}
+
+.terminal-ticker-strip {
+  display: flex;
+  overflow: hidden;
+  border-bottom: 2px solid #14181c;
+  background: #f5f7f8;
+}
+
+.terminal-ticker-run {
+  display: flex;
+  min-width: max-content;
+  animation: terminalTicker 34s linear infinite;
+}
+
+.terminal-ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 1rem;
+  border-right: 1px solid rgba(20, 24, 28, 0.12);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.terminal-lane-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border: 2px solid #14181c;
+  padding: 0.85rem 1rem;
+  box-shadow: 3px 3px 0 rgba(20, 24, 28, 0.95);
+}
+
+.terminal-note-card {
+  background: #fff;
+  border: 2px solid #14181c;
+  box-shadow: 3px 3px 0 rgba(20, 24, 28, 0.85);
+}
+
+.terminal-note-dropzone {
+  border: 2px dashed rgba(20, 24, 28, 0.6);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+@keyframes terminalTicker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 .material-symbols-outlined {

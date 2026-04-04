@@ -465,24 +465,22 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
   }
 
   return (
-    <div className="min-h-screen bg-background px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-      <div className="mx-auto max-w-[1500px]">
+    <div className="min-h-screen bg-background px-3 py-5 sm:px-5 sm:py-7 lg:px-8 lg:py-8">
+      <div className="terminal-shell">
         <div className="mb-10 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-          <div>
-            <h1 className="mt-3 font-headline text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
-              Markets
+          <div className="terminal-panel px-6 py-6 sm:px-8 sm:py-8">
+            <p className="terminal-label text-outline">Terminal session 04.22.2026 // Status: active</p>
+            <h1 className="mt-4 font-headline text-4xl font-extrabold uppercase tracking-tight text-slate-900 sm:text-[4rem]">
+              Market Overview
             </h1>
-            <p className="font-headline text-3xl font-semibold tracking-tight text-slate-300 sm:text-5xl">
-              Live market overview
-            </p>
             <p className="mt-4 max-w-3xl text-base leading-8 text-slate-500">
               {snapshot?.date
                 ? `Live benchmarks, warehouse context, and the strongest active signals as of ${snapshot.date}.`
                 : 'Loading live market snapshot...'}
             </p>
           </div>
-          <div className="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
-            <p className="terminal-label text-outline">Quick search</p>
+          <div className="terminal-panel px-6 py-6">
+            <p className="terminal-label text-outline">Analyst Terminal</p>
             <p className="mt-3 text-sm leading-7 text-slate-500">
               Jump straight into analyst mode for a live quote, momentum screen, or a specific symbol.
             </p>
@@ -490,7 +488,7 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
               <button
                 type="button"
                 onClick={() => onSearch('NVDA price')}
-                className="flex w-full items-center justify-between rounded-lg border border-outline/10 px-4 py-3 text-left transition-colors hover:bg-surface-container-low"
+                className="flex w-full items-center justify-between border-2 border-[#14181c] bg-white px-4 py-3 text-left transition-colors hover:bg-surface-container-low"
               >
                 <div>
                   <p className="text-sm font-semibold text-slate-900">Latest NVDA quote</p>
@@ -501,7 +499,7 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
               <button
                 type="button"
                 onClick={() => onSearch('Which tech stocks had the highest RSI last week?')}
-                className="flex w-full items-center justify-between rounded-lg border border-outline/10 px-4 py-3 text-left transition-colors hover:bg-surface-container-low"
+                className="flex w-full items-center justify-between border-2 border-[#14181c] bg-white px-4 py-3 text-left transition-colors hover:bg-surface-container-low"
               >
                 <div>
                   <p className="text-sm font-semibold text-slate-900">Momentum screen</p>
@@ -517,12 +515,7 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
           <div className="col-span-12 space-y-8 lg:col-span-8">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
               {benchmarkCards.map((index) => (
-                <div
-                  key={index.label}
-                  className={`rounded-xl bg-surface-container-lowest px-5 py-5 shadow-sm ${
-                    index.up ? 'border-b-4 border-secondary' : 'border-b-4 border-tertiary'
-                  }`}
-                >
+                <div key={index.label} className="terminal-panel px-5 py-5">
                   <p className="terminal-label text-outline">{index.sublabel}</p>
                   <div className="mt-3 flex items-end justify-between gap-3">
                     <p className="font-headline text-3xl font-bold text-slate-900">{index.value}</p>
@@ -564,7 +557,7 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
                 )}
               </div>
 
-              <div className="overflow-hidden rounded-xl bg-surface-container-lowest shadow-sm">
+              <div className="terminal-panel overflow-hidden">
                 <div className="hidden grid-cols-12 gap-4 bg-surface-container-low px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-outline md:grid">
                   <div className="col-span-5">Asset &amp; symbol</div>
                   <div className="col-span-2 text-right">Last price</div>
@@ -639,7 +632,7 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               {sectorCards.map((index) => (
-                <div key={index.label} className="rounded-xl bg-surface-container-lowest px-5 py-5 shadow-sm">
+                <div key={index.label} className="terminal-panel px-5 py-5">
                   <p className="terminal-label text-outline">{index.label}</p>
                   <p className="mt-3 font-headline text-4xl font-bold text-slate-900">{index.value}</p>
                   <p className="mt-3 text-sm font-semibold" style={{ color: index.up ? '#4f9f85' : '#c76d63' }}>
@@ -653,7 +646,7 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
               ))}
             </div>
 
-            <div className="rounded-xl bg-surface-container-lowest p-6 shadow-sm sm:p-8">
+            <div className="terminal-panel p-6 sm:p-8">
               <div className="mb-8 flex flex-col items-start justify-between gap-6 lg:flex-row">
                 <div>
                   <h2 className="font-headline text-2xl font-bold text-slate-900">Aggregated Volatility Matrix</h2>
@@ -683,7 +676,7 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
                     Sector data unavailable.
                   </div>
                 )}
-                <div className="absolute right-4 top-4 rounded-lg bg-white px-4 py-3 shadow-[0_8px_24px_rgba(148,163,184,0.12)] sm:right-14 sm:top-16 sm:px-5 sm:py-4">
+                    <div className="terminal-panel absolute right-4 top-4 px-4 py-3 shadow-none sm:right-14 sm:top-16 sm:px-5 sm:py-4">
                   <p className="terminal-label text-outline">Highest RSI</p>
                   <p className="mt-2 font-headline text-3xl font-bold text-slate-900">
                     {peakSector ? `${fmt(peakSector.avg_rsi)} RSI` : '...'}
@@ -705,7 +698,7 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
                 <button
                   key={signal.symbol}
                   onClick={() => onSearch(`${signal.symbol} price`)}
-                  className="rounded-xl bg-surface-container-lowest px-5 py-5 text-left shadow-sm transition-colors hover:bg-white"
+                  className="terminal-panel px-5 py-5 text-left transition-colors hover:bg-white"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <p className="font-headline text-lg font-bold text-slate-900">{signal.symbol}</p>
@@ -737,7 +730,7 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
                   key={story.id || `${story.symbol}-${index}`}
                   type="button"
                   onClick={() => onOpenNews(story)}
-                  className="block w-full rounded-xl bg-surface-container-lowest p-5 text-left shadow-sm transition-colors hover:bg-white"
+                  className="terminal-panel block w-full p-5 text-left transition-colors hover:bg-white"
                   style={{ borderLeft: `4px solid ${index === 0 ? '#4f9f85' : '#545e76'}` }}
                 >
                   <div className="mb-2 flex items-start justify-between gap-3">
@@ -760,7 +753,7 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
               ))}
 
               {!stories.length && (
-                <div className="rounded-xl bg-surface-container-lowest p-5 shadow-sm">
+                <div className="terminal-panel p-5 shadow-none">
                   <p className="text-sm font-semibold text-slate-900">No news available.</p>
                   <p className="mt-2 text-xs leading-6 text-slate-500">
                     Current market news from major names will appear here when available.
