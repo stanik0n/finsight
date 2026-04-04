@@ -744,11 +744,11 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
           </div>
 
           <div className="col-span-12 space-y-6 lg:col-span-4">
-            <div className="terminal-dark-module p-5">
+            <div className="terminal-panel p-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="terminal-label text-white/60">Analyst Terminal</p>
-                  <h2 className="mt-3 font-headline text-3xl font-bold uppercase text-white">Quick Actions</h2>
+                  <p className="terminal-label text-outline">Analyst Terminal</p>
+                  <h2 className="mt-3 font-headline text-3xl font-bold uppercase text-slate-900">Quick Actions</h2>
                 </div>
                 <span className="material-symbols-outlined text-[#2a63f6]">travel_explore</span>
               </div>
@@ -756,7 +756,7 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
                 <button
                   type="button"
                   onClick={() => onSearch('AAPL fundamentals')}
-                  className="flex w-full items-center justify-between border border-white/20 bg-white/5 px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-white/10"
+                  className="flex w-full items-center justify-between border-2 border-[#14181c] bg-white px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.14em] text-slate-900 transition-colors hover:bg-surface-container-low"
                 >
                   <span>Fundamentals</span>
                   <span className="material-symbols-outlined text-[18px] text-[#2a63f6]">arrow_outward</span>
@@ -764,7 +764,7 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
                 <button
                   type="button"
                   onClick={() => onSearch('NVDA technical analysis')}
-                  className="flex w-full items-center justify-between border border-white/20 bg-white/5 px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-white/10"
+                  className="flex w-full items-center justify-between border-2 border-[#14181c] bg-white px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.14em] text-slate-900 transition-colors hover:bg-surface-container-low"
                 >
                   <span>Technicals</span>
                   <span className="material-symbols-outlined text-[18px] text-[#f4c62a]">monitoring</span>
@@ -772,7 +772,7 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
                 <button
                   type="button"
                   onClick={() => onSearch('latest sec filings for TSLA')}
-                  className="flex w-full items-center justify-between border border-white/20 bg-white/5 px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-white/10"
+                  className="flex w-full items-center justify-between border-2 border-[#14181c] bg-white px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.14em] text-slate-900 transition-colors hover:bg-surface-container-low"
                 >
                   <span>SEC Filings</span>
                   <span className="material-symbols-outlined text-[18px] text-[#d14f59]">receipt_long</span>
