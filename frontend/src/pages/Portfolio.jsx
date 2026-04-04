@@ -1402,7 +1402,7 @@ export default function Portfolio() {
             </div>
 
             <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-              <div className="terminal-surface px-6 py-6">
+              <div className="terminal-panel terminal-card-accent-yellow px-6 py-6">
                 <p className="terminal-label text-outline">Concentration Risk</p>
                 <p className="mt-4 font-headline text-4xl font-bold text-slate-900">
                   {result.portfolio_insights?.concentration?.top_position_weight_pct != null
@@ -1419,7 +1419,7 @@ export default function Portfolio() {
                 </p>
               </div>
 
-              <div className="terminal-surface px-6 py-6">
+              <div className="terminal-panel terminal-card-accent-green px-6 py-6">
                 <p className="terminal-label text-outline">Top Winner</p>
                 <p className="mt-4 font-headline text-4xl font-bold text-slate-900">
                   {result.portfolio_insights?.top_gainer?.symbol || '--'}
@@ -1437,7 +1437,7 @@ export default function Portfolio() {
                 </p>
               </div>
 
-              <div className="terminal-surface px-6 py-6">
+              <div className="terminal-panel terminal-card-accent-red px-6 py-6">
                 <p className="terminal-label text-outline">Top Loser</p>
                 <p className="mt-4 font-headline text-4xl font-bold text-slate-900">
                   {result.portfolio_insights?.top_loser?.symbol || '--'}
@@ -1457,13 +1457,13 @@ export default function Portfolio() {
             </div>
 
             {result.missing_symbols?.length > 0 && (
-              <div className="border border-[#d8b0aa] bg-[#fff7f5] px-5 py-4 text-sm text-[#9d4840]">
+              <div className="terminal-surface-soft px-5 py-4 text-sm text-[#9d4840]">
                 <strong>Missing symbols:</strong> {result.missing_symbols.join(', ')} could not be priced from the warehouse.
               </div>
             )}
 
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-              <div className="terminal-surface px-6 py-6 lg:col-span-4">
+              <div className="terminal-panel px-6 py-6 lg:col-span-4">
                 <p className="terminal-label text-outline">Sector allocation</p>
                 <div className="mt-6 flex flex-col items-start gap-6 sm:flex-row sm:items-center">
                   <div className="relative h-32 w-32 shrink-0">
@@ -1490,14 +1490,14 @@ export default function Portfolio() {
                 </div>
               </div>
 
-              <div className="terminal-surface lg:col-span-8">
+              <div className="terminal-panel lg:col-span-8">
                 <div className="border-b border-outline/10 px-6 py-4">
                   <p className="font-headline text-2xl font-bold text-slate-900">Detailed holdings</p>
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full min-w-[760px]">
                     <thead>
-                      <tr className="border-b border-outline/10 bg-surface-container-low">
+                      <tr className="border-b-2 border-[#14181c] bg-[#eef3f6]">
                         {['Ticker', 'Shares', 'Avg Cost', 'Price', 'P&L', 'Return'].map((heading) => (
                           <th key={heading} className="px-6 py-3 text-left terminal-label text-outline">
                             {heading}
@@ -1507,7 +1507,7 @@ export default function Portfolio() {
                     </thead>
                     <tbody>
                       {result.positions.map((position) => (
-                        <tr key={position.symbol} className="border-b border-outline/10 hover:bg-white">
+                        <tr key={position.symbol} className="border-b border-outline/15 bg-white transition-colors hover:bg-[#f4f8fb]">
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-4">
                               <CompanyLogo symbol={position.symbol} alt={`${position.symbol} logo`} size={40} />
@@ -1537,8 +1537,8 @@ export default function Portfolio() {
         )}
 
         {holdings.length === 0 && (
-          <div className="mt-16 flex flex-col items-center justify-center border border-dashed border-outline/25 bg-surface-container-low px-8 py-20 text-center">
-            <div className="mb-6 flex h-16 w-16 items-center justify-center bg-surface-container-high text-slate-700">
+          <div className="terminal-panel mt-16 flex flex-col items-center justify-center border-dashed px-8 py-20 text-center">
+            <div className="mb-6 flex h-16 w-16 items-center justify-center border-2 border-[#14181c] bg-[#eef3f6] text-slate-700 shadow-[3px_3px_0_rgba(20,24,28,0.9)]">
               <span className="material-symbols-outlined text-3xl">account_balance_wallet</span>
             </div>
             <p className="font-headline text-3xl font-bold text-slate-900">No Positions Yet</p>
