@@ -330,7 +330,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
     <div className="flex min-h-[calc(100vh-56px-72px)] flex-col bg-background md:min-h-[calc(100vh-64px)] md:flex-row" style={{ overflow: 'hidden' }}>
       <aside className="hidden w-72 border-r border-outline/15 bg-surface-container-lowest lg:block">
         <div className="flex h-full flex-col overflow-y-auto px-6 py-8">
-          <div className="rounded-xl bg-white px-4 py-4 shadow-sm">
+          <div className="terminal-surface px-4 py-4">
             <p className="terminal-label mb-3 text-outline">Analysis Modes</p>
             <div className="space-y-1">
                 {visibleModes.map((item, index) => (
@@ -338,7 +338,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
                     key={item.label}
                     type="button"
                     onClick={() => handleModeClick(item)}
-                    className={`flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left transition-colors ${
+                    className={`flex w-full items-center gap-3 border-2 border-transparent px-3 py-3 text-left transition-colors ${
                       index === 1 ? 'bg-surface-container-low text-slate-900' : 'text-slate-600'
                     } hover:bg-surface-container-low`}
                   >
@@ -352,7 +352,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
             </div>
           </div>
 
-          <div className="mt-6 rounded-xl bg-white px-4 py-4 shadow-sm">
+          <div className="terminal-surface px-4 py-4">
             <div className="mb-3 flex items-center justify-between">
               <p className="terminal-label text-outline">Recent Sessions</p>
               <span className="terminal-label text-outline">{history.length}</span>
@@ -364,7 +364,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
                 [...history].reverse().slice(0, 6).map((entry, index) => (
                   <div
                     key={`${entry.question}-${index}`}
-                    className="rounded-lg border border-outline/10 bg-surface-container-low px-4 py-3"
+                    className="terminal-surface-soft px-4 py-3"
                   >
                     <p className="line-clamp-2 text-xs font-medium leading-relaxed text-slate-700">
                       {entry.question}
@@ -388,7 +388,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
             </div>
           </div>
 
-          <div className="mt-6 rounded-xl bg-white px-4 py-4 shadow-sm">
+          <div className="terminal-surface px-4 py-4">
             <p className="terminal-label text-outline">Session shortcuts</p>
             <div className="mt-3 space-y-2">
               {visibleExamples.slice(0, 3).map((example) => (
@@ -396,7 +396,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
                   key={example}
                   type="button"
                   onClick={() => handleQuestion(example)}
-                  className="block w-full rounded-lg border border-outline/10 px-3 py-3 text-left text-xs leading-relaxed text-slate-600 transition-colors hover:bg-surface-container-low"
+                  className="block w-full border-2 border-[#14181c] bg-white px-3 py-3 text-left text-xs leading-relaxed text-slate-600 transition-colors hover:bg-surface-container-low"
                 >
                   {example}
                 </button>
@@ -405,14 +405,14 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
           </div>
 
           {chatLockedToPublic && (
-            <div className="mt-6 rounded-xl border border-outline/10 bg-white px-4 py-4 shadow-sm">
+            <div className="terminal-surface px-4 py-4">
               <p className="terminal-label text-outline">Private account features</p>
               <p className="mt-2 text-xs leading-relaxed text-slate-500">
                 Sign in to ask about your saved portfolio, watchlist, notes, and Telegram-linked data.
               </p>
               <div className="mt-3">
                 <SignInButton mode="modal">
-                  <button className="rounded-lg bg-slate-800 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-slate-900">
+                  <button className="terminal-button px-3 py-2">
                     Sign In
                   </button>
                 </SignInButton>
@@ -444,7 +444,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
                   </p>
                 </div>
 
-                <div className="rounded-xl bg-white p-6 shadow-sm">
+                <div className="terminal-surface p-6">
                   <p className="terminal-label text-outline">Suggested questions</p>
                   <div className="mt-4 space-y-3">
                     {visibleExamples.slice(0, 3).map((example) => (
@@ -452,7 +452,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
                         key={example}
                         type="button"
                         onClick={() => handleQuestion(example)}
-                        className="block w-full rounded-lg border border-outline/10 px-4 py-3 text-left text-sm text-slate-700 transition-colors hover:bg-surface-container-low"
+                        className="block w-full border-2 border-[#14181c] bg-white px-4 py-3 text-left text-sm text-slate-700 transition-colors hover:bg-surface-container-low"
                       >
                         {example}
                       </button>
@@ -462,7 +462,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
               </div>
 
               {history.length === 0 && !loading && (
-                <div className="rounded-xl bg-white px-8 py-12 text-center shadow-sm">
+                <div className="terminal-surface px-8 py-12 text-center">
                   <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-xl bg-surface-container-low text-slate-700">
                     <span className="material-symbols-outlined text-3xl">psychology</span>
                   </div>
@@ -484,12 +484,12 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
                         <span className="terminal-label text-outline">Question</span>
                         <span className="h-1.5 w-1.5 border border-outline/60" />
                       </div>
-                      <div className="rounded-xl border border-outline/10 bg-white px-6 py-6 shadow-sm">
+                      <div className="terminal-surface-soft px-6 py-6">
                         <p className="text-sm leading-relaxed text-slate-700">{entry.question}</p>
                       </div>
                     </div>
 
-                    <div className="max-w-5xl rounded-xl bg-white p-6 shadow-sm">
+                    <div className="terminal-surface p-6">
                       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
                           <span className="h-1.5 w-1.5 bg-primary" />
@@ -512,7 +512,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
                           {entry.row_count === 0 && <span className="terminal-chip">No matches</span>}
                         </div>
                       </div>
-                      <div className="rounded-lg bg-surface-container-low px-5 py-5">
+                      <div className="terminal-surface-soft px-5 py-5">
                         <CommentaryPanel commentary={fallbackCommentary(entry)} />
                       </div>
                     </div>
@@ -521,7 +521,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
               </div>
 
               {loading && (
-                <div className="mt-8 max-w-4xl rounded-xl bg-white px-6 py-6 shadow-sm">
+                <div className="terminal-surface max-w-4xl px-6 py-6">
                   <div className="mb-3 flex items-center gap-2">
                     <span className="h-1.5 w-1.5 bg-primary" />
                     <span className="terminal-label text-slate-700">Response</span>
@@ -531,7 +531,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
               )}
 
               {error && (
-                <div className="mt-8 max-w-4xl rounded-xl border border-[#d4a5a1] bg-[#fff4f3] px-5 py-4 text-sm text-[#8c3d38]">
+                <div className="terminal-surface-soft mt-8 max-w-4xl px-5 py-4 text-sm text-[#8c3d38]">
                   <strong>Error:</strong> {error}
                 </div>
               )}
@@ -540,7 +540,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
             </div>
 
             <div className="absolute inset-x-0 bottom-0 z-20 px-4 pb-4 pt-6 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8 lg:pt-10">
-              <div className="mx-auto max-w-5xl rounded-2xl border border-outline/10 bg-[rgba(248,250,251,0.96)] px-6 py-5 shadow-[0_-12px_30px_rgba(226,233,236,0.85)] backdrop-blur-md">
+              <div className="terminal-surface mx-auto max-w-5xl bg-[rgba(248,250,251,0.96)] px-6 py-5 backdrop-blur-md">
                 <form onSubmit={submitForm}>
                   <div className="flex items-center gap-4">
                       <input
@@ -555,7 +555,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
                     <button
                       type="submit"
                       disabled={loading}
-                      className="material-symbols-outlined rounded-full bg-slate-800 p-2 text-white transition-colors hover:bg-slate-900 disabled:opacity-50"
+                      className="material-symbols-outlined border-2 border-[#14181c] bg-[#1b55e2] p-2 text-white shadow-[3px_3px_0_rgba(20,24,28,0.9)] transition-colors hover:bg-[#2a63f6] disabled:opacity-50"
                     >
                       arrow_upward
                     </button>
@@ -567,7 +567,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
 
           <aside className="hidden w-80 shrink-0 bg-surface-container-low px-8 py-8 xl:block">
             <div className="space-y-6">
-              <div className="rounded-xl bg-white px-6 py-6 shadow-sm">
+              <div className="terminal-surface px-6 py-6">
                 <div className="flex items-start justify-between gap-6">
                   <div className="min-w-0">
                     <p className="terminal-label text-outline">{isPortfolioView ? 'Portfolio' : 'Symbol'}</p>
@@ -623,7 +623,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
                 </div>
               </div>
 
-              <div className="rounded-xl bg-white px-6 py-6 shadow-sm">
+              <div className="terminal-surface px-6 py-6">
                 <p className="terminal-label text-outline">Route</p>
                 <p className="mt-2 font-headline text-2xl font-bold text-slate-900">{routeLabel}</p>
                   <p className="mt-2 text-sm text-slate-500">
@@ -655,7 +655,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
                   </div>
                 ) : (
                   sidebarCards.map((card) => (
-                    <div key={card.label} className="rounded-xl bg-white px-6 py-6 shadow-sm">
+                  <div key={card.label} className="terminal-surface px-6 py-6">
                       <p className="terminal-label text-outline">{card.label}</p>
                       <p className="mt-2 font-headline text-2xl font-bold text-slate-900">{card.value}</p>
                       <p className="mt-2 text-sm text-slate-500">{card.sublabel}</p>

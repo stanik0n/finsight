@@ -155,6 +155,18 @@ body {
   box-shadow: 4px 4px 0 rgba(20, 24, 28, 0.95);
 }
 
+.terminal-surface {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbfd 100%);
+  border: 2px solid #14181c;
+  box-shadow: 4px 4px 0 rgba(20, 24, 28, 0.95);
+}
+
+.terminal-surface-soft {
+  background: linear-gradient(180deg, #ffffff 0%, #f7fafc 100%);
+  border: 2px solid rgba(20, 24, 28, 0.7);
+  box-shadow: 3px 3px 0 rgba(20, 24, 28, 0.6);
+}
+
 .terminal-button {
   display: inline-flex;
   align-items: center;
@@ -178,6 +190,56 @@ body {
 .terminal-button-secondary {
   background: #fff;
   color: #14181c;
+}
+
+.terminal-button-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #14181c;
+  background: #fff;
+  color: #14181c;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  box-shadow: 3px 3px 0 rgba(20, 24, 28, 0.9);
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+
+.terminal-button-ghost:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0 rgba(20, 24, 28, 0.9);
+  background: #eef3f6;
+}
+
+.terminal-input {
+  width: 100%;
+  border: 2px solid #14181c;
+  background: #fff;
+  color: #334155;
+  padding: 0.8rem 0.95rem;
+  font-size: 0.95rem;
+  box-shadow: 3px 3px 0 rgba(20, 24, 28, 0.16);
+  outline: none;
+}
+
+.terminal-input:focus {
+  box-shadow: 3px 3px 0 rgba(42, 99, 246, 0.35);
+}
+
+.terminal-input-muted {
+  width: 100%;
+  border: 2px solid rgba(20, 24, 28, 0.24);
+  background: #edf1f3;
+  color: #334155;
+  padding: 0.8rem 0.95rem;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.terminal-input-muted:focus {
+  border-color: #14181c;
 }
 
 .terminal-divider {

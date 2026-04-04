@@ -67,7 +67,7 @@ export default function NewsArticle({ article, onBack }) {
   if (!article) {
     return (
       <div className="min-h-screen bg-background px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-        <div className="mx-auto max-w-5xl rounded-xl bg-white px-6 py-8 shadow-sm sm:px-8 sm:py-10">
+        <div className="terminal-surface mx-auto max-w-5xl px-6 py-8 sm:px-8 sm:py-10">
           <p className="font-headline text-3xl font-bold text-slate-900">No article selected</p>
           <p className="mt-3 text-sm leading-7 text-slate-500">
             Go back to Markets and select a story from the news rail.
@@ -75,7 +75,7 @@ export default function NewsArticle({ article, onBack }) {
           <button
             type="button"
             onClick={onBack}
-            className="mt-6 rounded-lg bg-slate-800 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-900"
+            className="terminal-button mt-6 px-5 py-3"
           >
             Back to Markets
           </button>
@@ -90,18 +90,18 @@ export default function NewsArticle({ article, onBack }) {
         <button
           type="button"
           onClick={onBack}
-          className="inline-flex items-center gap-2 rounded-lg border border-outline/15 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-surface-container-low"
+          className="terminal-button-ghost inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700"
         >
           <span className="material-symbols-outlined text-[18px]">arrow_back</span>
           Back to Markets
         </button>
 
-        <article className="rounded-2xl bg-white px-6 py-8 shadow-sm sm:px-10 sm:py-10">
+        <article className="terminal-surface px-6 py-8 sm:px-10 sm:py-10">
           <div className="mb-8 flex flex-wrap items-center gap-3">
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">
+            <span className="terminal-chip border-[#14181c] bg-[#14181c] px-3 py-1 text-[10px] text-white">
               {article.source || 'News'}
             </span>
-            <span className="rounded-full bg-surface-container-low px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-slate-700">
+            <span className="terminal-chip border-[#14181c] bg-[#eef3f6] px-3 py-1 text-[10px] text-slate-700">
               {article.symbol}
             </span>
             <span className="terminal-label text-outline">{formatArticleDate(article.datetime)}</span>
@@ -111,7 +111,7 @@ export default function NewsArticle({ article, onBack }) {
             {formatArticleTitle(article.title)}
           </h1>
 
-          <div className="mt-10 rounded-xl bg-surface-container-low px-6 py-5">
+          <div className="terminal-surface-soft mt-10 px-6 py-5">
             <p className="terminal-label text-outline">Article summary</p>
             <p className="mt-3 text-sm leading-8 text-slate-600">
               {article.summary || 'No summary available.'}

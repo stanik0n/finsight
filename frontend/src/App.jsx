@@ -187,12 +187,12 @@ function TelegramProfilePage() {
       </div>
 
       {error && (
-        <div className="rounded-lg border border-[#d8b0aa] bg-[#fff4f2] px-4 py-3 text-sm text-[#9d4840]">
+        <div className="terminal-surface-soft px-4 py-3 text-sm text-[#9d4840]">
           <strong>Error:</strong> {error}
         </div>
       )}
 
-      <div className="rounded-xl border border-outline/10 bg-surface-container-low px-5 py-5">
+      <div className="terminal-surface px-5 py-5">
         {loading ? (
           <p className="text-sm text-slate-500">Loading Telegram settings...</p>
         ) : status.linked ? (
@@ -225,7 +225,7 @@ function TelegramProfilePage() {
             </p>
 
             {status.pending_code ? (
-              <div className="rounded-lg bg-white px-4 py-4">
+              <div className="terminal-surface-soft px-4 py-4">
                 <p className="terminal-label text-outline">Current code</p>
                 <p className="mt-3 font-mono text-2xl font-bold tracking-[0.24em] text-slate-900">{status.pending_code}</p>
               </div>
@@ -238,7 +238,7 @@ function TelegramProfilePage() {
                   void generateCode()
                 }}
                 disabled={busy}
-                className="rounded-lg bg-slate-700 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
+                className="terminal-button px-4 py-2.5 disabled:opacity-50"
               >
                 {busy ? 'Generating' : status.pending_code ? 'Refresh Code' : 'Generate Code'}
               </button>
@@ -246,13 +246,13 @@ function TelegramProfilePage() {
                 type="button"
                 onClick={openTelegramConnect}
                 disabled={busy || !status.telegram_connect_url}
-                className="rounded-lg bg-white px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-slate-700 ring-1 ring-outline/15 transition-colors hover:bg-surface-container-low disabled:opacity-50"
+                className="terminal-button-ghost px-4 py-2.5 disabled:opacity-50"
               >
                 Open Telegram Bot
               </button>
             </div>
 
-            <div className="rounded-lg border border-dashed border-outline/20 bg-white px-4 py-4 text-sm leading-7 text-slate-600">
+            <div className="terminal-note-dropzone px-4 py-4 text-sm leading-7 text-slate-600">
               <p>Fallback if the deep link does not open correctly:</p>
               <p className="mt-2">
                 Send <span className="font-mono text-slate-700">/link {status.pending_code || 'YOUR_CODE'}</span> to your FinSight bot manually.

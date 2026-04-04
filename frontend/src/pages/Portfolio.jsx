@@ -748,7 +748,7 @@ export default function Portfolio() {
           )}
         </div>
 
-        <div className="terminal-panel px-6 py-6 shadow-none">
+        <div className="terminal-panel px-6 py-6">
           <p className="terminal-label text-outline">Add position</p>
           <form onSubmit={addHolding} className="mt-5 flex flex-wrap items-end gap-4">
             <div className="w-full sm:w-auto">
@@ -793,7 +793,7 @@ export default function Portfolio() {
         </div>
 
         {portfolioLocked && (
-          <div className="mt-8 rounded-xl border border-outline/15 bg-surface-container-lowest px-6 py-6 shadow-sm">
+          <div className="terminal-surface mt-8 px-6 py-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div className="max-w-3xl">
                 <p className="terminal-label text-outline">Private workspace</p>
@@ -804,12 +804,12 @@ export default function Portfolio() {
               </div>
               <div className="flex flex-wrap gap-3">
                 <SignInButton mode="modal">
-                  <button className="rounded-lg border border-outline/20 bg-white px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700 transition-colors hover:bg-surface-container-low">
+                  <button className="terminal-button-ghost px-4 py-3">
                     Sign In
                   </button>
                 </SignInButton>
                 <SignUpButton mode="modal">
-                  <button className="rounded-lg bg-slate-800 px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:bg-slate-900">
+                  <button className="terminal-button px-4 py-3">
                     Create Account
                   </button>
                 </SignUpButton>
@@ -819,7 +819,7 @@ export default function Portfolio() {
         )}
 
         {holdings.length > 0 && (
-          <div className="mt-8 overflow-hidden rounded-xl bg-surface-container-lowest shadow-sm">
+          <div className="terminal-surface mt-8 overflow-hidden">
             <div className="flex items-center justify-between px-6 py-5">
               <h2 className="font-headline text-2xl font-bold text-slate-900">Primary Holdings</h2>
               <span className="terminal-chip">{holdings.length} tracked</span>
@@ -916,7 +916,7 @@ export default function Portfolio() {
               ))}
             </div>
 
-            <div className="border border-outline/10 bg-white shadow-[0_1px_0_rgba(0,0,0,0.02)]">
+            <div className="terminal-surface">
               <button
                 type="button"
                 onClick={() => setPreferencesOpen((current) => !current)}
@@ -949,7 +949,7 @@ export default function Portfolio() {
                   </div>
 
                   <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
-                    <div className="border border-outline/10 bg-surface-container-lowest px-5 py-5">
+                    <div className="terminal-surface-soft px-5 py-5">
                       <div className="flex items-center justify-between gap-3">
                         <div>
                           <p className="terminal-label text-outline">Concentration alerts</p>
@@ -980,7 +980,7 @@ export default function Portfolio() {
                       </div>
                     </div>
 
-                    <div className="border border-outline/10 bg-surface-container-lowest px-5 py-5">
+                    <div className="terminal-surface-soft px-5 py-5">
                       <div className="flex items-center justify-between gap-3">
                         <div>
                           <p className="terminal-label text-outline">Daily move alerts</p>
@@ -1008,7 +1008,7 @@ export default function Portfolio() {
                       </div>
                     </div>
 
-                    <div className="border border-outline/10 bg-surface-container-lowest px-5 py-5">
+                    <div className="terminal-surface-soft px-5 py-5">
                       <div className="flex items-center justify-between gap-3">
                         <div>
                           <p className="terminal-label text-outline">RSI alerts</p>
@@ -1055,7 +1055,7 @@ export default function Portfolio() {
                       </div>
                     </div>
 
-                    <div className="border border-outline/10 bg-surface-container-lowest px-5 py-5">
+                    <div className="terminal-surface-soft px-5 py-5">
                       <p className="terminal-label text-outline">Telegram delivery</p>
                       <p className="mt-2 text-sm text-slate-500">
                         Control whether FinSight sends daily briefs and push alerts to your bot chat.
@@ -1092,20 +1092,20 @@ export default function Portfolio() {
                     <button
                       type="button"
                       onClick={loadPortfolio}
-                      className="rounded-lg bg-surface-container-low px-4 py-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-surface-container"
+                      className="terminal-button-ghost px-4 py-2 text-xs"
                     >
                       Edit List
                     </button>
                     <button
                       type="button"
                       onClick={() => document.getElementById('portfolio-watchlist-input')?.focus()}
-                      className="rounded-lg bg-slate-700 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-slate-800"
+                      className="terminal-button px-4 py-2 text-xs"
                     >
                       Add Symbol
                     </button>
                   </div>
                 </div>
-                <div className="overflow-hidden rounded-xl bg-surface-container-lowest shadow-sm">
+                <div className="terminal-surface overflow-hidden">
                   <div className="hidden grid-cols-12 gap-4 bg-surface-container-low px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-outline md:grid">
                     <div className="col-span-5">Asset &amp; symbol</div>
                     <div className="col-span-2 text-right">Last price</div>
@@ -1122,7 +1122,7 @@ export default function Portfolio() {
                           widthClass="w-full"
                         />
                       </div>
-                      <button className="rounded-lg bg-slate-700 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white transition-colors hover:bg-slate-800 sm:w-auto">
+                      <button className="terminal-button px-4 py-3 sm:w-auto">
                         Add
                       </button>
                     </div>
@@ -1172,7 +1172,7 @@ export default function Portfolio() {
                   </div>
                 </div>
 
-                <div className="terminal-panel p-6 shadow-none">
+                <div className="terminal-panel p-6">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                       <h3 className="terminal-label text-outline">Notes Board</h3>
@@ -1194,7 +1194,7 @@ export default function Portfolio() {
                         <div>
                           <p className="terminal-label mb-2 text-outline">Note Lane</p>
                           <select
-                            className="w-full rounded-lg border-0 bg-surface-container-low px-4 py-3 text-sm text-slate-700 focus:outline-none"
+                            className="terminal-input-muted"
                             value={noteForm.note_type}
                             onChange={(event) => setNoteForm((current) => ({ ...current, note_type: event.target.value }))}
                           >
@@ -1207,20 +1207,20 @@ export default function Portfolio() {
                           <p className="terminal-label mb-2 text-outline">Review Date</p>
                           <input
                             type="date"
-                            className="w-full rounded-lg border-0 bg-surface-container-low px-4 py-3 text-sm text-slate-700 focus:outline-none"
+                            className="terminal-input-muted"
                             value={noteForm.review_date}
                             onChange={(event) => setNoteForm((current) => ({ ...current, review_date: event.target.value }))}
                           />
                         </div>
                       </div>
                       <input
-                        className="w-full rounded-lg border-0 bg-surface-container-low px-4 py-3 text-sm text-slate-700 focus:outline-none"
+                        className="terminal-input-muted"
                         placeholder="Optional title, like P1 now | Trim if guidance slips."
                         value={noteForm.note_title}
                         onChange={(event) => setNoteForm((current) => ({ ...current, note_title: event.target.value }))}
                       />
                       <textarea
-                        className="min-h-[180px] w-full resize-none rounded-lg border-0 bg-surface-container-low px-4 py-3 text-sm text-slate-700 focus:outline-none"
+                        className="terminal-input-muted min-h-[180px] w-full resize-none"
                         placeholder="Capture the note, trigger, or decision you want attached to this ticker."
                         value={noteForm.note_text}
                         onChange={(event) => setNoteForm((current) => ({ ...current, note_text: event.target.value }))}
@@ -1344,7 +1344,7 @@ export default function Portfolio() {
                   {allAlerts.length ? allAlerts.map((alert) => (
                     <div
                       key={alert.alert_id}
-                      className="terminal-panel p-5 shadow-none"
+                      className="terminal-panel p-5"
                       style={{ borderLeft: `4px solid ${alertAccent(alert)}` }}
                     >
                       <div className="mb-2 flex items-start justify-between gap-3">
@@ -1360,13 +1360,13 @@ export default function Portfolio() {
                       <p className="mt-2 text-xs leading-6 text-slate-500">{alert.message}</p>
                     </div>
                   )) : (
-                    <div className="terminal-panel p-5 text-sm text-slate-500 shadow-none">
+                    <div className="terminal-panel p-5 text-sm text-slate-500">
                       No active alerts right now.
                     </div>
                   )}
                 </div>
 
-                <div className="terminal-panel p-6 shadow-none">
+                <div className="terminal-panel p-6">
                   <h3 className="terminal-label text-outline">Position overview</h3>
                   <div className="mt-5 space-y-4">
                     <div className="flex items-center justify-between">
@@ -1402,7 +1402,7 @@ export default function Portfolio() {
             </div>
 
             <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-              <div className="border border-outline/10 bg-white px-6 py-6 shadow-[0_1px_0_rgba(0,0,0,0.02)]">
+              <div className="terminal-surface px-6 py-6">
                 <p className="terminal-label text-outline">Concentration Risk</p>
                 <p className="mt-4 font-headline text-4xl font-bold text-slate-900">
                   {result.portfolio_insights?.concentration?.top_position_weight_pct != null
@@ -1419,7 +1419,7 @@ export default function Portfolio() {
                 </p>
               </div>
 
-              <div className="border border-outline/10 bg-white px-6 py-6 shadow-[0_1px_0_rgba(0,0,0,0.02)]">
+              <div className="terminal-surface px-6 py-6">
                 <p className="terminal-label text-outline">Top Winner</p>
                 <p className="mt-4 font-headline text-4xl font-bold text-slate-900">
                   {result.portfolio_insights?.top_gainer?.symbol || '--'}
@@ -1437,7 +1437,7 @@ export default function Portfolio() {
                 </p>
               </div>
 
-              <div className="border border-outline/10 bg-white px-6 py-6 shadow-[0_1px_0_rgba(0,0,0,0.02)]">
+              <div className="terminal-surface px-6 py-6">
                 <p className="terminal-label text-outline">Top Loser</p>
                 <p className="mt-4 font-headline text-4xl font-bold text-slate-900">
                   {result.portfolio_insights?.top_loser?.symbol || '--'}
@@ -1463,7 +1463,7 @@ export default function Portfolio() {
             )}
 
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-              <div className="border border-outline/10 bg-white px-6 py-6 lg:col-span-4">
+              <div className="terminal-surface px-6 py-6 lg:col-span-4">
                 <p className="terminal-label text-outline">Sector allocation</p>
                 <div className="mt-6 flex flex-col items-start gap-6 sm:flex-row sm:items-center">
                   <div className="relative h-32 w-32 shrink-0">
@@ -1490,7 +1490,7 @@ export default function Portfolio() {
                 </div>
               </div>
 
-              <div className="border border-outline/10 bg-surface-container-lowest lg:col-span-8">
+              <div className="terminal-surface lg:col-span-8">
                 <div className="border-b border-outline/10 px-6 py-4">
                   <p className="font-headline text-2xl font-bold text-slate-900">Detailed holdings</p>
                 </div>

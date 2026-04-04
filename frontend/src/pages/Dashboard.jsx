@@ -116,7 +116,7 @@ function TickerInput({ value, onChange, widthClass = 'w-full' }) {
   return (
     <div ref={containerRef} className={`relative ${widthClass}`}>
       <input
-        className="w-full rounded-lg border border-outline/20 bg-white px-4 py-3 text-sm text-slate-700 focus:outline-none"
+        className="terminal-input"
         placeholder="Ticker or name"
         value={value}
         onChange={(event) => {
@@ -128,7 +128,7 @@ function TickerInput({ value, onChange, widthClass = 'w-full' }) {
         autoComplete="off"
       />
       {open && suggestions.length > 0 && (
-        <ul className="absolute left-0 top-full z-50 mt-1 w-full overflow-hidden rounded-lg border border-outline/15 bg-white shadow-[0_12px_30px_rgba(148,163,184,0.18)]">
+        <ul className="absolute left-0 top-full z-50 mt-1 w-full overflow-hidden border-2 border-[#14181c] bg-white shadow-[4px_4px_0_rgba(20,24,28,0.95)]">
           {suggestions.map((ticker, index) => (
             <li
               key={ticker.symbol}
@@ -703,7 +703,7 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
                     Sector data unavailable.
                   </div>
                 )}
-                    <div className="terminal-panel absolute right-4 top-4 px-4 py-3 shadow-none sm:right-14 sm:top-16 sm:px-5 sm:py-4">
+                    <div className="terminal-panel absolute right-4 top-4 px-4 py-3 sm:right-14 sm:top-16 sm:px-5 sm:py-4">
                   <p className="terminal-label text-outline">Highest RSI</p>
                   <p className="mt-2 font-headline text-3xl font-bold text-slate-900">
                     {peakSector ? `${fmt(peakSector.avg_rsi)} RSI` : '...'}
@@ -819,7 +819,7 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
               ))}
 
               {!stories.length && (
-                <div className="terminal-panel p-5 shadow-none">
+                <div className="terminal-panel p-5">
                   <p className="text-sm font-semibold text-slate-900">No news available.</p>
                   <p className="mt-2 text-xs leading-6 text-slate-500">
                     Current market news from major names will appear here when available.
