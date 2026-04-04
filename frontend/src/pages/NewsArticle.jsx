@@ -87,14 +87,27 @@ export default function NewsArticle({ article, onBack }) {
   return (
     <div className="min-h-screen bg-background px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
       <div className="mx-auto max-w-5xl space-y-6">
-        <button
-          type="button"
-          onClick={onBack}
-          className="terminal-button-ghost inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700"
-        >
-          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
-          Back to Markets
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={onBack}
+            className="terminal-button-ghost inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-700"
+          >
+            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+            Back to Markets
+          </button>
+          {article.url && (
+            <a
+              href={article.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="terminal-button inline-flex items-center gap-2 px-4 py-2 text-sm"
+            >
+              <span className="material-symbols-outlined text-[18px]">open_in_new</span>
+              Read Full Article
+            </a>
+          )}
+        </div>
 
         <article className="terminal-surface px-6 py-8 sm:px-10 sm:py-10">
           <div className="mb-8 flex flex-wrap items-center gap-3">
@@ -125,6 +138,19 @@ export default function NewsArticle({ article, onBack }) {
                 {paragraph}
               </p>
             ))}
+            {article.url && (
+              <div className="pt-4">
+                <a
+                  href={article.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="terminal-button inline-flex items-center gap-2 px-4 py-2 text-sm"
+                >
+                  <span className="material-symbols-outlined text-[18px]">open_in_new</span>
+                  Open Original Source
+                </a>
+              </div>
+            )}
           </div>
         </article>
       </div>
