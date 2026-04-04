@@ -245,24 +245,24 @@ function WatchlistSparkline({ points = [], up = true }) {
 function noteAccent(noteType) {
   switch (noteType) {
     case 'thesis':
-      return '#5d85b3'
+      return '#54f06a'
     case 'risk':
-      return '#c76d63'
+      return '#f4c62a'
     case 'exit':
-      return '#9a7bcb'
+      return '#7a8cff'
     case 'review':
-      return '#7dbda7'
+      return '#2a63f6'
     default:
-      return '#94a3b8'
+      return '#9ea8b6'
   }
 }
 
 function noteUrgency(title) {
   const normalized = (title || '').trim().toLowerCase()
   if (!normalized) return null
-  if (/^(p0|p1|urgent|now)\b/.test(normalized)) return { label: 'Urgent', color: '#c76d63' }
-  if (/^(p2|next|soon)\b/.test(normalized)) return { label: 'Next', color: '#d59a5a' }
-  if (/^(p3|p4|later|backlog)\b/.test(normalized)) return { label: 'Later', color: '#7b8aa0' }
+  if (/^(p0|p1|urgent|now)\b/.test(normalized)) return { label: 'High urgency', color: '#7a8cff' }
+  if (/^(p2|next|soon)\b/.test(normalized)) return { label: 'Medium urgency', color: '#f4c62a' }
+  if (/^(p3|p4|later|backlog)\b/.test(normalized)) return { label: 'Low urgency', color: '#54f06a' }
   return null
 }
 
@@ -708,7 +708,7 @@ export default function Portfolio() {
               <button
                 onClick={calculate}
                 disabled={loading}
-                className="rounded-lg bg-slate-700 px-4 py-3 terminal-label text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
+                className="terminal-button px-4 py-3 disabled:opacity-50"
               >
                 {loading ? 'Refreshing' : 'Refresh'}
               </button>
@@ -753,7 +753,7 @@ export default function Portfolio() {
             </div>
             <button
               disabled={portfolioLocked}
-              className="w-full rounded-lg bg-slate-700 px-6 py-3 terminal-label text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+              className="terminal-button w-full px-6 py-3 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
             >
               {portfolioLocked ? 'Sign In To Add' : 'Add Position'}
             </button>
@@ -862,15 +862,19 @@ export default function Portfolio() {
                   value: `${allAlerts.length}`,
                   sub: 'Portfolio + watchlist',
                 },
-              ].map((card) => (
+              ].map((card, cardIndex) => (
                 <div
                   key={card.label}
-                  className={`bg-surface-container-lowest px-6 py-6 rounded-xl shadow-sm ${
-                    card.label === 'Total P&L'
-                      ? result.total_pnl >= 0
-                        ? 'border-b-4 border-secondary'
-                        : 'border-b-4 border-tertiary'
-                      : ''
+                  className={`terminal-panel px-6 py-6 shadow-none ${
+                    cardIndex === 0
+                      ? 'terminal-card-accent-blue'
+                      : cardIndex === 1
+                        ? 'terminal-card-accent-yellow'
+                        : cardIndex === 2
+                          ? result.total_pnl >= 0
+                            ? 'terminal-card-accent-green'
+                            : 'terminal-card-accent-red'
+                          : 'terminal-card-accent-red'
                   }`}
                 >
                   <p className="terminal-label text-outline">{card.label}</p>
@@ -1226,7 +1230,11 @@ export default function Portfolio() {
                                     <div className="flex items-start justify-between gap-3">
                                       <div className="flex flex-wrap items-center gap-2">
                                         <span className="terminal-chip">{note.symbol}</span>
-                                        {urgency && <span className="terminal-chip">{urgency.label}</span>}
+                                        {urgency && (
+                                          <span className="terminal-chip border-0 text-white" style={{ backgroundColor: urgency.color }}>
+                                            {urgency.label}
+                                          </span>
+                                        )}
                                         {note.note_title && <span className="terminal-chip">{note.note_title}</span>}
                                       </div>
                                       <button
@@ -1250,7 +1258,7 @@ export default function Portfolio() {
                                         onClick={() => {
                                           void moveNote(note, NOTE_LANE_ORDER[laneIndex - 1])
                                         }}
-                                        className="rounded-lg bg-surface-container-low px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-600 transition-colors hover:bg-surface-container disabled:opacity-40"
+                                        className="terminal-button terminal-button-secondary px-3 py-2 text-[10px] disabled:opacity-40"
                                       >
                                         Move Left
                                       </button>
@@ -1260,7 +1268,7 @@ export default function Portfolio() {
                                         onClick={() => {
                                           void moveNote(note, NOTE_LANE_ORDER[laneIndex + 1])
                                         }}
-                                        className="rounded-lg bg-slate-700 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:bg-slate-800 disabled:opacity-40"
+                                        className="terminal-button px-3 py-2 text-[10px] disabled:opacity-40"
                                       >
                                         Move Right
                                       </button>
@@ -1284,7 +1292,7 @@ export default function Portfolio() {
               <div className="col-span-12 space-y-6 lg:col-span-4">
                 <div className="flex items-center justify-between">
                   <h2 className="font-headline text-2xl font-bold text-slate-900">Portfolio Signals</h2>
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-700 text-[10px] font-bold text-white">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#d14f59] text-[10px] font-bold text-white">
                     {allAlerts.length}
                   </span>
                 </div>

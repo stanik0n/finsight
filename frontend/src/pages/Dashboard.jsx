@@ -60,6 +60,11 @@ function fmt(n, d = 2) {
   return Number(n).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d })
 }
 
+function markerColor(index) {
+  const colors = ['#1f8f54', '#2a63f6', '#f4c62a', '#d14f59', '#7a5cff']
+  return colors[index % colors.length]
+}
+
 function TickerInput({ value, onChange, widthClass = 'w-full' }) {
   const [open, setOpen] = useState(false)
   const [highlighted, setHighlighted] = useState(0)
@@ -514,8 +519,19 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
           <div className="col-span-12 space-y-8 lg:col-span-8">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {benchmarkCards.map((index) => (
-                <div key={index.label} className="terminal-panel px-5 py-5">
+              {benchmarkCards.map((index, cardIndex) => (
+                <div
+                  key={index.label}
+                  className={`terminal-panel px-5 py-5 ${
+                    cardIndex === 0
+                      ? 'terminal-card-accent-green'
+                      : cardIndex === 1
+                        ? 'terminal-card-accent-blue'
+                        : cardIndex === 2
+                          ? 'terminal-card-accent-red'
+                          : 'terminal-card-accent-yellow'
+                  }`}
+                >
                   <p className="terminal-label text-outline">{index.sublabel}</p>
                   <div className="mt-3 flex items-end justify-between gap-3">
                     <p className="font-headline text-3xl font-bold text-slate-900">{index.value}</p>
@@ -533,7 +549,7 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
                 <h2 className="font-headline text-2xl font-bold text-slate-900">Watchlist</h2>
                 {watchlistLocked ? (
                   <SignInButton mode="modal">
-                    <button className="rounded-lg bg-slate-800 px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-white transition-colors hover:bg-slate-900">
+                    <button className="terminal-button px-4 py-2">
                       Sign In
                     </button>
                   </SignInButton>
@@ -542,14 +558,14 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
                     <button
                       type="button"
                       onClick={() => setWatchlistEditing((current) => !current)}
-                      className="rounded-lg bg-surface-container-low px-4 py-2 text-xs font-semibold text-slate-600 transition-colors hover:bg-surface-container"
+                      className="terminal-button terminal-button-secondary px-4 py-2"
                     >
                       {watchlistEditing ? 'Done' : 'Edit List'}
                     </button>
                     <button
                       type="button"
                       onClick={() => setWatchlistEditing(true)}
-                      className="rounded-lg bg-slate-700 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-slate-800"
+                      className="terminal-button px-4 py-2"
                     >
                       Add Symbol
                     </button>
@@ -581,7 +597,7 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
                         type="button"
                         disabled={watchlistBusy || !watchlistDraft.trim()}
                         onClick={addWatchlistSymbol}
-                        className="rounded-lg bg-slate-700 px-4 py-3 text-xs font-semibold uppercase tracking-wider text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
+                        className="terminal-button px-4 py-3 disabled:opacity-50"
                       >
                         Add
                       </button>
@@ -608,8 +624,14 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
                       </div>
                       <div className="flex items-center justify-between md:col-span-3 md:justify-center">
                         <span className="terminal-label text-outline md:hidden">Trend</span>
-                        <div className="w-24">
-                          <LineStrip points={signal.points || FALLBACK_POINTS[signal.symbol] || FALLBACK_POINTS.SPY} up={signal.pct_change >= 0} />
+                        <div className="flex items-center gap-3">
+                          <div className="w-24">
+                            <LineStrip points={signal.points || FALLBACK_POINTS[signal.symbol] || FALLBACK_POINTS.SPY} up={signal.pct_change >= 0} />
+                          </div>
+                          <span
+                            className="terminal-mini-bar w-8"
+                            style={{ backgroundColor: markerColor(watchlistCards.findIndex((card) => card.symbol === signal.symbol)) }}
+                          />
                         </div>
                       </div>
                       {!watchlistLocked && watchlistEditing && (
@@ -632,7 +654,12 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               {sectorCards.map((index) => (
-                <div key={index.label} className="terminal-panel px-5 py-5">
+                <div
+                  key={index.label}
+                  className={`terminal-panel px-5 py-5 ${
+                    index.up ? 'terminal-card-accent-green' : 'terminal-card-accent-red'
+                  }`}
+                >
                   <p className="terminal-label text-outline">{index.label}</p>
                   <p className="mt-3 font-headline text-4xl font-bold text-slate-900">{index.value}</p>
                   <p className="mt-3 text-sm font-semibold" style={{ color: index.up ? '#4f9f85' : '#c76d63' }}>
@@ -717,9 +744,45 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
           </div>
 
           <div className="col-span-12 space-y-6 lg:col-span-4">
+            <div className="terminal-dark-module p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="terminal-label text-white/60">Analyst Terminal</p>
+                  <h2 className="mt-3 font-headline text-3xl font-bold uppercase text-white">Quick Actions</h2>
+                </div>
+                <span className="material-symbols-outlined text-[#2a63f6]">travel_explore</span>
+              </div>
+              <div className="mt-5 space-y-3">
+                <button
+                  type="button"
+                  onClick={() => onSearch('AAPL fundamentals')}
+                  className="flex w-full items-center justify-between border border-white/20 bg-white/5 px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-white/10"
+                >
+                  <span>Fundamentals</span>
+                  <span className="material-symbols-outlined text-[18px] text-[#2a63f6]">arrow_outward</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onSearch('NVDA technical analysis')}
+                  className="flex w-full items-center justify-between border border-white/20 bg-white/5 px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-white/10"
+                >
+                  <span>Technicals</span>
+                  <span className="material-symbols-outlined text-[18px] text-[#f4c62a]">monitoring</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onSearch('latest sec filings for TSLA')}
+                  className="flex w-full items-center justify-between border border-white/20 bg-white/5 px-4 py-3 text-left text-sm font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-white/10"
+                >
+                  <span>SEC Filings</span>
+                  <span className="material-symbols-outlined text-[18px] text-[#d14f59]">receipt_long</span>
+                </button>
+              </div>
+            </div>
+
             <div className="flex items-center justify-between">
               <h2 className="font-headline text-2xl font-bold text-slate-900">Market News</h2>
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-700 text-[10px] font-bold text-white">
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#1b55e2] text-[10px] font-bold text-white">
                 {stories.length}
               </span>
             </div>
@@ -734,7 +797,10 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
                   style={{ borderLeft: `4px solid ${index === 0 ? '#4f9f85' : '#545e76'}` }}
                 >
                   <div className="mb-2 flex items-start justify-between gap-3">
-                    <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                    <span
+                      className="rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white"
+                      style={{ backgroundColor: index === 0 ? '#1f8f54' : index === 1 ? '#2a63f6' : '#d14f59' }}
+                    >
                       Press release
                     </span>
                     <span className="text-[10px] font-medium text-outline">{story.symbol}</span>

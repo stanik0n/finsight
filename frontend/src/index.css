@@ -143,7 +143,7 @@ body {
 }
 
 .terminal-panel-soft {
-  background: #fff;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbfd 100%);
   border: 1px solid rgba(20, 24, 28, 0.14);
   box-shadow: 0 1px 0 rgba(20, 24, 28, 0.05);
 }
@@ -160,7 +160,7 @@ body {
   align-items: center;
   justify-content: center;
   border: 2px solid #14181c;
-  background: #1b55e2;
+  background: linear-gradient(180deg, #2a63f6 0%, #1b55e2 100%);
   color: #fff;
   font-size: 11px;
   font-weight: 800;
@@ -188,7 +188,7 @@ body {
   display: flex;
   overflow: hidden;
   border-bottom: 2px solid #14181c;
-  background: #f5f7f8;
+  background: linear-gradient(180deg, #f8fbfc 0%, #eef3f6 100%);
 }
 
 .terminal-ticker-run {
@@ -220,7 +220,7 @@ body {
 }
 
 .terminal-note-card {
-  background: #fff;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbfd 100%);
   border: 2px solid #14181c;
   box-shadow: 3px 3px 0 rgba(20, 24, 28, 0.85);
 }
@@ -228,6 +228,51 @@ body {
 .terminal-note-dropzone {
   border: 2px dashed rgba(20, 24, 28, 0.6);
   background: rgba(255, 255, 255, 0.78);
+}
+
+.accent-positive {
+  color: var(--accent-green);
+}
+
+.accent-negative {
+  color: var(--accent-red);
+}
+
+.accent-blue {
+  color: var(--accent-blue);
+}
+
+.accent-yellow {
+  color: #8a6a00;
+}
+
+.terminal-card-accent-green {
+  border-top: 6px solid var(--accent-green);
+}
+
+.terminal-card-accent-red {
+  border-top: 6px solid var(--accent-red);
+}
+
+.terminal-card-accent-blue {
+  border-top: 6px solid var(--accent-blue);
+}
+
+.terminal-card-accent-yellow {
+  border-top: 6px solid var(--accent-yellow);
+}
+
+.terminal-dark-module {
+  background: #111418;
+  border: 2px solid #14181c;
+  box-shadow: 4px 4px 0 rgba(20, 24, 28, 0.95);
+  color: #fff;
+}
+
+.terminal-mini-bar {
+  height: 12px;
+  border: 2px solid #14181c;
+  box-shadow: 2px 2px 0 rgba(20, 24, 28, 0.55);
 }
 
 @keyframes terminalTicker {
