@@ -223,11 +223,34 @@ body {
   background: linear-gradient(180deg, #ffffff 0%, #f8fbfd 100%);
   border: 2px solid #14181c;
   box-shadow: 3px 3px 0 rgba(20, 24, 28, 0.85);
+  cursor: grab;
+  transition: transform 120ms ease, box-shadow 120ms ease, opacity 120ms ease, background 120ms ease;
+}
+
+.terminal-note-card:active {
+  cursor: grabbing;
+}
+
+.terminal-note-card-dragging {
+  opacity: 0.55;
+  transform: rotate(1deg) scale(0.98);
+  box-shadow: 1px 1px 0 rgba(20, 24, 28, 0.55);
 }
 
 .terminal-note-dropzone {
   border: 2px dashed rgba(20, 24, 28, 0.6);
   background: rgba(255, 255, 255, 0.78);
+  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+}
+
+.terminal-lane-active .terminal-note-dropzone {
+  background: rgba(42, 99, 246, 0.08);
+  border-color: rgba(42, 99, 246, 0.9);
+}
+
+.terminal-lane-active .terminal-lane-header {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 rgba(42, 99, 246, 0.95);
 }
 
 .accent-positive {

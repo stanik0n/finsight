@@ -284,6 +284,8 @@ export default function Portfolio() {
   const [preferencesOpen, setPreferencesOpen] = useState(false)
   const [telegramLink, setTelegramLink] = useState({ linked: false, pending_code: null })
   const [telegramBusy, setTelegramBusy] = useState(false)
+  const [draggedNoteId, setDraggedNoteId] = useState(null)
+  const [dragOverLane, setDragOverLane] = useState(null)
   const [error, setError] = useState(null)
 
   const notesByLane = NOTE_LANE_ORDER.reduce((accumulator, lane) => {
@@ -643,6 +645,36 @@ export default function Portfolio() {
     } finally {
       setLoading(false)
     }
+  }
+
+  function handleNoteDragStart(note, event) {
+    setDraggedNoteId(note.note_id)
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move'
+      event.dataTransfer.setData('text/plain', String(note.note_id))
+    }
+  }
+
+  function handleNoteDragEnd() {
+    setDraggedNoteId(null)
+    setDragOverLane(null)
+  }
+
+  function handleLaneDragOver(lane, event) {
+    event.preventDefault()
+    if (dragOverLane !== lane) setDragOverLane(lane)
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'move'
+  }
+
+  function handleLaneDrop(lane, event) {
+    event.preventDefault()
+    const droppedId = draggedNoteId || Number(event.dataTransfer?.getData('text/plain'))
+    setDragOverLane(null)
+    setDraggedNoteId(null)
+    if (!droppedId) return
+    const note = notes.find((entry) => entry.note_id === droppedId)
+    if (!note || note.note_type === lane) return
+    void moveNote(note, lane)
   }
 
   async function generateTelegramLinkCode() {
@@ -1209,7 +1241,16 @@ export default function Portfolio() {
                     <div className="overflow-x-auto pb-2">
                       <div className="grid min-w-[980px] gap-4 xl:grid-cols-5">
                         {NOTE_LANE_ORDER.map((lane, laneIndex) => (
-                          <div key={lane} className="rounded-xl bg-transparent p-1">
+                          <div
+                            key={lane}
+                            className={`rounded-xl bg-transparent p-1 ${dragOverLane === lane ? 'terminal-lane-active' : ''}`}
+                            onDragOver={(event) => handleLaneDragOver(lane, event)}
+                            onDragEnter={(event) => handleLaneDragOver(lane, event)}
+                            onDragLeave={() => {
+                              if (dragOverLane === lane) setDragOverLane(null)
+                            }}
+                            onDrop={(event) => handleLaneDrop(lane, event)}
+                          >
                             <div className="terminal-lane-header" style={{ backgroundColor: `${noteAccent(lane)}22` }}>
                               <div>
                                 <p className="terminal-label text-[#14181c]">{NOTE_TYPE_LABELS[lane]}</p>
@@ -1224,7 +1265,10 @@ export default function Portfolio() {
                                 return (
                                   <div
                                     key={note.note_id}
-                                    className="terminal-note-card px-4 py-4"
+                                    className={`terminal-note-card px-4 py-4 ${draggedNoteId === note.note_id ? 'terminal-note-card-dragging' : ''}`}
+                                    draggable
+                                    onDragStart={(event) => handleNoteDragStart(note, event)}
+                                    onDragEnd={handleNoteDragEnd}
                                     style={{ borderTop: `3px solid ${urgency?.color || noteAccent(note.note_type)}` }}
                                   >
                                     <div className="flex items-start justify-between gap-3">
@@ -1277,7 +1321,7 @@ export default function Portfolio() {
                                 )
                               }) : (
                                 <div className="terminal-note-dropzone px-4 py-5 text-sm text-slate-500">
-                                  No notes in this lane yet.
+                                  {dragOverLane === lane ? 'Drop note here.' : 'No notes in this lane yet.'}
                                 </div>
                               )}
                             </div>
