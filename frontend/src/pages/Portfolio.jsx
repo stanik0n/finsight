@@ -79,6 +79,7 @@ const NOTE_TYPE_LABELS = {
   review: 'Review Note',
   note: 'General Note',
 }
+const NOTE_LANE_ORDER = ['thesis', 'risk', 'review', 'exit', 'note']
 
 function fmt(n, d = 2) {
   return Number(n).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d })
@@ -284,6 +285,11 @@ export default function Portfolio() {
   const [telegramLink, setTelegramLink] = useState({ linked: false, pending_code: null })
   const [telegramBusy, setTelegramBusy] = useState(false)
   const [error, setError] = useState(null)
+
+  const notesByLane = NOTE_LANE_ORDER.reduce((accumulator, lane) => {
+    accumulator[lane] = notes.filter((note) => (note.note_type || 'note') === lane)
+    return accumulator
+  }, {})
 
   useEffect(() => {
     if (portfolioLocked) {
@@ -596,6 +602,36 @@ export default function Portfolio() {
     setError(null)
     try {
       const response = await authedFetch(getToken, `/notes/${noteId}`, { method: 'DELETE' })
+      if (!response.ok) {
+        const detail = await response.json().catch(() => ({ detail: response.statusText }))
+        throw new Error(detail.detail || `HTTP ${response.status}`)
+      }
+      const payload = await response.json()
+      setNotes(payload.notes || [])
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function moveNote(note, nextLane) {
+    if (!note || !nextLane || nextLane === note.note_type) return
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await authedFetch(getToken, '/notes', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          note_id: note.note_id,
+          symbol: note.symbol,
+          note_type: nextLane,
+          note_title: note.note_title || null,
+          review_date: note.review_date || null,
+          note_text: note.note_text,
+        }),
+      })
       if (!response.ok) {
         const detail = await response.json().catch(() => ({ detail: response.statusText }))
         throw new Error(detail.detail || `HTTP ${response.status}`)
@@ -1099,140 +1135,148 @@ export default function Portfolio() {
                   </div>
                 </div>
 
-                <div className="grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(300px,0.85fr)]">
-                  <div className="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                      <div>
-                        <h3 className="terminal-label text-outline">Notes</h3>
-                        <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-500">
-                          Use titles like <span className="font-mono text-slate-700">P1 now</span>, <span className="font-mono text-slate-700">P2 next</span>, or <span className="font-mono text-slate-700">P3 later</span> to mirror kanban urgency right inside each note.
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="terminal-chip">{notes.length} notes saved</span>
-                      </div>
+                <div className="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                    <div>
+                      <h3 className="terminal-label text-outline">Notes Board</h3>
+                      <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-500">
+                        Use titles like <span className="font-mono text-slate-700">P1 now</span>, <span className="font-mono text-slate-700">P2 next</span>, or <span className="font-mono text-slate-700">P3 later</span>. Then move notes between lanes as the work changes.
+                      </p>
                     </div>
-                    <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.35fr)]">
-                      <form onSubmit={handleNoteSubmit} className="space-y-3" noValidate>
-                        <TickerInput
-                          value={noteForm.symbol}
-                          onChange={(value) => setNoteForm((current) => ({ ...current, symbol: value }))}
-                        />
-                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                          <div>
-                            <p className="terminal-label mb-2 text-outline">Note Lane</p>
-                            <select
-                              className="w-full rounded-lg border-0 bg-surface-container-low px-4 py-3 text-sm text-slate-700 focus:outline-none"
-                              value={noteForm.note_type}
-                              onChange={(event) => setNoteForm((current) => ({ ...current, note_type: event.target.value }))}
-                            >
-                              {Object.entries(NOTE_TYPE_LABELS).map(([value, label]) => (
-                                <option key={value} value={value}>{label}</option>
-                              ))}
-                            </select>
-                          </div>
-                          <div>
-                            <p className="terminal-label mb-2 text-outline">Review Date</p>
-                            <input
-                              type="date"
-                              className="w-full rounded-lg border-0 bg-surface-container-low px-4 py-3 text-sm text-slate-700 focus:outline-none"
-                              value={noteForm.review_date}
-                              onChange={(event) => setNoteForm((current) => ({ ...current, review_date: event.target.value }))}
-                            />
-                          </div>
-                        </div>
-                        <input
-                          className="w-full rounded-lg border-0 bg-surface-container-low px-4 py-3 text-sm text-slate-700 focus:outline-none"
-                          placeholder="Optional title, like P1 now | Trim if guidance slips."
-                          value={noteForm.note_title}
-                          onChange={(event) => setNoteForm((current) => ({ ...current, note_title: event.target.value }))}
-                        />
-                        <textarea
-                          className="min-h-[148px] w-full resize-none rounded-lg border-0 bg-surface-container-low px-4 py-3 text-sm text-slate-700 focus:outline-none"
-                          placeholder="Capture the note, trigger, or decision you want attached to this ticker."
-                          value={noteForm.note_text}
-                          onChange={(event) => setNoteForm((current) => ({ ...current, note_text: event.target.value }))}
-                        />
-                        <div className="flex items-center justify-end">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              void addNote()
-                            }}
-                            className="rounded-lg bg-slate-700 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-white transition-colors hover:bg-slate-800"
-                          >
-                            Save Note
-                          </button>
-                        </div>
-                      </form>
-                      <div className="space-y-3">
-                        {notes.length ? notes.slice(0, 6).map((note) => {
-                          const urgency = noteUrgency(note.note_title)
-                          return (
-                            <div
-                              key={note.note_id}
-                              className="rounded-lg bg-surface-container-low px-4 py-4"
-                              style={{ borderLeft: `4px solid ${urgency?.color || noteAccent(note.note_type)}` }}
-                            >
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <span className="terminal-chip">{note.symbol}</span>
-                                  <span className="terminal-chip">{NOTE_TYPE_LABELS[note.note_type] || 'General Note'}</span>
-                                  {urgency && <span className="terminal-chip">{urgency.label}</span>}
-                                  {note.note_title && <span className="terminal-chip">{note.note_title}</span>}
-                                </div>
-                                <button
-                                  onClick={() => removeNote(note.note_id)}
-                                  type="button"
-                                  className="material-symbols-outlined text-slate-400 transition-colors hover:text-[#c76d63]"
-                                >
-                                  close
-                                </button>
-                              </div>
-                              {note.review_date && (
-                                <p className="mt-3 terminal-label text-outline">Review on {note.review_date}</p>
-                              )}
-                              <p className="mt-3 text-sm leading-7 text-slate-600">{note.note_text}</p>
-                            </div>
-                          )
-                        }) : (
-                          <div className="rounded-lg bg-surface-container-low px-4 py-5 text-sm text-slate-500">
-                            No saved notes yet. Add a thesis, risk rule, exit trigger, or review note above.
-                          </div>
-                        )}
-                      </div>
+                    <div className="flex items-center gap-3">
+                      <span className="terminal-chip">{notes.length} notes saved</span>
                     </div>
                   </div>
+                  <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(320px,0.78fr)_minmax(0,1.9fr)]">
+                    <form onSubmit={handleNoteSubmit} className="space-y-3" noValidate>
+                      <TickerInput
+                        value={noteForm.symbol}
+                        onChange={(value) => setNoteForm((current) => ({ ...current, symbol: value }))}
+                      />
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div>
+                          <p className="terminal-label mb-2 text-outline">Note Lane</p>
+                          <select
+                            className="w-full rounded-lg border-0 bg-surface-container-low px-4 py-3 text-sm text-slate-700 focus:outline-none"
+                            value={noteForm.note_type}
+                            onChange={(event) => setNoteForm((current) => ({ ...current, note_type: event.target.value }))}
+                          >
+                            {Object.entries(NOTE_TYPE_LABELS).map(([value, label]) => (
+                              <option key={value} value={value}>{label}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <p className="terminal-label mb-2 text-outline">Review Date</p>
+                          <input
+                            type="date"
+                            className="w-full rounded-lg border-0 bg-surface-container-low px-4 py-3 text-sm text-slate-700 focus:outline-none"
+                            value={noteForm.review_date}
+                            onChange={(event) => setNoteForm((current) => ({ ...current, review_date: event.target.value }))}
+                          />
+                        </div>
+                      </div>
+                      <input
+                        className="w-full rounded-lg border-0 bg-surface-container-low px-4 py-3 text-sm text-slate-700 focus:outline-none"
+                        placeholder="Optional title, like P1 now | Trim if guidance slips."
+                        value={noteForm.note_title}
+                        onChange={(event) => setNoteForm((current) => ({ ...current, note_title: event.target.value }))}
+                      />
+                      <textarea
+                        className="min-h-[180px] w-full resize-none rounded-lg border-0 bg-surface-container-low px-4 py-3 text-sm text-slate-700 focus:outline-none"
+                        placeholder="Capture the note, trigger, or decision you want attached to this ticker."
+                        value={noteForm.note_text}
+                        onChange={(event) => setNoteForm((current) => ({ ...current, note_text: event.target.value }))}
+                      />
+                      <div className="flex items-center justify-end">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void addNote()
+                          }}
+                          className="rounded-lg bg-slate-700 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-white transition-colors hover:bg-slate-800"
+                        >
+                          Save Note
+                        </button>
+                      </div>
+                    </form>
 
-                  <div className="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
-                    <h3 className="terminal-label text-outline">Position overview</h3>
-                    <div className="mt-5 space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-slate-500">Largest position</span>
-                        <span className="font-semibold text-slate-900">{topPosition?.symbol || '--'}</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-slate-500">Top winner</span>
-                        <span className="font-semibold" style={{ color: insightTone(topGainer?.pnl_pct || 0) }}>
-                          {topGainer?.symbol || '--'}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-slate-500">Top loser</span>
-                        <span className="font-semibold" style={{ color: insightTone(topLoser?.pnl_pct || 0) }}>
-                          {topLoser?.symbol || '--'}
-                        </span>
-                      </div>
-                      <div className="pt-4">
-                        <p className="text-xs font-bold uppercase tracking-wider text-outline">Concentration profile</p>
-                        <p className="mt-3 font-headline text-4xl font-bold text-slate-900">
-                          {result.portfolio_insights?.concentration?.top_position_weight_pct != null
-                            ? `${fmt(result.portfolio_insights.concentration.top_position_weight_pct, 1)}%`
-                            : '--'}
-                        </p>
-                        <p className="mt-2 text-sm text-slate-500">
-                          {result.portfolio_insights?.concentration?.level || 'Balanced'}
-                        </p>
+                    <div className="overflow-x-auto pb-2">
+                      <div className="grid min-w-[980px] gap-4 xl:grid-cols-5">
+                        {NOTE_LANE_ORDER.map((lane, laneIndex) => (
+                          <div key={lane} className="rounded-xl bg-surface-container-low p-4">
+                            <div className="flex items-center justify-between gap-3">
+                              <div>
+                                <p className="terminal-label text-outline">{NOTE_TYPE_LABELS[lane]}</p>
+                                <p className="mt-2 text-sm text-slate-500">{notesByLane[lane].length} cards</p>
+                              </div>
+                              <span
+                                className="h-3 w-3 rounded-full"
+                                style={{ backgroundColor: noteAccent(lane) }}
+                              />
+                            </div>
+
+                            <div className="mt-4 space-y-3">
+                              {notesByLane[lane].length ? notesByLane[lane].map((note) => {
+                                const urgency = noteUrgency(note.note_title)
+                                return (
+                                  <div
+                                    key={note.note_id}
+                                    className="rounded-lg bg-white px-4 py-4 shadow-sm"
+                                    style={{ borderTop: `3px solid ${urgency?.color || noteAccent(note.note_type)}` }}
+                                  >
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div className="flex flex-wrap items-center gap-2">
+                                        <span className="terminal-chip">{note.symbol}</span>
+                                        {urgency && <span className="terminal-chip">{urgency.label}</span>}
+                                        {note.note_title && <span className="terminal-chip">{note.note_title}</span>}
+                                      </div>
+                                      <button
+                                        onClick={() => removeNote(note.note_id)}
+                                        type="button"
+                                        className="material-symbols-outlined text-slate-400 transition-colors hover:text-[#c76d63]"
+                                      >
+                                        close
+                                      </button>
+                                    </div>
+
+                                    {note.review_date && (
+                                      <p className="mt-3 terminal-label text-outline">Review on {note.review_date}</p>
+                                    )}
+                                    <p className="mt-3 text-sm leading-7 text-slate-600">{note.note_text}</p>
+
+                                    <div className="mt-4 flex items-center justify-between gap-2 border-t border-outline/10 pt-3">
+                                      <button
+                                        type="button"
+                                        disabled={laneIndex === 0}
+                                        onClick={() => {
+                                          void moveNote(note, NOTE_LANE_ORDER[laneIndex - 1])
+                                        }}
+                                        className="rounded-lg bg-surface-container-low px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-600 transition-colors hover:bg-surface-container disabled:opacity-40"
+                                      >
+                                        Move Left
+                                      </button>
+                                      <button
+                                        type="button"
+                                        disabled={laneIndex === NOTE_LANE_ORDER.length - 1}
+                                        onClick={() => {
+                                          void moveNote(note, NOTE_LANE_ORDER[laneIndex + 1])
+                                        }}
+                                        className="rounded-lg bg-slate-700 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white transition-colors hover:bg-slate-800 disabled:opacity-40"
+                                      >
+                                        Move Right
+                                      </button>
+                                    </div>
+                                  </div>
+                                )
+                              }) : (
+                                <div className="rounded-lg border border-dashed border-outline/15 bg-white px-4 py-5 text-sm text-slate-500">
+                                  No notes in this lane yet.
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
@@ -1270,6 +1314,39 @@ export default function Portfolio() {
                       No active alerts right now.
                     </div>
                   )}
+                </div>
+
+                <div className="rounded-xl bg-surface-container-lowest p-6 shadow-sm">
+                  <h3 className="terminal-label text-outline">Position overview</h3>
+                  <div className="mt-5 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-500">Largest position</span>
+                      <span className="font-semibold text-slate-900">{topPosition?.symbol || '--'}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-500">Top winner</span>
+                      <span className="font-semibold" style={{ color: insightTone(topGainer?.pnl_pct || 0) }}>
+                        {topGainer?.symbol || '--'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-500">Top loser</span>
+                      <span className="font-semibold" style={{ color: insightTone(topLoser?.pnl_pct || 0) }}>
+                        {topLoser?.symbol || '--'}
+                      </span>
+                    </div>
+                    <div className="pt-4">
+                      <p className="text-xs font-bold uppercase tracking-wider text-outline">Concentration profile</p>
+                      <p className="mt-3 font-headline text-4xl font-bold text-slate-900">
+                        {result.portfolio_insights?.concentration?.top_position_weight_pct != null
+                          ? `${fmt(result.portfolio_insights.concentration.top_position_weight_pct, 1)}%`
+                          : '--'}
+                      </p>
+                      <p className="mt-2 text-sm text-slate-500">
+                        {result.portfolio_insights?.concentration?.level || 'Balanced'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
