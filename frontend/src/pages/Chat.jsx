@@ -327,9 +327,9 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
   const sidebarCards = cards.slice(0, 3)
 
   return (
-    <div className="min-h-[calc(100vh-56px-72px)] bg-background px-3 py-5 md:min-h-[calc(100vh-64px)] sm:px-5 sm:py-7 lg:px-8 lg:py-8">
+    <div className="h-[calc(100vh-104px)] overflow-hidden bg-background px-3 py-4 sm:h-[calc(100vh-112px)] sm:px-5 sm:py-5 lg:px-8 lg:py-6">
       <div className="terminal-shell">
-        <div className="flex min-h-[calc(100vh-180px)] flex-col md:flex-row" style={{ overflow: 'hidden' }}>
+        <div className="flex h-full min-h-0 flex-col md:flex-row" style={{ overflow: 'hidden' }}>
       <aside className="hidden w-60 bg-transparent pl-2 pr-2 py-4 lg:block xl:w-64">
         <div className="flex h-full flex-col overflow-y-auto border-r-2 border-[#14181c] pr-2">
           <div className="terminal-surface px-4 py-4">
