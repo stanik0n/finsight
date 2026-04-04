@@ -420,8 +420,7 @@ export default function Portfolio() {
     }
   }
 
-  async function addHolding(event) {
-    event.preventDefault()
+  async function addHolding() {
     const symbol = form.symbol.trim().toUpperCase()
     const shares = parseFloat(form.shares)
     const avgCost = parseFloat(form.avg_cost)
@@ -511,8 +510,7 @@ export default function Portfolio() {
     }
   }
 
-  async function addWatchlistSymbol(event) {
-    event.preventDefault()
+  async function addWatchlistSymbol() {
     const symbol = watchlistForm.symbol.trim().toUpperCase()
     if (!symbol) return
     setLoading(true)
@@ -592,11 +590,6 @@ export default function Portfolio() {
     } finally {
       setLoading(false)
     }
-  }
-
-  async function handleNoteSubmit(event) {
-    event.preventDefault()
-    await addNote()
   }
 
   async function removeNote(noteId) {
@@ -750,7 +743,7 @@ export default function Portfolio() {
 
         <div className="terminal-panel px-6 py-6">
           <p className="terminal-label text-outline">Add position</p>
-          <form onSubmit={addHolding} className="mt-5 flex flex-wrap items-end gap-4">
+          <div className="mt-5 flex flex-wrap items-end gap-4">
             <div className="w-full sm:w-auto">
               <p className="terminal-label mb-2 text-outline">Ticker</p>
               <div className={portfolioLocked ? 'pointer-events-none opacity-60' : ''}>
@@ -784,12 +777,16 @@ export default function Portfolio() {
               />
             </div>
             <button
+              type="button"
+              onClick={() => {
+                void addHolding()
+              }}
               disabled={portfolioLocked}
               className="terminal-button w-full px-6 py-3 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
             >
               {portfolioLocked ? 'Sign In To Add' : 'Add Position'}
             </button>
-          </form>
+          </div>
         </div>
 
         {portfolioLocked && (
@@ -940,6 +937,7 @@ export default function Portfolio() {
                 <div className="border-t border-outline/10 px-6 py-6">
                   <div className="flex justify-end">
                     <button
+                      type="button"
                       onClick={savePreferences}
                       disabled={savingPreferences}
                       className="bg-slate-700 px-5 py-2.5 terminal-label text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
@@ -1113,7 +1111,7 @@ export default function Portfolio() {
                     <div className="col-span-2 text-center">Trend</div>
                     <div className="col-span-1 text-right">Actions</div>
                   </div>
-                  <form onSubmit={addWatchlistSymbol} className="border-b border-surface-container px-6 py-4">
+                  <div className="border-b border-surface-container px-6 py-4">
                     <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-end">
                       <div className="flex-1">
                         <TickerInput
@@ -1122,11 +1120,17 @@ export default function Portfolio() {
                           widthClass="w-full"
                         />
                       </div>
-                      <button className="terminal-button px-4 py-3 sm:w-auto">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          void addWatchlistSymbol()
+                        }}
+                        className="terminal-button px-4 py-3 sm:w-auto"
+                      >
                         Add
                       </button>
                     </div>
-                  </form>
+                  </div>
                   <div className="divide-y divide-surface-container">
                     {watchlist.length ? watchlist.map((item) => {
                       const liveItem = watchlistSnapshot?.items?.find((entry) => entry.symbol === item.symbol)
@@ -1185,7 +1189,7 @@ export default function Portfolio() {
                     </div>
                   </div>
                   <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(320px,0.78fr)_minmax(0,1.9fr)]">
-                    <form onSubmit={handleNoteSubmit} className="terminal-panel-soft space-y-3 px-4 py-4" noValidate>
+                    <div className="terminal-panel-soft space-y-3 px-4 py-4">
                       <TickerInput
                         value={noteForm.symbol}
                         onChange={(value) => setNoteForm((current) => ({ ...current, symbol: value }))}
@@ -1236,7 +1240,7 @@ export default function Portfolio() {
                           Save Note
                         </button>
                       </div>
-                    </form>
+                    </div>
 
                     <div className="overflow-x-auto pb-2">
                       <div className="grid min-w-[980px] gap-4 xl:grid-cols-5">
