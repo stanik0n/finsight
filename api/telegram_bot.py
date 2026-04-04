@@ -244,6 +244,7 @@ def format_query_response(data: dict) -> str:
 def help_text() -> str:
     return (
         "<b>FinSight Telegram Commands</b>\n\n"
+        "Fastest setup: open the Telegram page in your FinSight account and tap the connect button.\n\n"
         "/link [code] - link this chat to your signed-in FinSight account\n"
         "/unlink - disconnect this Telegram chat\n"
         "/brief - portfolio daily brief\n"
@@ -268,6 +269,23 @@ def help_text() -> str:
         "note on NVDA: trim if concentration stays too high\n"
         "how is my portfolio\n"
         "do you think tesla will go up tomorrow\n"
+    )
+
+
+def complete_link_for_chat(chat_id: int | str, code: str, telegram_username: str | None = None) -> None:
+    payload = api_post(
+        '/telegram/link/complete',
+        {
+            'code': code.strip(),
+            'chat_id': str(chat_id),
+            'telegram_username': telegram_username,
+        },
+    )
+    status = payload.get('status') or {}
+    username_suffix = f" @{escape(status['telegram_username'])}" if status.get('telegram_username') else ''
+    send_message(
+        chat_id,
+        f"<b>Telegram linked</b>\n\nThis chat is now connected to your FinSight account{username_suffix}.\nYou can now use portfolio, watchlist, notes, and alert commands here.",
     )
 
 
@@ -415,28 +433,19 @@ def handle_command(chat: dict, text: str) -> None:
 
     try:
         if command_root == '/start':
+            parts = command.split(maxsplit=1)
+            if len(parts) > 1 and parts[1].strip():
+                complete_link_for_chat(chat_id, parts[1], telegram_username=telegram_username)
+                return
             send_message(chat_id, help_text())
             return
 
         if command_root == '/link':
             parts = command.split(maxsplit=1)
             if len(parts) < 2 or not parts[1].strip():
-                send_message(chat_id, 'Generate a Telegram link code in Portfolio, then send /link YOUR_CODE here.')
+                send_message(chat_id, 'Open the Telegram page in your FinSight account, generate a code there, or use the one-tap connect button.')
                 return
-            payload = api_post(
-                '/telegram/link/complete',
-                {
-                    'code': parts[1].strip(),
-                    'chat_id': str(chat_id),
-                    'telegram_username': telegram_username,
-                },
-            )
-            status = payload.get('status') or {}
-            username_suffix = f" @{escape(status['telegram_username'])}" if status.get('telegram_username') else ''
-            send_message(
-                chat_id,
-                f"<b>Telegram linked</b>\n\nThis chat is now connected to your FinSight account{username_suffix}.\nYou can now use portfolio, watchlist, notes, and alert commands here.",
-            )
+            complete_link_for_chat(chat_id, parts[1], telegram_username=telegram_username)
             return
 
         if command_root == '/unlink':

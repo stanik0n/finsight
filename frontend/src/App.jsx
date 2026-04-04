@@ -76,11 +76,190 @@ function buildHash(page, params = new URLSearchParams()) {
   return `#${base}${query ? `?${query}` : ''}`
 }
 
+function TelegramProfilePage() {
+  const { authEnabled, getToken, isSignedIn } = useFinsightAuth()
+  const [status, setStatus] = useState({ linked: false, pending_code: null, telegram_connect_url: null })
+  const [loading, setLoading] = useState(true)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    if (!authEnabled || !isSignedIn) {
+      setLoading(false)
+      return
+    }
+
+    let cancelled = false
+
+    async function loadStatus() {
+      setLoading(true)
+      setError(null)
+      try {
+        const response = await authedFetch(getToken, '/telegram/link')
+        const payload = await response.json().catch(() => ({}))
+        if (!response.ok) {
+          throw new Error(payload.detail || `HTTP ${response.status}`)
+        }
+        if (!cancelled) {
+          setStatus(payload || { linked: false, pending_code: null, telegram_connect_url: null })
+        }
+      } catch (nextError) {
+        if (!cancelled) {
+          setError(nextError instanceof Error ? nextError.message : 'Unable to load Telegram settings.')
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      }
+    }
+
+    loadStatus()
+    return () => {
+      cancelled = true
+    }
+  }, [authEnabled, getToken, isSignedIn])
+
+  async function generateCode() {
+    setBusy(true)
+    setError(null)
+    try {
+      const response = await authedFetch(getToken, '/telegram/link-code', { method: 'POST' })
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        throw new Error(payload.detail || `HTTP ${response.status}`)
+      }
+      setStatus(payload || { linked: false, pending_code: null, telegram_connect_url: null })
+      window.dispatchEvent(new CustomEvent('finsight:telegram-link-updated', { detail: payload }))
+      if (payload.pending_code && typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(payload.pending_code)
+      }
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : 'Unable to generate a Telegram link code.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function unlinkTelegram() {
+    setBusy(true)
+    setError(null)
+    try {
+      const response = await authedFetch(getToken, '/telegram/link', { method: 'DELETE' })
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        throw new Error(payload.detail || `HTTP ${response.status}`)
+      }
+      setStatus(payload.status || { linked: false, pending_code: null, telegram_connect_url: null })
+      window.dispatchEvent(
+        new CustomEvent('finsight:telegram-link-updated', {
+          detail: payload.status || { linked: false, pending_code: null, telegram_connect_url: null },
+        })
+      )
+    } catch (nextError) {
+      setError(nextError instanceof Error ? nextError.message : 'Unable to unlink Telegram.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  function openTelegramConnect() {
+    if (!status.telegram_connect_url) return
+    window.open(status.telegram_connect_url, '_blank', 'noopener,noreferrer')
+  }
+
+  return (
+    <div className="space-y-5 px-1 py-1 text-slate-800">
+      <div>
+        <h2 className="text-xl font-bold text-slate-900">Telegram</h2>
+        <p className="mt-2 text-sm leading-7 text-slate-500">
+          Link your Telegram chat to this FinSight account so your bot commands, notes, watchlist, and portfolio alerts stay private to you.
+        </p>
+      </div>
+
+      {error && (
+        <div className="rounded-lg border border-[#d8b0aa] bg-[#fff4f2] px-4 py-3 text-sm text-[#9d4840]">
+          <strong>Error:</strong> {error}
+        </div>
+      )}
+
+      <div className="rounded-xl border border-outline/10 bg-surface-container-low px-5 py-5">
+        {loading ? (
+          <p className="text-sm text-slate-500">Loading Telegram settings...</p>
+        ) : status.linked ? (
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="terminal-chip">Linked</span>
+              {status.telegram_username && <span className="terminal-chip">@{status.telegram_username}</span>}
+            </div>
+            <p className="text-sm leading-7 text-slate-600">
+              This Telegram chat is already connected to your account. You can use the bot for portfolio, notes, watchlist, and alert actions.
+            </p>
+            <button
+              type="button"
+              onClick={unlinkTelegram}
+              disabled={busy}
+              className="rounded-lg bg-surface-container px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-slate-700 transition-colors hover:bg-surface-container-high disabled:opacity-50"
+            >
+              {busy ? 'Unlinking' : 'Unlink Telegram'}
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="terminal-chip">{status.pending_code ? 'Ready to connect' : 'Not linked yet'}</span>
+              {status.pending_code_expires_at && <span className="terminal-chip">Expires {status.pending_code_expires_at}</span>}
+            </div>
+
+            <p className="text-sm leading-7 text-slate-600">
+              Best flow: generate a fresh token here, then open your bot with one tap. Telegram will send the secure token back through <span className="font-mono text-slate-700">/start</span> automatically.
+            </p>
+
+            {status.pending_code ? (
+              <div className="rounded-lg bg-white px-4 py-4">
+                <p className="terminal-label text-outline">Current code</p>
+                <p className="mt-3 font-mono text-2xl font-bold tracking-[0.24em] text-slate-900">{status.pending_code}</p>
+              </div>
+            ) : null}
+
+            <div className="flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  void generateCode()
+                }}
+                disabled={busy}
+                className="rounded-lg bg-slate-700 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-white transition-colors hover:bg-slate-800 disabled:opacity-50"
+              >
+                {busy ? 'Generating' : status.pending_code ? 'Refresh Code' : 'Generate Code'}
+              </button>
+              <button
+                type="button"
+                onClick={openTelegramConnect}
+                disabled={busy || !status.telegram_connect_url}
+                className="rounded-lg bg-white px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-slate-700 ring-1 ring-outline/15 transition-colors hover:bg-surface-container-low disabled:opacity-50"
+              >
+                Open Telegram Bot
+              </button>
+            </div>
+
+            <div className="rounded-lg border border-dashed border-outline/20 bg-white px-4 py-4 text-sm leading-7 text-slate-600">
+              <p>Fallback if the deep link does not open correctly:</p>
+              <p className="mt-2">
+                Send <span className="font-mono text-slate-700">/link {status.pending_code || 'YOUR_CODE'}</span> to your FinSight bot manually.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function App() {
   const { authEnabled, getToken, isSignedIn } = useFinsightAuth()
   const [route, setRoute] = useState(() => routeFromHash())
   const [headerSearch, setHeaderSearch] = useState('')
-  const [telegramBusy, setTelegramBusy] = useState(false)
   const [selectedNewsArticle, setSelectedNewsArticle] = useState(() => readNewsFromStorage())
 
   const page = route.page
@@ -153,35 +332,6 @@ export default function App() {
     setHeaderSearch('')
   }
 
-  async function generateTelegramLinkCodeFromProfile() {
-    if (!authEnabled || !isSignedIn) return
-    window.dispatchEvent(new CustomEvent('finsight:open-portfolio'))
-    window.dispatchEvent(new CustomEvent('finsight:telegram-link-busy', { detail: true }))
-    setTelegramBusy(true)
-    try {
-      const response = await authedFetch(getToken, '/telegram/link-code', {
-        method: 'POST',
-      })
-      const payload = await response.json().catch(() => ({}))
-      if (!response.ok) {
-        throw new Error(payload.detail || `HTTP ${response.status}`)
-      }
-      if (payload.pending_code && typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(payload.pending_code)
-      }
-      window.dispatchEvent(new CustomEvent('finsight:telegram-link-updated', { detail: payload }))
-    } catch (error) {
-      window.dispatchEvent(
-        new CustomEvent('finsight:telegram-link-error', {
-          detail: error instanceof Error ? error.message : 'Unable to generate Telegram code.',
-        })
-      )
-    } finally {
-      window.dispatchEvent(new CustomEvent('finsight:telegram-link-busy', { detail: false }))
-      setTelegramBusy(false)
-    }
-  }
-
   function clearAnalysisQuestionFromRoute() {
     if (page !== 'chat' || !route.params.get('q')) return
     navigateTo('chat', { replace: true })
@@ -249,13 +399,18 @@ export default function App() {
                     <UserButton appearance={{ elements: { avatarBox: 'h-8 w-8' } }}>
                       <UserButton.MenuItems>
                         <UserButton.Action
-                          label={telegramBusy ? 'Generating Telegram Code...' : 'Generate Telegram Code'}
+                          label="Telegram"
                           labelIcon={<span className="material-symbols-outlined text-[16px]">sms</span>}
-                          onClick={() => {
-                            void generateTelegramLinkCodeFromProfile()
-                          }}
+                          open="telegram"
                         />
                       </UserButton.MenuItems>
+                      <UserButton.UserProfilePage
+                        label="Telegram"
+                        url="telegram"
+                        labelIcon={<span className="material-symbols-outlined text-[16px]">sms</span>}
+                      >
+                        <TelegramProfilePage />
+                      </UserButton.UserProfilePage>
                     </UserButton>
                   </div>
                 </Show>

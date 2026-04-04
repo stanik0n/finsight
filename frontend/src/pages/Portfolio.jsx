@@ -672,7 +672,7 @@ export default function Portfolio() {
                 <span>
                   {telegramLink.linked
                     ? `Linked ${telegramLink.telegram_username ? `to @${telegramLink.telegram_username}` : 'to your FinSight bot chat'}.`
-                    : 'Use the Telegram Code button beside your profile, then send /link CODE to your FinSight bot.'}
+                    : 'Open your profile menu, choose Telegram, and connect your bot from the account panel.'}
                 </span>
               </div>
             )}

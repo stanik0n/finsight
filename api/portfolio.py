@@ -296,6 +296,19 @@ def _cleanup_expired_telegram_link_codes(conn: duckdb.DuckDBPyConnection) -> Non
     conn.execute("DELETE FROM app.telegram_link_codes WHERE expires_at <= CAST(NOW() AS TIMESTAMP)")
 
 
+def _telegram_bot_username() -> str | None:
+    username = (os.environ.get('TELEGRAM_BOT_USERNAME') or '').strip().lstrip('@')
+    return username or None
+
+
+def _telegram_connect_url(code: str | None) -> str | None:
+    bot_username = _telegram_bot_username()
+    normalized_code = (code or '').strip()
+    if not bot_username or not normalized_code:
+        return None
+    return f'https://t.me/{bot_username}?start={normalized_code}'
+
+
 def _ensure_user_alert_preferences(conn: duckdb.DuckDBPyConnection, user_id: str) -> None:
     conn.execute(
         """
@@ -371,15 +384,18 @@ def get_telegram_link_status(user_id: str) -> dict:
             """,
             [normalized_user_id],
         ).fetchone()
+        pending_code = code_row[0] if code_row else None
         return {
             'linked': bool(link_row),
             'chat_id': str(link_row[0]) if link_row else None,
             'telegram_username': link_row[1] if link_row else None,
             'linked_at': link_row[2].isoformat() if link_row and link_row[2] else None,
             'updated_at': link_row[3].isoformat() if link_row and link_row[3] else None,
-            'pending_code': code_row[0] if code_row else None,
+            'pending_code': pending_code,
             'pending_code_expires_at': code_row[1].isoformat() if code_row and code_row[1] else None,
             'pending_code_created_at': code_row[2].isoformat() if code_row and code_row[2] else None,
+            'telegram_bot_username': _telegram_bot_username(),
+            'telegram_connect_url': _telegram_connect_url(pending_code),
         }
     finally:
         conn.close()
