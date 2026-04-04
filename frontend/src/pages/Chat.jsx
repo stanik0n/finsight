@@ -328,8 +328,8 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
 
   return (
     <div className="flex min-h-[calc(100vh-56px-72px)] flex-col bg-background md:min-h-[calc(100vh-64px)] md:flex-row" style={{ overflow: 'hidden' }}>
-      <aside className="hidden w-72 bg-transparent px-4 py-4 lg:block">
-        <div className="flex h-full flex-col overflow-y-auto border-r-2 border-[#14181c] pr-4">
+      <aside className="hidden w-60 bg-transparent pl-2 pr-2 py-4 lg:block xl:w-64">
+        <div className="flex h-full flex-col overflow-y-auto border-r-2 border-[#14181c] pr-2">
           <div className="terminal-surface px-4 py-4">
             <p className="terminal-label mb-3 text-outline">Analysis Modes</p>
             <div className="space-y-1">
@@ -426,7 +426,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
       </aside>
 
       <section className="flex-1 bg-surface">
-        <div className="mx-auto flex h-full max-w-[1580px] flex-col xl:flex-row">
+        <div className="mx-auto flex h-full max-w-[1520px] flex-col xl:flex-row">
           <div className="relative flex min-w-0 flex-1 flex-col xl:border-r-2 xl:border-[#14181c] xl:px-8">
             <div className="flex-1 overflow-y-auto px-4 pb-[180px] pt-6 sm:px-6 sm:pb-[220px] sm:pt-8 lg:px-8 lg:pb-[250px] lg:pt-10">
               <div className="mb-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
