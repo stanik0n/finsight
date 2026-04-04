@@ -328,8 +328,8 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
 
   return (
     <div className="flex min-h-[calc(100vh-56px-72px)] flex-col bg-background md:min-h-[calc(100vh-64px)] md:flex-row" style={{ overflow: 'hidden' }}>
-      <aside className="hidden w-72 border-r border-outline/15 bg-surface-container-lowest lg:block">
-        <div className="flex h-full flex-col overflow-y-auto px-6 py-8">
+      <aside className="hidden w-72 bg-transparent px-4 py-4 lg:block">
+        <div className="flex h-full flex-col overflow-y-auto border-r-2 border-[#14181c] pr-4">
           <div className="terminal-surface px-4 py-4">
             <p className="terminal-label mb-3 text-outline">Analysis Modes</p>
             <div className="space-y-1">
@@ -338,8 +338,10 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
                     key={item.label}
                     type="button"
                     onClick={() => handleModeClick(item)}
-                    className={`flex w-full items-center gap-3 border-2 border-transparent px-3 py-3 text-left transition-colors ${
-                      index === 1 ? 'bg-surface-container-low text-slate-900' : 'text-slate-600'
+                    className={`flex w-full items-center gap-3 border-2 px-3 py-3 text-left transition-colors ${
+                      index === 1
+                        ? 'border-[#14181c] bg-surface-container-low text-slate-900 shadow-[2px_2px_0_rgba(20,24,28,0.75)]'
+                        : 'border-transparent text-slate-600'
                     } hover:bg-surface-container-low`}
                   >
                   <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
@@ -424,18 +426,18 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
       </aside>
 
       <section className="flex-1 bg-surface">
-        <div className="mx-auto flex h-full max-w-[1500px] flex-col xl:flex-row">
-          <div className="relative flex min-w-0 flex-1 flex-col xl:border-r xl:border-outline/15 xl:px-8">
+        <div className="mx-auto flex h-full max-w-[1580px] flex-col xl:flex-row">
+          <div className="relative flex min-w-0 flex-1 flex-col xl:border-r-2 xl:border-[#14181c] xl:px-8">
             <div className="flex-1 overflow-y-auto px-4 pb-[180px] pt-6 sm:px-6 sm:pb-[220px] sm:pt-8 lg:px-8 lg:pb-[250px] lg:pt-10">
               <div className="mb-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
                 <div>
-                  <span className="border border-outline/15 px-4 py-1 terminal-label text-outline">
+                  <span className="inline-flex border-2 border-[#14181c] bg-white px-4 py-1 terminal-label text-outline shadow-[2px_2px_0_rgba(20,24,28,0.7)]">
                     March 31, 2026
                   </span>
                   <h1 className="mt-5 font-headline text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
                     Analysis
                   </h1>
-                  <p className="font-headline text-3xl font-semibold tracking-tight text-slate-300 sm:text-5xl">
+                  <p className="font-headline text-3xl font-semibold tracking-tight text-[#c7d3df] sm:text-5xl">
                     Market and portfolio questions
                   </p>
                   <p className="mt-4 max-w-3xl text-sm leading-8 text-slate-500">
@@ -462,8 +464,8 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
               </div>
 
               {history.length === 0 && !loading && (
-                <div className="terminal-surface px-8 py-12 text-center">
-                  <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-xl bg-surface-container-low text-slate-700">
+                <div className="terminal-panel terminal-card-accent-blue px-8 py-12 text-center">
+                  <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center border-2 border-[#14181c] bg-[#eef3f6] text-slate-700 shadow-[3px_3px_0_rgba(20,24,28,0.9)]">
                     <span className="material-symbols-outlined text-3xl">psychology</span>
                   </div>
                   <p className="font-headline text-4xl font-extrabold tracking-tight text-slate-900">
@@ -565,7 +567,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
             </div>
           </div>
 
-          <aside className="hidden w-80 shrink-0 bg-surface-container-low px-8 py-8 xl:block">
+          <aside className="hidden w-80 shrink-0 bg-transparent px-8 py-8 xl:block">
             <div className="space-y-6">
               <div className="terminal-surface px-6 py-6">
                 <div className="flex items-start justify-between gap-6">
@@ -645,7 +647,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
 
               <div className="space-y-4">
                 {sidebarCards.length === 0 ? (
-                  <div className="rounded-xl bg-white px-6 py-6 shadow-sm">
+                  <div className="terminal-surface px-6 py-6">
                     <p className="terminal-label text-outline">Metrics</p>
                     <p className="mt-2 text-sm text-slate-500">
                       {latestEntry?.row_count === 0
