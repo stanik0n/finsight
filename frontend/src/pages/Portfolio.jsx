@@ -119,6 +119,7 @@ function TickerInput({ value, onChange }) {
   function handleKey(event) {
     if (event.key === 'Enter') {
       event.preventDefault()
+      event.stopPropagation()
       if (open && suggestions.length) {
         selectTicker(suggestions[highlighted])
       }
@@ -128,13 +129,18 @@ function TickerInput({ value, onChange }) {
     if (!open || !suggestions.length) return
     if (event.key === 'ArrowDown') {
       event.preventDefault()
+      event.stopPropagation()
       setHighlighted((current) => Math.min(current + 1, suggestions.length - 1))
     }
     if (event.key === 'ArrowUp') {
       event.preventDefault()
+      event.stopPropagation()
       setHighlighted((current) => Math.max(current - 1, 0))
     }
-    if (event.key === 'Escape') setOpen(false)
+    if (event.key === 'Escape') {
+      event.stopPropagation()
+      setOpen(false)
+    }
   }
 
   return (
@@ -154,19 +160,26 @@ function TickerInput({ value, onChange }) {
       {open && suggestions.length > 0 && (
         <ul className="absolute left-0 top-full z-50 mt-1 w-full overflow-hidden border border-outline/15 bg-white shadow-[0_12px_30px_rgba(148,163,184,0.18)] sm:w-80">
           {suggestions.map((ticker, index) => (
-            <li
-              key={ticker.symbol}
-              onMouseDown={(event) => {
-                event.preventDefault()
-                selectTicker(ticker)
-              }}
-              onMouseEnter={() => setHighlighted(index)}
-              className="flex cursor-pointer items-center gap-3 px-4 py-3 text-sm"
-              style={{ backgroundColor: index === highlighted ? '#f0f4f6' : '#ffffff' }}
-            >
-              <span className="terminal-label min-w-[56px] text-slate-700">{ticker.symbol}</span>
-              <span className="flex-1 truncate text-slate-700">{ticker.name}</span>
-              <span className="terminal-label text-outline">{ticker.sector.split(' ')[0]}</span>
+            <li key={ticker.symbol}>
+              <button
+                type="button"
+                onMouseDown={(event) => {
+                  event.preventDefault()
+                  event.stopPropagation()
+                }}
+                onClick={(event) => {
+                  event.preventDefault()
+                  event.stopPropagation()
+                  selectTicker(ticker)
+                }}
+                onMouseEnter={() => setHighlighted(index)}
+                className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm"
+                style={{ backgroundColor: index === highlighted ? '#f0f4f6' : '#ffffff' }}
+              >
+                <span className="terminal-label min-w-[56px] text-slate-700">{ticker.symbol}</span>
+                <span className="flex-1 truncate text-slate-700">{ticker.name}</span>
+                <span className="terminal-label text-outline">{ticker.sector.split(' ')[0]}</span>
+              </button>
             </li>
           ))}
         </ul>
