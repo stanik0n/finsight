@@ -248,6 +248,11 @@ _PORTFOLIO_FUZZY_TERMS = ('portfolio', 'holdings', 'positions', 'account', 'expo
 _NOTE_KEYWORDS = frozenset([
     'note', 'notes', 'thesis', 'memo', 'remember', 'why do i own', 'save note',
 ])
+_CONVERSATIONAL_KEYWORDS = frozenset([
+    'hi', 'hello', 'hey', 'how are you', 'how are u', 'whats up', "what's up",
+    'good morning', 'good afternoon', 'good evening', 'yo', 'sup',
+    'who are you', 'what can you do', 'thanks', 'thank you',
+])
 
 
 # ── Models ──────────────────────────────────────────────────────────────────
@@ -404,6 +409,49 @@ def _is_opinion_query(question: str) -> bool:
             'tomorrow' in q and any(word in q for word in ['up', 'down', 'higher', 'lower'])
         )
     )
+
+
+def _normalize_small_talk(question: str) -> str:
+    return re.sub(r'[^a-z0-9\s\?]', '', question.lower()).strip()
+
+
+def _is_conversational_query(question: str) -> bool:
+    normalized = _normalize_small_talk(question)
+    if not normalized:
+        return False
+    if len(normalized.split()) > 8:
+        return False
+    return any(keyword in normalized for keyword in _CONVERSATIONAL_KEYWORDS)
+
+
+def _run_conversational_query(question: str) -> dict:
+    normalized = _normalize_small_talk(question)
+
+    if any(phrase in normalized for phrase in ['how are you', 'how are u']):
+        commentary = (
+            "Doing well and ready to help. I can chat casually, or if you want, "
+            "I can switch straight into markets, news, watchlist, or portfolio questions."
+        )
+    elif any(phrase in normalized for phrase in ['who are you', 'what can you do']):
+        commentary = (
+            "I'm FinSight's analyst assistant. I can handle casual chat, but I'm mainly here for "
+            "market questions, stock screens, news, watchlist context, and your saved portfolio."
+        )
+    elif any(phrase in normalized for phrase in ['thanks', 'thank you']):
+        commentary = "Anytime. If you want, ask me about the market, a ticker, recent news, or your portfolio next."
+    else:
+        commentary = (
+            "Hey. I can chat normally, and I can also help with stocks, market news, technical screens, "
+            "watchlist ideas, or portfolio questions."
+        )
+
+    return {
+        'question': question,
+        'sql': 'conversation: no market query executed',
+        'results': [],
+        'path': 'conversation',
+        'commentary': commentary,
+    }
 
 
 def _run_portfolio_query(question: str, user_id: str | None = None) -> dict:
@@ -1624,6 +1672,17 @@ async def run_query(req: QueryRequest, user_id: str | None = Depends(get_current
     """
     if not req.question.strip():
         raise HTTPException(status_code=400, detail='Question cannot be empty')
+
+    if _is_conversational_query(req.question):
+        result = _run_conversational_query(req.question)
+        return QueryResponse(
+            question=result['question'],
+            sql=result['sql'],
+            results=result['results'],
+            path=result['path'],
+            row_count=len(result['results']),
+            commentary=result['commentary'],
+        )
 
     if _is_news_query(req.question):
         try:
