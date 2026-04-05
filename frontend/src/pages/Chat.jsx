@@ -70,6 +70,15 @@ function formatPercent(value) {
   return `${value >= 0 ? '+' : ''}${Number(value).toFixed(2)}%`
 }
 
+function formatAnalysisDate() {
+  return new Date().toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone: 'America/Chicago',
+  }).toUpperCase()
+}
+
 function metricCards(entry) {
   if (!entry?.results?.length) return []
 
@@ -387,17 +396,13 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
                 <div className="terminal-panel px-6 py-6">
                   <div className="mb-5 h-[2px] bg-[#14181c]" />
                   <span className="inline-flex border-2 border-[#14181c] bg-white px-4 py-1 terminal-label text-outline shadow-[2px_2px_0_rgba(20,24,28,0.7)]">
-                    March 31, 2026
+                    {formatAnalysisDate()}
                   </span>
                   <h1 className="mt-4 font-headline text-[2.35rem] font-extrabold tracking-tight text-slate-900 sm:mt-5 sm:text-5xl">
                     Analysis
                   </h1>
                   <p className="font-headline text-[2rem] font-semibold tracking-tight text-[#c7d3df] sm:text-5xl">
                     Market and portfolio questions
-                  </p>
-                  <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-500 sm:mt-4 sm:leading-8">
-                    Ask natural language questions across live markets, warehouse context, and your saved
-                    portfolio from one continuous analyst canvas.
                   </p>
                   <div className="mt-6 h-[2px] bg-[#14181c]" />
                 </div>
