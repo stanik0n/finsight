@@ -38,6 +38,16 @@ function formatTickerStripChange(value) {
 }
 
 function buildLiveTickerStrip(snapshot) {
+  if (Array.isArray(snapshot?.ticker_strip) && snapshot.ticker_strip.length) {
+    const directItems = snapshot.ticker_strip.map((item) => ({
+      label: item.label || item.symbol || 'Ticker',
+      value: formatTickerStripValue(Number(item.close)),
+      change: formatTickerStripChange(Number(item.pct_change)),
+    }))
+    const filtered = directItems.filter((item) => item.value !== '--')
+    if (filtered.length) return filtered
+  }
+
   const benchmarkItems = (snapshot?.benchmarks || []).slice(0, 4).map((item) => ({
     label: item.label || item.symbol || 'Benchmark',
     value: formatTickerStripValue(Number(item.close)),

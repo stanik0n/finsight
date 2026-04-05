@@ -167,6 +167,7 @@ DUCKDB_PATH = os.environ.get('DUCKDB_PATH', '/data/finsight.duckdb')
 INTRADAY_DUCKDB_PATH = os.environ.get('INTRADAY_DUCKDB_PATH', '/data/intraday.duckdb')
 _BENCHMARK_CACHE: dict[str, object] = {'ts': 0.0, 'data': []}
 _BENCHMARK_TTL_SECONDS = 300
+_HEADER_TICKER_CACHE: dict[str, object] = {'ts': 0.0, 'data': []}
 _ETF_CACHE_MINUTES = int(os.environ.get('TWELVE_DATA_CACHE_MINUTES', '15'))
 _MARKET_NEWS_CACHE: dict[str, dict[str, object]] = {}
 _MARKET_NEWS_TTL_SECONDS = 900
@@ -1269,6 +1270,58 @@ def _get_proxy_benchmarks(conn: duckdb.DuckDBPyConnection, latest_date) -> list[
     ]
 
 
+def _get_header_ticker_strip() -> list[dict]:
+    now = time.time()
+    cached = _HEADER_TICKER_CACHE.get('data')
+    if cached and now - float(_HEADER_TICKER_CACHE.get('ts', 0.0)) < _BENCHMARK_TTL_SECONDS:
+        return cached  # type: ignore[return-value]
+
+    symbols = [
+        ('^IXIC', 'Nasdaq'),
+        ('BTC-USD', 'BTC/USD'),
+        ('GC=F', 'Gold'),
+        ('AAPL', 'AAPL'),
+        ('^GSPC', 'S&P 500'),
+        ('^VIX', 'VIX'),
+    ]
+
+    items: list[dict] = []
+
+    try:
+        for symbol, label in symbols:
+            history = yf.Ticker(symbol).history(period='5d', interval='1d', auto_adjust=False)
+            if history.empty or 'Close' not in history.columns:
+                continue
+
+            close_series = history['Close'].dropna()
+            if len(close_series) < 2:
+                continue
+
+            latest = float(close_series.iloc[-1])
+            previous = float(close_series.iloc[-2])
+            pct_change = ((latest - previous) / previous) * 100 if previous else 0.0
+            latest_ts = close_series.index[-1]
+
+            items.append(
+                {
+                    'symbol': symbol,
+                    'label': label,
+                    'close': latest,
+                    'pct_change': float(pct_change),
+                    'date': str(pd.to_datetime(latest_ts).date()),
+                    'source': 'yfinance',
+                }
+            )
+    except Exception:
+        items = []
+
+    if items:
+        _HEADER_TICKER_CACHE['ts'] = now
+        _HEADER_TICKER_CACHE['data'] = items
+
+    return items
+
+
 def _market_news_query(symbol: str | None = None) -> str:
     base_query = os.environ.get(
         'BRAVE_NEWS_QUERY',
@@ -1758,6 +1811,7 @@ async def market_snapshot():
         benchmarks = _get_benchmark_snapshot()
         if not benchmarks:
             benchmarks = _get_proxy_benchmarks(conn, latest_date)
+        ticker_strip = _get_header_ticker_strip()
 
         conn.close()
 
@@ -1816,6 +1870,7 @@ async def market_snapshot():
 
         return {
             'date': str(latest_date),
+            'ticker_strip': ticker_strip,
             'benchmarks': benchmarks,
             'faang': [
                 {
