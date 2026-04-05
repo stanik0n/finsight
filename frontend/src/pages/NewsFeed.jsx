@@ -57,15 +57,15 @@ export default function NewsFeed({ onOpenArticle = () => {} }) {
   }, [getToken])
 
   return (
-    <div className="bg-background px-3 py-5 sm:px-5 sm:py-7 lg:px-8 lg:py-8">
+    <div className="bg-background px-3 py-4 sm:px-5 sm:py-7 lg:px-8 lg:py-8">
       <div className="terminal-shell">
         <div className="mb-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
           <div className="terminal-panel px-6 py-6 sm:px-8 sm:py-8">
             <p className="terminal-label text-outline">Latest finance and trading coverage</p>
-            <h1 className="mt-4 font-headline text-4xl font-extrabold uppercase tracking-tight text-slate-900 sm:text-[4rem]">
+            <h1 className="mt-4 font-headline text-[2.45rem] font-extrabold uppercase tracking-tight text-slate-900 sm:text-[4rem]">
               Market News
             </h1>
-            <p className="mt-4 max-w-3xl text-base leading-8 text-slate-500">
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-500 sm:text-base sm:leading-8">
               Brave News Search is pulling the latest 24-hour finance, trading, and stock market coverage into one feed.
             </p>
           </div>
@@ -119,7 +119,7 @@ export default function NewsFeed({ onOpenArticle = () => {} }) {
                   <span className="terminal-label text-outline">{formatArticleDate(story.datetime)}</span>
                 </div>
 
-                <h2 className="max-w-3xl font-headline text-2xl font-extrabold tracking-tight text-slate-900">
+                <h2 className="max-w-3xl font-headline text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">
                   {story.title || 'Untitled article'}
                 </h2>
                 <p className="mt-4 text-sm leading-8 text-slate-600">

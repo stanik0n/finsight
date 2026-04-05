@@ -730,7 +730,7 @@ export default function Portfolio() {
 
   return (
     <div
-      className="min-h-screen bg-background px-3 py-5 sm:px-5 sm:py-7 lg:px-8 lg:py-8"
+      className="min-h-screen bg-background px-3 py-4 sm:px-5 sm:py-7 lg:px-8 lg:py-8"
       onKeyDownCapture={preventImplicitSubmit}
     >
       <div className="terminal-shell">
@@ -1101,7 +1101,7 @@ export default function Portfolio() {
               )}
             </div>
 
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
               <div className="col-span-12 space-y-6 lg:col-span-8">
                 <div className="flex min-h-[44px] flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
                   <h2 className="font-headline text-2xl font-bold text-slate-900">Primary Watchlist</h2>
@@ -1316,7 +1316,7 @@ export default function Portfolio() {
                         onChange={(event) => setNoteForm((current) => ({ ...current, note_title: event.target.value }))}
                       />
                       <textarea
-                        className="terminal-input-muted min-h-[180px] w-full resize-none"
+                        className="terminal-input-muted min-h-[150px] w-full resize-none sm:min-h-[180px]"
                         placeholder="Capture the note, trigger, or decision you want attached to this ticker."
                         value={noteForm.note_text}
                         onChange={(event) => setNoteForm((current) => ({ ...current, note_text: event.target.value }))}
@@ -1334,8 +1334,8 @@ export default function Portfolio() {
                       </div>
                     </div>
 
-                    <div className="overflow-x-auto pb-2">
-                      <div className="grid min-w-[1180px] gap-4 xl:grid-cols-5">
+                    <div className="pb-2">
+                      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
                         {NOTE_LANE_ORDER.map((lane) => (
                           <div
                             key={lane}
@@ -1468,7 +1468,7 @@ export default function Portfolio() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
               <div className="terminal-panel px-6 py-6 lg:col-span-4">
                 <p className="terminal-label text-outline">Sector allocation</p>
                 <div className="mt-6 flex flex-col items-start gap-6 sm:flex-row sm:items-center">

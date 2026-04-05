@@ -357,7 +357,7 @@ export default function App() {
       <div className="min-h-screen bg-background text-on-surface">
         <div className="fixed inset-x-0 top-0 z-50 bg-[#eef2f4] px-2 pb-2 pt-2 sm:px-4">
           <div className="terminal-shell overflow-hidden rounded-[22px] border-2 border-[#14181c] bg-white shadow-[4px_4px_0_rgba(20,24,28,0.95)]">
-            <div className="terminal-ticker-strip">
+            <div className="terminal-ticker-strip hidden md:flex">
               <div className="terminal-ticker-run">
                 {[...TICKER_STRIP, ...TICKER_STRIP].map((item, index) => (
                   <div key={`${item.label}-${index}`} className="terminal-ticker-item">
@@ -369,11 +369,11 @@ export default function App() {
               </div>
             </div>
             <header className="flex h-16 items-center justify-between px-4 sm:h-[74px] sm:px-6 lg:px-8">
-              <div className="flex items-center gap-4 sm:gap-10">
+              <div className="flex min-w-0 items-center gap-4 sm:gap-10">
                 <button
                   type="button"
                   onClick={() => navigateTo('dashboard')}
-                  className="font-headline text-lg font-extrabold tracking-tight text-slate-900 sm:text-[1.55rem]"
+                  className="shrink-0 font-headline text-lg font-extrabold tracking-tight text-slate-900 sm:text-[1.55rem]"
                 >
                   FINSIGHT
                 </button>
@@ -446,14 +446,28 @@ export default function App() {
                 )}
               </div>
             </header>
+            <div className="border-t-2 border-[#14181c] px-3 py-3 md:hidden">
+              <form onSubmit={submitHeaderSearch}>
+                <div className="flex items-center gap-3 border-2 border-[#14181c] bg-[#fbfcfc] px-3 py-2.5">
+                  <span className="material-symbols-outlined text-[18px] text-slate-500">search</span>
+                  <input
+                    value={headerSearch}
+                    onChange={(e) => setHeaderSearch(e.target.value)}
+                    className="w-full bg-transparent text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none"
+                    placeholder="Search stocks..."
+                    autoComplete="off"
+                  />
+                </div>
+              </form>
+            </div>
           </div>
         </div>
 
         <main
           className={
             page === 'chat'
-              ? 'fixed inset-x-0 top-[104px] bottom-20 overflow-hidden bg-background md:top-[112px] md:bottom-0'
-              : 'box-border bg-background pb-20 pt-[104px] md:pb-0 md:pt-[112px]'
+              ? 'fixed inset-x-0 top-[140px] bottom-20 overflow-hidden bg-background md:top-[112px] md:bottom-0'
+              : 'box-border bg-background pb-20 pt-[140px] md:pb-0 md:pt-[112px]'
           }
           style={
             page === 'chat'

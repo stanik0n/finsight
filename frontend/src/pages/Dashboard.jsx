@@ -470,15 +470,15 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
   }
 
   return (
-    <div className="bg-background px-3 py-5 sm:px-5 sm:py-7 lg:px-8 lg:py-8">
+    <div className="bg-background px-3 py-4 sm:px-5 sm:py-7 lg:px-8 lg:py-8">
       <div className="terminal-shell">
         <div className="mb-10 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
           <div className="terminal-panel px-6 py-6 sm:px-8 sm:py-8">
             <p className="terminal-label text-outline">Terminal session 04.22.2026 // Status: active</p>
-            <h1 className="mt-4 font-headline text-4xl font-extrabold uppercase tracking-tight text-slate-900 sm:text-[4rem]">
+            <h1 className="mt-4 font-headline text-[2.4rem] font-extrabold uppercase tracking-tight text-slate-900 sm:text-[4rem]">
               Market Overview
             </h1>
-            <p className="mt-4 max-w-3xl text-base leading-8 text-slate-500">
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-500 sm:text-base sm:leading-8">
               {snapshot?.date
                 ? `Live benchmarks, warehouse context, and the strongest active signals as of ${snapshot.date}.`
                 : 'Loading live market snapshot...'}
@@ -703,7 +703,7 @@ export default function Dashboard({ onSearch = () => {}, onOpenNews = () => {} }
                     Sector data unavailable.
                   </div>
                 )}
-                    <div className="terminal-panel absolute right-4 top-4 px-4 py-3 sm:right-14 sm:top-16 sm:px-5 sm:py-4">
+                    <div className="terminal-panel mx-4 mb-4 mt-4 px-4 py-3 sm:absolute sm:right-14 sm:top-16 sm:mx-0 sm:mb-0 sm:mt-0 sm:px-5 sm:py-4">
                   <p className="terminal-label text-outline">Highest RSI</p>
                   <p className="mt-2 font-headline text-3xl font-bold text-slate-900">
                     {peakSector ? `${fmt(peakSector.avg_rsi)} RSI` : '...'}

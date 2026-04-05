@@ -87,7 +87,7 @@ export default function NewsArticle({ article, onBack }) {
   }
 
   return (
-    <div className="min-h-screen bg-background px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+    <div className="min-h-screen bg-background px-3 py-4 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
       <div className="terminal-shell space-y-6">
         <div className="flex flex-wrap items-center gap-3">
           <button
@@ -111,7 +111,7 @@ export default function NewsArticle({ article, onBack }) {
           )}
         </div>
 
-        <article className="terminal-surface px-6 py-8 sm:px-10 sm:py-10">
+        <article className="terminal-surface px-5 py-6 sm:px-10 sm:py-10">
           <div className="mb-8 flex flex-wrap items-center gap-3">
             <span className="terminal-chip border-[#14181c] bg-[#14181c] px-3 py-1 text-[10px] text-white">
               {article.source || 'News'}
@@ -122,7 +122,7 @@ export default function NewsArticle({ article, onBack }) {
             <span className="terminal-label text-outline">{formatArticleDate(article.datetime)}</span>
           </div>
 
-          <h1 className="max-w-4xl font-headline text-3xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
+          <h1 className="max-w-4xl font-headline text-[2.2rem] font-extrabold tracking-tight text-slate-900 sm:text-5xl">
             {formatArticleTitle(article.title)}
           </h1>
 
@@ -136,7 +136,7 @@ export default function NewsArticle({ article, onBack }) {
           <div className="mt-8 space-y-5">
             <p className="terminal-label text-outline">Full article</p>
             {buildArticleParagraphs(article).map((paragraph, index) => (
-              <p key={`${paragraph.slice(0, 24)}-${index}`} className="max-w-4xl text-base leading-9 text-slate-700">
+              <p key={`${paragraph.slice(0, 24)}-${index}`} className="max-w-4xl text-[15px] leading-8 text-slate-700 sm:text-base sm:leading-9">
                 {paragraph}
               </p>
             ))}

@@ -333,7 +333,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
   const sidebarCards = cards.slice(0, 3)
 
   return (
-    <div className="box-border h-full overflow-hidden bg-background px-3 py-4 sm:px-5 sm:py-5 lg:px-8 lg:py-6">
+    <div className="box-border h-full overflow-hidden bg-background px-2 py-3 sm:px-5 sm:py-5 lg:px-8 lg:py-6">
       <div className="terminal-shell h-full">
         <div className="flex h-full min-h-0 flex-col md:flex-row overflow-hidden">
       <aside className="hidden h-full min-h-0 w-60 bg-transparent pl-2 pr-2 py-4 lg:block xl:w-64">
@@ -438,20 +438,20 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
           <div className="relative flex min-w-0 flex-1 flex-col xl:border-r-2 xl:border-[#14181c] xl:px-8">
             <div
               ref={messagesContainerRef}
-              className="flex-1 overflow-y-auto px-4 pb-[180px] pt-6 sm:px-6 sm:pb-[220px] sm:pt-8 lg:px-8 lg:pb-[250px] lg:pt-10"
+              className="flex-1 overflow-y-auto px-3 pb-[148px] pt-4 sm:px-6 sm:pb-[220px] sm:pt-8 lg:px-8 lg:pb-[250px] lg:pt-10"
             >
-              <div className="mb-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+              <div className="mb-6 grid gap-4 xl:mb-8 xl:gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
                 <div>
                   <span className="inline-flex border-2 border-[#14181c] bg-white px-4 py-1 terminal-label text-outline shadow-[2px_2px_0_rgba(20,24,28,0.7)]">
                     March 31, 2026
                   </span>
-                  <h1 className="mt-5 font-headline text-4xl font-extrabold tracking-tight text-slate-900 sm:text-5xl">
+                  <h1 className="mt-4 font-headline text-[2.35rem] font-extrabold tracking-tight text-slate-900 sm:mt-5 sm:text-5xl">
                     Analysis
                   </h1>
-                  <p className="font-headline text-3xl font-semibold tracking-tight text-[#c7d3df] sm:text-5xl">
+                  <p className="font-headline text-[2rem] font-semibold tracking-tight text-[#c7d3df] sm:text-5xl">
                     Market and portfolio questions
                   </p>
-                  <p className="mt-4 max-w-3xl text-sm leading-8 text-slate-500">
+                  <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-500 sm:mt-4 sm:leading-8">
                     Ask natural language questions across live markets, warehouse context, and your saved
                     portfolio from one continuous analyst canvas.
                   </p>
@@ -489,7 +489,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
                 </div>
               )}
 
-              <div className="mt-8 space-y-10">
+              <div className="mt-6 space-y-6 sm:mt-8 sm:space-y-10">
                 {history.map((entry, index) => (
                   <div key={`${entry.question}-${index}`} className="space-y-5">
                     <div className="mr-0 ml-auto max-w-2xl">
@@ -552,8 +552,8 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
               <div ref={messagesEndRef} />
             </div>
 
-            <div className="absolute inset-x-0 bottom-0 z-20 px-4 pb-4 pt-6 sm:px-6 sm:pb-6 lg:px-8 lg:pb-8 lg:pt-10">
-              <div className="terminal-surface mx-auto max-w-5xl bg-[rgba(248,250,251,0.96)] px-6 py-5 backdrop-blur-md">
+            <div className="absolute inset-x-0 bottom-0 z-20 px-3 pb-3 pt-4 sm:px-6 sm:pb-6 sm:pt-6 lg:px-8 lg:pb-8 lg:pt-10">
+              <div className="terminal-surface mx-auto max-w-5xl bg-[rgba(248,250,251,0.96)] px-4 py-4 sm:px-6 sm:py-5 backdrop-blur-md">
                 <form onSubmit={submitForm}>
                   <div className="flex items-center gap-4">
                       <input

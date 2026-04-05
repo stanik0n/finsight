@@ -386,3 +386,37 @@ body {
 ::-webkit-scrollbar-thumb {
   background: rgba(114, 125, 128, 0.45);
 }
+
+@media (max-width: 767px) {
+  body {
+    background:
+      radial-gradient(circle at 1px 1px, rgba(24, 29, 34, 0.06) 1px, transparent 0) 0 0 / 14px 14px,
+      var(--background);
+  }
+
+  .terminal-panel,
+  .terminal-surface,
+  .terminal-panel-dark {
+    box-shadow: 3px 3px 0 rgba(20, 24, 28, 0.92);
+  }
+
+  .terminal-surface-soft,
+  .terminal-panel-soft {
+    box-shadow: 2px 2px 0 rgba(20, 24, 28, 0.28);
+  }
+
+  .terminal-button,
+  .terminal-button-ghost {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+  }
+
+  .terminal-chip,
+  .terminal-label {
+    letter-spacing: 0.16em;
+  }
+
+  .terminal-note-card {
+    box-shadow: 2px 2px 0 rgba(20, 24, 28, 0.85);
+  }
+}
