@@ -1288,30 +1288,47 @@ def _get_header_ticker_strip() -> list[dict]:
     items: list[dict] = []
 
     try:
+        bulk_history = yf.download(
+            [symbol for symbol, _label in symbols],
+            period='5d',
+            interval='1d',
+            auto_adjust=False,
+            progress=False,
+            group_by='ticker',
+            threads=False,
+        )
+
         for symbol, label in symbols:
-            history = yf.Ticker(symbol).history(period='5d', interval='1d', auto_adjust=False)
-            if history.empty or 'Close' not in history.columns:
+            try:
+                if isinstance(bulk_history.columns, pd.MultiIndex):
+                    if symbol not in bulk_history.columns.get_level_values(0):
+                        continue
+                    close_series = bulk_history[symbol]['Close'].dropna()
+                else:
+                    if symbol != symbols[0][0] or 'Close' not in bulk_history.columns:
+                        continue
+                    close_series = bulk_history['Close'].dropna()
+
+                if len(close_series) < 2:
+                    continue
+
+                latest = float(close_series.iloc[-1])
+                previous = float(close_series.iloc[-2])
+                pct_change = ((latest - previous) / previous) * 100 if previous else 0.0
+                latest_ts = close_series.index[-1]
+
+                items.append(
+                    {
+                        'symbol': symbol,
+                        'label': label,
+                        'close': latest,
+                        'pct_change': float(pct_change),
+                        'date': str(pd.to_datetime(latest_ts).date()),
+                        'source': 'yfinance',
+                    }
+                )
+            except Exception:
                 continue
-
-            close_series = history['Close'].dropna()
-            if len(close_series) < 2:
-                continue
-
-            latest = float(close_series.iloc[-1])
-            previous = float(close_series.iloc[-2])
-            pct_change = ((latest - previous) / previous) * 100 if previous else 0.0
-            latest_ts = close_series.index[-1]
-
-            items.append(
-                {
-                    'symbol': symbol,
-                    'label': label,
-                    'close': latest,
-                    'pct_change': float(pct_change),
-                    'date': str(pd.to_datetime(latest_ts).date()),
-                    'source': 'yfinance',
-                }
-            )
     except Exception:
         items = []
 
