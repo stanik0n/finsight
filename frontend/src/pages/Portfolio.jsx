@@ -1248,7 +1248,7 @@ export default function Portfolio() {
                   </span>
                 </div>
                 <div className="terminal-surface flex flex-col overflow-hidden lg:h-[392px]">
-                  <div className="border-b border-surface-container px-5 py-5">
+                  <div className="max-h-[170px] overflow-y-auto border-b border-surface-container px-5 py-5">
                     {allAlerts.length ? (
                       <div className="space-y-3">
                         {allAlerts.map((alert) => (
