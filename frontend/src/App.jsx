@@ -450,14 +450,14 @@ export default function App() {
         </div>
 
         <main
-          className={`box-border bg-background pb-20 pt-[104px] md:pb-0 md:pt-[112px] ${
-            page === 'chat' ? 'overflow-hidden md:h-screen' : ''
-          }`}
+          className={
+            page === 'chat'
+              ? 'fixed inset-x-0 top-[104px] bottom-20 overflow-hidden bg-background md:top-[112px] md:bottom-0'
+              : 'box-border bg-background pb-20 pt-[104px] md:pb-0 md:pt-[112px]'
+          }
           style={
             page === 'chat'
-              ? {
-                  height: '100vh',
-                }
+              ? undefined
               : {
                   minHeight: '100vh',
                 }
