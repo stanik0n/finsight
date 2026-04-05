@@ -1192,62 +1192,66 @@ export default function Portfolio() {
                     {allAlerts.length}
                   </span>
                 </div>
-                <div className="flex flex-col space-y-4 lg:h-[388px]">
-                  {allAlerts.length ? allAlerts.map((alert) => (
-                    <div
-                      key={alert.alert_id}
-                      className="terminal-panel p-5"
-                      style={{ borderLeft: `4px solid ${alertAccent(alert)}` }}
-                    >
-                      <div className="mb-2 flex items-start justify-between gap-3">
-                        <span
-                          className="rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider"
-                          style={{ backgroundColor: `${alertAccent(alert)}14`, color: alertAccent(alert) }}
-                        >
-                          {alert.alert_type.replaceAll('_', ' ')}
-                        </span>
-                        <span className="text-[10px] font-medium text-outline">{alert.symbol || alert.source_scope}</span>
+                <div className="terminal-surface flex flex-col overflow-hidden lg:h-[392px]">
+                  <div className="border-b border-surface-container px-5 py-5">
+                    {allAlerts.length ? (
+                      <div className="space-y-3">
+                        {allAlerts.map((alert) => (
+                          <div
+                            key={alert.alert_id}
+                            className="rounded-sm border-l-[4px] border-[#14181c] bg-white/80 px-3 py-3"
+                            style={{ borderLeftColor: alertAccent(alert) }}
+                          >
+                            <div className="mb-2 flex items-start justify-between gap-3">
+                              <span
+                                className="rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider"
+                                style={{ backgroundColor: `${alertAccent(alert)}14`, color: alertAccent(alert) }}
+                              >
+                                {alert.alert_type.replaceAll('_', ' ')}
+                              </span>
+                              <span className="text-[10px] font-medium text-outline">{alert.symbol || alert.source_scope}</span>
+                            </div>
+                            <p className="text-sm font-semibold text-slate-900">{alert.title}</p>
+                            <p className="mt-2 text-xs leading-6 text-slate-500">{alert.message}</p>
+                          </div>
+                        ))}
                       </div>
-                      <p className="text-sm font-semibold text-slate-900">{alert.title}</p>
-                      <p className="mt-2 text-xs leading-6 text-slate-500">{alert.message}</p>
-                    </div>
-                  )) : (
-                    <div className="terminal-panel p-5 text-sm text-slate-500">
-                      No active alerts right now.
-                    </div>
-                  )}
-                  <div className="terminal-panel flex-1 p-6">
-                  <h3 className="terminal-label text-outline">Position overview</h3>
-                  <div className="mt-5 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-slate-500">Largest position</span>
-                      <span className="font-semibold text-slate-900">{topPosition?.symbol || '--'}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-slate-500">Top winner</span>
-                      <span className="font-semibold" style={{ color: insightTone(topGainer?.pnl_pct || 0) }}>
-                        {topGainer?.symbol || '--'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-slate-500">Top loser</span>
-                      <span className="font-semibold" style={{ color: insightTone(topLoser?.pnl_pct || 0) }}>
-                        {topLoser?.symbol || '--'}
-                      </span>
-                    </div>
-                    <div className="pt-4">
-                      <p className="text-xs font-bold uppercase tracking-wider text-outline">Concentration profile</p>
-                      <p className="mt-3 font-headline text-4xl font-bold text-slate-900">
-                        {result.portfolio_insights?.concentration?.top_position_weight_pct != null
-                          ? `${fmt(result.portfolio_insights.concentration.top_position_weight_pct, 1)}%`
-                          : '--'}
-                      </p>
-                      <p className="mt-2 text-sm text-slate-500">
-                        {result.portfolio_insights?.concentration?.level || 'Balanced'}
-                      </p>
+                    ) : (
+                      <p className="text-sm text-slate-500">No active alerts right now.</p>
+                    )}
+                  </div>
+                  <div className="flex-1 px-6 py-6">
+                    <h3 className="terminal-label text-outline">Position overview</h3>
+                    <div className="mt-5 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-slate-500">Largest position</span>
+                        <span className="font-semibold text-slate-900">{topPosition?.symbol || '--'}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-slate-500">Top winner</span>
+                        <span className="font-semibold" style={{ color: insightTone(topGainer?.pnl_pct || 0) }}>
+                          {topGainer?.symbol || '--'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-slate-500">Top loser</span>
+                        <span className="font-semibold" style={{ color: insightTone(topLoser?.pnl_pct || 0) }}>
+                          {topLoser?.symbol || '--'}
+                        </span>
+                      </div>
+                      <div className="pt-4">
+                        <p className="text-xs font-bold uppercase tracking-wider text-outline">Concentration profile</p>
+                        <p className="mt-3 font-headline text-4xl font-bold text-slate-900">
+                          {result.portfolio_insights?.concentration?.top_position_weight_pct != null
+                            ? `${fmt(result.portfolio_insights.concentration.top_position_weight_pct, 1)}%`
+                            : '--'}
+                        </p>
+                        <p className="mt-2 text-sm text-slate-500">
+                          {result.portfolio_insights?.concentration?.level || 'Balanced'}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                </div>
                 </div>
               </div>
 
