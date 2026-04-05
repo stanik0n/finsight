@@ -329,8 +329,8 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
   return (
     <div className="h-[calc(100vh-104px)] overflow-hidden bg-background px-3 py-4 sm:h-[calc(100vh-112px)] sm:px-5 sm:py-5 lg:px-8 lg:py-6">
       <div className="terminal-shell">
-        <div className="flex h-full min-h-0 flex-col md:flex-row" style={{ overflow: 'hidden' }}>
-      <aside className="hidden w-60 bg-transparent pl-2 pr-2 py-4 lg:block xl:w-64">
+        <div className="flex h-full min-h-0 flex-col md:flex-row overflow-hidden">
+      <aside className="hidden h-full min-h-0 w-60 bg-transparent pl-2 pr-2 py-4 lg:block xl:w-64">
         <div className="flex h-full flex-col overflow-y-auto border-r-2 border-[#14181c] pr-2">
           <div className="terminal-surface px-4 py-4">
             <p className="terminal-label mb-3 text-outline">Analysis Modes</p>
@@ -427,8 +427,8 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
         </div>
       </aside>
 
-      <section className="flex-1 bg-surface">
-      <div className="terminal-shell flex h-full flex-col xl:flex-row">
+      <section className="flex min-h-0 flex-1 bg-surface">
+      <div className="flex h-full min-h-0 flex-1 flex-col xl:flex-row">
           <div className="relative flex min-w-0 flex-1 flex-col xl:border-r-2 xl:border-[#14181c] xl:px-8">
             <div className="flex-1 overflow-y-auto px-4 pb-[180px] pt-6 sm:px-6 sm:pb-[220px] sm:pt-8 lg:px-8 lg:pb-[250px] lg:pt-10">
               <div className="mb-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
@@ -569,7 +569,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
             </div>
           </div>
 
-          <aside className="hidden w-80 shrink-0 bg-transparent px-8 py-8 xl:block">
+          <aside className="hidden h-full min-h-0 w-80 shrink-0 overflow-y-auto bg-transparent px-8 py-8 xl:block">
             <div className="space-y-6">
               <div className="terminal-surface px-6 py-6">
                 <div className="flex items-start justify-between gap-6">
