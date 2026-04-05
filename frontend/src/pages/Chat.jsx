@@ -432,10 +432,6 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
                   <p className="font-headline text-4xl font-extrabold tracking-tight text-slate-900">
                     Ask a question
                   </p>
-                  <p className="mx-auto mt-3 max-w-2xl text-sm leading-relaxed text-slate-500">
-                    FinSight will route each question across live, historical, hybrid, or portfolio context and
-                    return a clean analyst-style answer.
-                  </p>
                 </div>
               )}
 
