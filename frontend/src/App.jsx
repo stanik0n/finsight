@@ -363,7 +363,7 @@ export default function App() {
     }
 
     loadTickerStrip()
-    const intervalId = window.setInterval(loadTickerStrip, 60000)
+    const intervalId = window.setInterval(loadTickerStrip, 30 * 60 * 1000)
 
     return () => {
       cancelled = true
