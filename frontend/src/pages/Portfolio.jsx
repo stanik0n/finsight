@@ -1185,14 +1185,14 @@ export default function Portfolio() {
 
               </div>
 
-              <div className="col-span-12 space-y-6 lg:col-span-4 lg:flex lg:h-[460px] lg:flex-col">
+              <div className="col-span-12 space-y-6 lg:col-span-4">
                 <div className="flex min-h-[44px] items-center justify-between">
                   <h2 className="font-headline text-2xl font-bold text-slate-900">Portfolio Signals</h2>
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#d14f59] text-[10px] font-bold text-white">
                     {allAlerts.length}
                   </span>
                 </div>
-                <div className="flex flex-1 flex-col space-y-4">
+                <div className="flex flex-col space-y-4 lg:h-[392px]">
                   {allAlerts.length ? allAlerts.map((alert) => (
                     <div
                       key={alert.alert_id}
