@@ -428,7 +428,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
       </aside>
 
       <section className="flex-1 bg-surface">
-        <div className="mx-auto flex h-full max-w-[1520px] flex-col xl:flex-row">
+      <div className="terminal-shell flex h-full flex-col xl:flex-row">
           <div className="relative flex min-w-0 flex-1 flex-col xl:border-r-2 xl:border-[#14181c] xl:px-8">
             <div className="flex-1 overflow-y-auto px-4 pb-[180px] pt-6 sm:px-6 sm:pb-[220px] sm:pt-8 lg:px-8 lg:pb-[250px] lg:pt-10">
               <div className="mb-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">

@@ -58,7 +58,7 @@ export default function NewsFeed({ onOpenArticle = () => {} }) {
 
   return (
     <div className="bg-background px-3 py-5 sm:px-5 sm:py-7 lg:px-8 lg:py-8">
-      <div className="mx-auto max-w-[1520px]">
+      <div className="terminal-shell">
         <div className="mb-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
           <div className="terminal-panel px-6 py-6 sm:px-8 sm:py-8">
             <p className="terminal-label text-outline">Latest finance and trading coverage</p>

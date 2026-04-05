@@ -67,7 +67,8 @@ export default function NewsArticle({ article, onBack }) {
   if (!article) {
     return (
       <div className="min-h-screen bg-background px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-        <div className="terminal-surface mx-auto max-w-5xl px-6 py-8 sm:px-8 sm:py-10">
+        <div className="terminal-shell">
+          <div className="terminal-surface px-6 py-8 sm:px-8 sm:py-10">
           <p className="font-headline text-3xl font-bold text-slate-900">No article selected</p>
           <p className="mt-3 text-sm leading-7 text-slate-500">
             Go back to Markets and select a story from the news rail.
@@ -79,6 +80,7 @@ export default function NewsArticle({ article, onBack }) {
           >
             Back to Markets
           </button>
+          </div>
         </div>
       </div>
     )
@@ -86,7 +88,7 @@ export default function NewsArticle({ article, onBack }) {
 
   return (
     <div className="min-h-screen bg-background px-4 py-6 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
-      <div className="mx-auto max-w-5xl space-y-6">
+      <div className="terminal-shell space-y-6">
         <div className="flex flex-wrap items-center gap-3">
           <button
             type="button"
