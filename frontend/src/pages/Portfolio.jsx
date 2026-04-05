@@ -117,6 +117,14 @@ function TickerInput({ value, onChange }) {
   }
 
   function handleKey(event) {
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      if (open && suggestions.length) {
+        selectTicker(suggestions[highlighted])
+      }
+      return
+    }
+
     if (!open || !suggestions.length) return
     if (event.key === 'ArrowDown') {
       event.preventDefault()
@@ -125,10 +133,6 @@ function TickerInput({ value, onChange }) {
     if (event.key === 'ArrowUp') {
       event.preventDefault()
       setHighlighted((current) => Math.max(current - 1, 0))
-    }
-    if (event.key === 'Enter') {
-      event.preventDefault()
-      selectTicker(suggestions[highlighted])
     }
     if (event.key === 'Escape') setOpen(false)
   }
@@ -152,7 +156,10 @@ function TickerInput({ value, onChange }) {
           {suggestions.map((ticker, index) => (
             <li
               key={ticker.symbol}
-              onMouseDown={() => selectTicker(ticker)}
+              onMouseDown={(event) => {
+                event.preventDefault()
+                selectTicker(ticker)
+              }}
               onMouseEnter={() => setHighlighted(index)}
               className="flex cursor-pointer items-center gap-3 px-4 py-3 text-sm"
               style={{ backgroundColor: index === highlighted ? '#f0f4f6' : '#ffffff' }}
