@@ -1279,6 +1279,21 @@ def _market_news_query(symbol: str | None = None) -> str:
     return base_query
 
 
+def _market_news_fallback_queries(symbol: str | None = None) -> list[str]:
+    if symbol:
+        raw_value = os.environ.get(
+            'BRAVE_SYMBOL_NEWS_FALLBACK_QUERY',
+            f'{symbol} business news earnings analyst rating markets',
+        ).strip()
+    else:
+        raw_value = os.environ.get(
+            'BRAVE_NEWS_FALLBACK_QUERY',
+            'latest business news IPO AI economy big tech markets',
+        ).strip()
+
+    return [query.strip() for query in raw_value.split('||') if query.strip()]
+
+
 def _story_timestamp(value: object) -> datetime:
     if not value:
         return datetime.min.replace(tzinfo=ZoneInfo('UTC'))
@@ -1400,6 +1415,36 @@ def _run_news_query(question: str) -> dict:
     }
 
 
+def _fetch_brave_news_results(
+    api_key: str,
+    query: str,
+    *,
+    story_count: int,
+    freshness: str,
+    country: str,
+    search_lang: str,
+) -> list[dict]:
+    response = requests.get(
+        'https://api.search.brave.com/res/v1/news/search',
+        headers={'X-Subscription-Token': api_key},
+        params={
+            'q': query,
+            'count': story_count,
+            'offset': 0,
+            'freshness': freshness,
+            'country': country,
+            'search_lang': search_lang,
+            'extra_snippets': 'true',
+            'safesearch': 'moderate',
+        },
+        timeout=15,
+    )
+    response.raise_for_status()
+    payload = response.json()
+    items = payload.get('results') or payload.get('items') or []
+    return [item for item in items if isinstance(item, dict)]
+
+
 def _get_market_news(symbol: str | None = None) -> list[dict]:
     now = time.time()
     cache_key = symbol or '__market__'
@@ -1416,38 +1461,31 @@ def _get_market_news(symbol: str | None = None) -> list[dict]:
     country = os.environ.get('BRAVE_NEWS_COUNTRY', 'US').strip() or 'US'
     search_lang = os.environ.get('BRAVE_NEWS_SEARCH_LANG', 'en').strip() or 'en'
 
-    response = requests.get(
-        'https://api.search.brave.com/res/v1/news/search',
-        headers={'X-Subscription-Token': api_key},
-        params={
-            'q': _market_news_query(symbol=symbol),
-            'count': story_count,
-            'offset': 0,
-            'freshness': freshness,
-            'country': country,
-            'search_lang': search_lang,
-            'extra_snippets': 'true',
-            'safesearch': 'moderate',
-        },
-        timeout=15,
-    )
-    response.raise_for_status()
-    payload = response.json()
-    items = payload.get('results') or payload.get('items') or []
-
     stories: list[dict] = []
     seen_ids: set[str] = set()
-    for item in items:
-        if not isinstance(item, dict):
-            continue
-        normalized = _normalize_brave_story(item, requested_symbol=symbol)
-        if not normalized:
-            continue
-        story_id = str(normalized.get('id'))
-        if story_id in seen_ids:
-            continue
-        seen_ids.add(story_id)
-        stories.append(normalized)
+    queries = [_market_news_query(symbol=symbol), *_market_news_fallback_queries(symbol=symbol)]
+    for query in queries:
+        items = _fetch_brave_news_results(
+            api_key,
+            query,
+            story_count=story_count,
+            freshness=freshness,
+            country=country,
+            search_lang=search_lang,
+        )
+        for item in items:
+            normalized = _normalize_brave_story(item, requested_symbol=symbol)
+            if not normalized:
+                continue
+            story_id = str(normalized.get('id'))
+            if story_id in seen_ids:
+                continue
+            seen_ids.add(story_id)
+            stories.append(normalized)
+            if len(stories) >= story_count:
+                break
+        if len(stories) >= story_count:
+            break
 
     stories.sort(key=lambda item: _story_timestamp(item.get('datetime')), reverse=True)
     trimmed = stories[:story_count]
