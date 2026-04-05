@@ -1342,6 +1342,53 @@ def _format_story_source(item: dict) -> str:
     return 'Brave News'
 
 
+def _story_hostname(item: dict) -> str:
+    meta = item.get('meta_url')
+    if isinstance(meta, dict):
+        hostname = meta.get('hostname') or meta.get('netloc')
+        if hostname:
+            return str(hostname).replace('www.', '').lower()
+
+    url = item.get('url')
+    if url:
+        hostname = urlparse(str(url)).netloc.replace('www.', '').lower()
+        if hostname:
+            return hostname
+
+    return ''
+
+
+def _allowed_news_hosts() -> list[str]:
+    raw_value = os.environ.get(
+        'BRAVE_NEWS_ALLOWED_HOSTS',
+        'reuters.com,apnews.com,bloomberg.com,cnbc.com,wsj.com,marketwatch.com,finance.yahoo.com,'
+        'yahoo.com,barrons.com,investing.com,fool.com,businessinsider.com,seekingalpha.com,'
+        'axios.com,cnn.com,nytimes.com,washingtonpost.com,forbes.com',
+    ).strip()
+    return [host.strip().lower() for host in raw_value.split(',') if host.strip()]
+
+
+def _blocked_news_host_suffixes() -> list[str]:
+    raw_value = os.environ.get(
+        'BRAVE_NEWS_BLOCKED_HOST_SUFFIXES',
+        '.in,.co.in,.co.uk,.uk,.com.au,.ca,.sg,.hk',
+    ).strip()
+    return [suffix.strip().lower() for suffix in raw_value.split(',') if suffix.strip()]
+
+
+def _is_allowed_news_source(item: dict) -> bool:
+    hostname = _story_hostname(item)
+    if not hostname:
+        return False
+
+    blocked_suffixes = _blocked_news_host_suffixes()
+    if any(hostname.endswith(suffix) for suffix in blocked_suffixes):
+        return False
+
+    allowed_hosts = _allowed_news_hosts()
+    return any(hostname == host or hostname.endswith(f'.{host}') for host in allowed_hosts)
+
+
 def _normalize_brave_story(item: dict, requested_symbol: str | None = None) -> dict | None:
     title = str(item.get('title') or '').strip()
     description = str(item.get('description') or item.get('snippet') or '').strip()
@@ -1474,6 +1521,8 @@ def _get_market_news(symbol: str | None = None) -> list[dict]:
             search_lang=search_lang,
         )
         for item in items:
+            if not _is_allowed_news_source(item):
+                continue
             normalized = _normalize_brave_story(item, requested_symbol=symbol)
             if not normalized:
                 continue
