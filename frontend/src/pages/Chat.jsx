@@ -330,7 +330,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
               {history.length === 0 ? (
                 <p className="text-xs text-slate-500">No sessions yet.</p>
               ) : (
-                [...history].reverse().slice(0, 6).map((entry, index) => (
+                [...history].reverse().slice(0, 5).map((entry, index) => (
                   <div
                     key={`${entry.question}-${index}`}
                     className="terminal-surface-soft px-4 py-3"
@@ -354,22 +354,6 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
                   </div>
                 ))
               )}
-            </div>
-          </div>
-
-          <div className="terminal-surface px-4 py-4">
-            <p className="terminal-label text-outline">Session shortcuts</p>
-            <div className="mt-3 space-y-2">
-              {visibleExamples.slice(0, 3).map((example) => (
-                <button
-                  key={example}
-                  type="button"
-                  onClick={() => handleQuestion(example)}
-                  className="block w-full border-2 border-[#14181c] bg-white px-3 py-3 text-left text-xs leading-relaxed text-slate-600 transition-colors hover:bg-surface-container-low"
-                >
-                  {example}
-                </button>
-              ))}
             </div>
           </div>
 
