@@ -450,7 +450,7 @@ export default function App() {
         </div>
 
         <main
-          className={`bg-background pb-20 pt-[104px] md:pb-0 md:pt-[112px] ${
+          className={`box-border bg-background pb-20 pt-[104px] md:pb-0 md:pt-[112px] ${
             page === 'chat' ? 'overflow-hidden md:h-screen' : ''
           }`}
           style={
