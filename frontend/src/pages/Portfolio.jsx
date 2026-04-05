@@ -780,12 +780,16 @@ export default function Portfolio() {
         </div>
 
         <div className="terminal-panel px-6 py-6">
-          <p className="terminal-label text-outline">Add position</p>
+          <h2 className="font-headline text-2xl font-bold uppercase tracking-tight text-slate-900">Add Position</h2>
           <div className="mt-5 flex flex-wrap items-end gap-4">
             <div className="w-full sm:w-auto">
               <p className="terminal-label mb-2 text-outline">Ticker</p>
               <div className={portfolioLocked ? 'pointer-events-none opacity-60' : ''}>
-                <TickerInput value={form.symbol} onChange={(value) => setForm((current) => ({ ...current, symbol: value }))} />
+                <TickerInput
+                  value={form.symbol}
+                  onChange={(value) => setForm((current) => ({ ...current, symbol: value }))}
+                  inputClassName="w-full border-2 border-[#2a63f6] bg-[#eef4ff] px-3 py-3 text-sm font-semibold text-slate-800 shadow-[3px_3px_0_rgba(42,99,246,0.18)] focus:outline-none sm:w-48"
+                />
               </div>
             </div>
             <div className="w-full sm:w-auto">
@@ -794,7 +798,7 @@ export default function Portfolio() {
                 type="number"
                 min="0"
                 step="any"
-                className="w-full border border-outline/20 bg-white px-3 py-3 text-sm text-slate-700 focus:outline-none sm:w-36"
+                className="w-full border-2 border-[#2a63f6] bg-[#eef4ff] px-3 py-3 text-sm font-semibold text-slate-800 shadow-[3px_3px_0_rgba(42,99,246,0.18)] focus:outline-none sm:w-36"
                 value={form.shares}
                 disabled={portfolioLocked}
                 onChange={(event) => setForm((current) => ({ ...current, shares: event.target.value }))}
@@ -807,7 +811,7 @@ export default function Portfolio() {
                 type="number"
                 min="0"
                 step="any"
-                className="w-full border border-outline/20 bg-white px-3 py-3 text-sm text-slate-700 focus:outline-none sm:w-40"
+                className="w-full border-2 border-[#2a63f6] bg-[#eef4ff] px-3 py-3 text-sm font-semibold text-slate-800 shadow-[3px_3px_0_rgba(42,99,246,0.18)] focus:outline-none sm:w-40"
                 value={form.avg_cost}
                 disabled={portfolioLocked}
                 onChange={(event) => setForm((current) => ({ ...current, avg_cost: event.target.value }))}
