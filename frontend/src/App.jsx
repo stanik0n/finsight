@@ -24,6 +24,36 @@ const TICKER_STRIP = [
   { label: 'VIX', value: '13.42', change: '-2.15%' },
 ]
 
+function formatTickerStripValue(value) {
+  if (typeof value !== 'number' || Number.isNaN(value)) return '--'
+  return value.toLocaleString('en-US', {
+    minimumFractionDigits: value >= 1000 ? 2 : 2,
+    maximumFractionDigits: 2,
+  })
+}
+
+function formatTickerStripChange(value) {
+  if (typeof value !== 'number' || Number.isNaN(value)) return '0.00%'
+  return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`
+}
+
+function buildLiveTickerStrip(snapshot) {
+  const benchmarkItems = (snapshot?.benchmarks || []).slice(0, 4).map((item) => ({
+    label: item.label || item.symbol || 'Benchmark',
+    value: formatTickerStripValue(Number(item.close)),
+    change: formatTickerStripChange(Number(item.pct_change)),
+  }))
+
+  const equityItems = (snapshot?.faang || []).slice(0, 2).map((item) => ({
+    label: item.symbol || item.company_name || 'Equity',
+    value: formatTickerStripValue(Number(item.close)),
+    change: formatTickerStripChange(Number(item.pct_change)),
+  }))
+
+  const liveItems = [...benchmarkItems, ...equityItems].filter((item) => item.value !== '--')
+  return liveItems.length ? liveItems : TICKER_STRIP
+}
+
 const NEWS_STORAGE_KEY = 'finsight:selected-news-article'
 
 function readNewsFromStorage() {
@@ -276,6 +306,7 @@ export default function App() {
   const [route, setRoute] = useState(() => routeFromHash())
   const [headerSearch, setHeaderSearch] = useState('')
   const [selectedNewsArticle, setSelectedNewsArticle] = useState(() => readNewsFromStorage())
+  const [tickerStrip, setTickerStrip] = useState(TICKER_STRIP)
 
   const page = route.page
 
@@ -310,6 +341,35 @@ export default function App() {
     window.addEventListener('finsight:open-portfolio', handleOpenPortfolio)
     return () => window.removeEventListener('finsight:open-portfolio', handleOpenPortfolio)
   }, [])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadTickerStrip() {
+      try {
+        const response = await authedFetch(getToken, '/market-snapshot', { cache: 'no-store' })
+        const payload = await response.json().catch(() => ({}))
+        if (!response.ok) {
+          throw new Error(payload.detail || `HTTP ${response.status}`)
+        }
+        if (!cancelled) {
+          setTickerStrip(buildLiveTickerStrip(payload))
+        }
+      } catch {
+        if (!cancelled) {
+          setTickerStrip(TICKER_STRIP)
+        }
+      }
+    }
+
+    loadTickerStrip()
+    const intervalId = window.setInterval(loadTickerStrip, 60000)
+
+    return () => {
+      cancelled = true
+      window.clearInterval(intervalId)
+    }
+  }, [getToken])
 
   function navigateTo(nextPage, { params, replace = false, article = null } = {}) {
     if (article !== null) {
@@ -359,7 +419,7 @@ export default function App() {
           <div className="terminal-shell overflow-hidden rounded-[22px] border-2 border-[#14181c] bg-white shadow-[4px_4px_0_rgba(20,24,28,0.95)]">
             <div className="terminal-ticker-strip hidden md:flex">
               <div className="terminal-ticker-run">
-                {[...TICKER_STRIP, ...TICKER_STRIP].map((item, index) => (
+                {[...tickerStrip, ...tickerStrip].map((item, index) => (
                   <div key={`${item.label}-${index}`} className="terminal-ticker-item">
                     <span className="text-[#4f5964]">{item.label}</span>
                     <span className="text-[#14181c]">{item.value}</span>
