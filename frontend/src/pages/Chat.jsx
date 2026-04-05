@@ -384,7 +384,8 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
               className="flex-1 overflow-y-auto px-3 pb-[148px] pt-4 sm:px-6 sm:pb-[220px] sm:pt-8 lg:px-8 lg:pb-[250px] lg:pt-10"
             >
               <div className="mb-6 grid gap-4 xl:mb-8 xl:gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
-                <div>
+                <div className="terminal-surface px-6 py-6">
+                  <div className="mb-5 h-px bg-[#14181c]" />
                   <span className="inline-flex border-2 border-[#14181c] bg-white px-4 py-1 terminal-label text-outline shadow-[2px_2px_0_rgba(20,24,28,0.7)]">
                     March 31, 2026
                   </span>
@@ -398,6 +399,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
                     Ask natural language questions across live markets, warehouse context, and your saved
                     portfolio from one continuous analyst canvas.
                   </p>
+                  <div className="mt-6 h-px bg-[#14181c]" />
                 </div>
 
                 <div className="terminal-surface p-6">
