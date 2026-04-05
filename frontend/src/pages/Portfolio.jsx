@@ -85,7 +85,7 @@ function fmt(n, d = 2) {
   return Number(n).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d })
 }
 
-function TickerInput({ value, onChange }) {
+function TickerInput({ value, onChange, placeholder = 'Ticker or name', inputClassName = 'w-full border border-outline/20 bg-white px-3 py-3 text-sm text-slate-700 focus:outline-none sm:w-48' }) {
   const [open, setOpen] = useState(false)
   const [highlighted, setHighlighted] = useState(0)
   const containerRef = useRef(null)
@@ -146,8 +146,8 @@ function TickerInput({ value, onChange }) {
   return (
     <div ref={containerRef} className="relative w-full sm:w-auto">
       <input
-        className="w-full border border-outline/20 bg-white px-3 py-3 text-sm text-slate-700 focus:outline-none sm:w-48"
-        placeholder="Ticker or name"
+        className={inputClassName}
+        placeholder={placeholder}
         value={value}
         onChange={(event) => {
           onChange(event.target.value)
@@ -1284,10 +1284,7 @@ export default function Portfolio() {
                 <div className="terminal-panel p-6">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                     <div>
-                      <h3 className="terminal-label text-outline">Notes Board</h3>
-                      <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-500">
-                        Use titles like <span className="font-mono text-slate-700">P1 now</span>, <span className="font-mono text-slate-700">P2 next</span>, or <span className="font-mono text-slate-700">P3 later</span>. Then move notes between lanes as the work changes.
-                      </p>
+                      <h3 className="font-headline text-2xl font-bold text-slate-900">Notes Board</h3>
                     </div>
                     <div className="flex items-center gap-3">
                       <span className="terminal-chip">{notes.length} notes saved</span>
@@ -1298,6 +1295,8 @@ export default function Portfolio() {
                       <TickerInput
                         value={noteForm.symbol}
                         onChange={(value) => setNoteForm((current) => ({ ...current, symbol: value }))}
+                        placeholder="Ticker this note belongs to"
+                        inputClassName="w-full border-2 border-[#2a63f6] bg-[#eef4ff] px-3 py-3 text-sm font-semibold text-slate-800 shadow-[3px_3px_0_rgba(42,99,246,0.18)] focus:outline-none"
                       />
                       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div>
@@ -1324,13 +1323,13 @@ export default function Portfolio() {
                       </div>
                       <input
                         className="terminal-input-muted"
-                        placeholder="Optional title, like P1 now | Trim if guidance slips."
+                        placeholder="Title, e.g. P1 now | Cut if guidance slips"
                         value={noteForm.note_title}
                         onChange={(event) => setNoteForm((current) => ({ ...current, note_title: event.target.value }))}
                       />
                       <textarea
                         className="terminal-input-muted min-h-[150px] w-full resize-none sm:min-h-[180px]"
-                        placeholder="Capture the note, trigger, or decision you want attached to this ticker."
+                        placeholder="Write the thesis, trigger, risk rule, or review note for this ticker."
                         value={noteForm.note_text}
                         onChange={(event) => setNoteForm((current) => ({ ...current, note_text: event.target.value }))}
                       />
