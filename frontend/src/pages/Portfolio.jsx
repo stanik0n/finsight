@@ -1305,29 +1305,6 @@ export default function Portfolio() {
                                       <p className="mt-3 terminal-label text-outline">Review on {note.review_date}</p>
                                     )}
                                     <p className="mt-3 text-sm leading-7 text-slate-600">{note.note_text}</p>
-
-                                    <div className="mt-4 flex items-center justify-between gap-2 border-t border-outline/10 pt-3">
-                                      <button
-                                        type="button"
-                                        disabled={laneIndex === 0}
-                                        onClick={() => {
-                                          void moveNote(note, NOTE_LANE_ORDER[laneIndex - 1])
-                                        }}
-                                        className="terminal-button terminal-button-secondary px-3 py-2 text-[10px] disabled:opacity-40"
-                                      >
-                                        Move Left
-                                      </button>
-                                      <button
-                                        type="button"
-                                        disabled={laneIndex === NOTE_LANE_ORDER.length - 1}
-                                        onClick={() => {
-                                          void moveNote(note, NOTE_LANE_ORDER[laneIndex + 1])
-                                        }}
-                                        className="terminal-button px-3 py-2 text-[10px] disabled:opacity-40"
-                                      >
-                                        Move Right
-                                      </button>
-                                    </div>
                                   </div>
                                 )
                               }) : (
