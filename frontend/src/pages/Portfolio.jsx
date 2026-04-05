@@ -1110,7 +1110,7 @@ export default function Portfolio() {
                     </button>
                   </div>
                 </div>
-                <div className="terminal-surface overflow-hidden">
+                <div className="terminal-surface overflow-hidden lg:h-[392px]">
                   <div className="hidden grid-cols-12 gap-4 bg-surface-container-low px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-outline md:grid">
                     <div className="col-span-5">Asset &amp; symbol</div>
                     <div className="col-span-2 text-right">Last price</div>
@@ -1138,7 +1138,7 @@ export default function Portfolio() {
                       </button>
                     </div>
                   </div>
-                  <div className="divide-y divide-surface-container">
+                  <div className="divide-y divide-surface-container lg:h-[258px] lg:overflow-y-auto">
                     {watchlist.length ? watchlist.map((item) => {
                       const liveItem = watchlistSnapshot?.items?.find((entry) => entry.symbol === item.symbol)
                       const dailyChange = liveItem?.daily_pct_change ?? 0
@@ -1183,6 +1183,75 @@ export default function Portfolio() {
                   </div>
                 </div>
 
+              </div>
+
+              <div className="col-span-12 space-y-6 lg:col-span-4 lg:h-[440px]">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-headline text-2xl font-bold text-slate-900">Portfolio Signals</h2>
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#d14f59] text-[10px] font-bold text-white">
+                    {allAlerts.length}
+                  </span>
+                </div>
+                <div className="flex h-full flex-col space-y-4">
+                  {allAlerts.length ? allAlerts.map((alert) => (
+                    <div
+                      key={alert.alert_id}
+                      className="terminal-panel p-5"
+                      style={{ borderLeft: `4px solid ${alertAccent(alert)}` }}
+                    >
+                      <div className="mb-2 flex items-start justify-between gap-3">
+                        <span
+                          className="rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider"
+                          style={{ backgroundColor: `${alertAccent(alert)}14`, color: alertAccent(alert) }}
+                        >
+                          {alert.alert_type.replaceAll('_', ' ')}
+                        </span>
+                        <span className="text-[10px] font-medium text-outline">{alert.symbol || alert.source_scope}</span>
+                      </div>
+                      <p className="text-sm font-semibold text-slate-900">{alert.title}</p>
+                      <p className="mt-2 text-xs leading-6 text-slate-500">{alert.message}</p>
+                    </div>
+                  )) : (
+                    <div className="terminal-panel p-5 text-sm text-slate-500">
+                      No active alerts right now.
+                    </div>
+                  )}
+                  <div className="terminal-panel flex-1 p-6">
+                  <h3 className="terminal-label text-outline">Position overview</h3>
+                  <div className="mt-5 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-500">Largest position</span>
+                      <span className="font-semibold text-slate-900">{topPosition?.symbol || '--'}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-500">Top winner</span>
+                      <span className="font-semibold" style={{ color: insightTone(topGainer?.pnl_pct || 0) }}>
+                        {topGainer?.symbol || '--'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-slate-500">Top loser</span>
+                      <span className="font-semibold" style={{ color: insightTone(topLoser?.pnl_pct || 0) }}>
+                        {topLoser?.symbol || '--'}
+                      </span>
+                    </div>
+                    <div className="pt-4">
+                      <p className="text-xs font-bold uppercase tracking-wider text-outline">Concentration profile</p>
+                      <p className="mt-3 font-headline text-4xl font-bold text-slate-900">
+                        {result.portfolio_insights?.concentration?.top_position_weight_pct != null
+                          ? `${fmt(result.portfolio_insights.concentration.top_position_weight_pct, 1)}%`
+                          : '--'}
+                      </p>
+                      <p className="mt-2 text-sm text-slate-500">
+                        {result.portfolio_insights?.concentration?.level || 'Balanced'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                </div>
+              </div>
+
+              <div className="col-span-12">
                 <div className="terminal-panel p-6">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                     <div>
@@ -1195,7 +1264,7 @@ export default function Portfolio() {
                       <span className="terminal-chip">{notes.length} notes saved</span>
                     </div>
                   </div>
-                  <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(320px,0.78fr)_minmax(0,1.9fr)]">
+                  <div className="mt-6 grid gap-6 2xl:grid-cols-[minmax(340px,0.62fr)_minmax(0,2.38fr)]">
                     <div className="terminal-panel-soft space-y-3 px-4 py-4">
                       <TickerInput
                         value={noteForm.symbol}
@@ -1250,8 +1319,8 @@ export default function Portfolio() {
                     </div>
 
                     <div className="overflow-x-auto pb-2">
-                      <div className="grid min-w-[980px] gap-4 xl:grid-cols-5">
-                        {NOTE_LANE_ORDER.map((lane, laneIndex) => (
+                      <div className="grid min-w-[1180px] gap-4 xl:grid-cols-5">
+                        {NOTE_LANE_ORDER.map((lane) => (
                           <div
                             key={lane}
                             className={`rounded-xl bg-transparent p-1 ${dragOverLane === lane ? 'terminal-lane-active' : ''}`}
@@ -1316,73 +1385,6 @@ export default function Portfolio() {
                           </div>
                         ))}
                       </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="col-span-12 space-y-6 lg:col-span-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="font-headline text-2xl font-bold text-slate-900">Portfolio Signals</h2>
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#d14f59] text-[10px] font-bold text-white">
-                    {allAlerts.length}
-                  </span>
-                </div>
-                <div className="space-y-4">
-                  {allAlerts.length ? allAlerts.map((alert) => (
-                    <div
-                      key={alert.alert_id}
-                      className="terminal-panel p-5"
-                      style={{ borderLeft: `4px solid ${alertAccent(alert)}` }}
-                    >
-                      <div className="mb-2 flex items-start justify-between gap-3">
-                        <span
-                          className="rounded-full px-2 py-1 text-[10px] font-bold uppercase tracking-wider"
-                          style={{ backgroundColor: `${alertAccent(alert)}14`, color: alertAccent(alert) }}
-                        >
-                          {alert.alert_type.replaceAll('_', ' ')}
-                        </span>
-                        <span className="text-[10px] font-medium text-outline">{alert.symbol || alert.source_scope}</span>
-                      </div>
-                      <p className="text-sm font-semibold text-slate-900">{alert.title}</p>
-                      <p className="mt-2 text-xs leading-6 text-slate-500">{alert.message}</p>
-                    </div>
-                  )) : (
-                    <div className="terminal-panel p-5 text-sm text-slate-500">
-                      No active alerts right now.
-                    </div>
-                  )}
-                </div>
-
-                <div className="terminal-panel p-6">
-                  <h3 className="terminal-label text-outline">Position overview</h3>
-                  <div className="mt-5 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-slate-500">Largest position</span>
-                      <span className="font-semibold text-slate-900">{topPosition?.symbol || '--'}</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-slate-500">Top winner</span>
-                      <span className="font-semibold" style={{ color: insightTone(topGainer?.pnl_pct || 0) }}>
-                        {topGainer?.symbol || '--'}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-slate-500">Top loser</span>
-                      <span className="font-semibold" style={{ color: insightTone(topLoser?.pnl_pct || 0) }}>
-                        {topLoser?.symbol || '--'}
-                      </span>
-                    </div>
-                    <div className="pt-4">
-                      <p className="text-xs font-bold uppercase tracking-wider text-outline">Concentration profile</p>
-                      <p className="mt-3 font-headline text-4xl font-bold text-slate-900">
-                        {result.portfolio_insights?.concentration?.top_position_weight_pct != null
-                          ? `${fmt(result.portfolio_insights.concentration.top_position_weight_pct, 1)}%`
-                          : '--'}
-                      </p>
-                      <p className="mt-2 text-sm text-slate-500">
-                        {result.portfolio_insights?.concentration?.level || 'Balanced'}
-                      </p>
                     </div>
                   </div>
                 </div>
