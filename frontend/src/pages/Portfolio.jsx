@@ -1192,7 +1192,7 @@ export default function Portfolio() {
                     {allAlerts.length}
                   </span>
                 </div>
-                <div className="flex flex-col space-y-4 lg:h-[392px]">
+                <div className="flex flex-col space-y-4 lg:h-[388px]">
                   {allAlerts.length ? allAlerts.map((alert) => (
                     <div
                       key={alert.alert_id}
