@@ -721,8 +721,18 @@ export default function Portfolio() {
   const topGainer = result?.portfolio_insights?.top_gainer
   const topLoser = result?.portfolio_insights?.top_loser
 
+  function preventImplicitSubmit(event) {
+    if (event.key !== 'Enter') return
+    const tagName = event.target?.tagName
+    if (tagName === 'TEXTAREA') return
+    event.preventDefault()
+  }
+
   return (
-    <div className="min-h-screen bg-background px-3 py-5 sm:px-5 sm:py-7 lg:px-8 lg:py-8">
+    <div
+      className="min-h-screen bg-background px-3 py-5 sm:px-5 sm:py-7 lg:px-8 lg:py-8"
+      onKeyDownCapture={preventImplicitSubmit}
+    >
       <div className="terminal-shell">
         <div className="mb-10 flex flex-col items-start justify-between gap-6 md:flex-row md:items-start">
           <div className="terminal-panel w-full px-6 py-6 sm:px-8 sm:py-8">
@@ -738,6 +748,7 @@ export default function Portfolio() {
             <div className="flex w-full flex-wrap items-center gap-3 md:w-auto md:justify-end">
               <span className="terminal-chip">Prices as of {result.as_of_date}</span>
               <button
+                type="button"
                 onClick={calculate}
                 disabled={loading}
                 className="terminal-button px-4 py-3 disabled:opacity-50"
@@ -808,12 +819,12 @@ export default function Portfolio() {
               </div>
               <div className="flex flex-wrap gap-3">
                 <SignInButton mode="modal">
-                  <button className="terminal-button-ghost px-4 py-3">
+                  <button type="button" className="terminal-button-ghost px-4 py-3">
                     Sign In
                   </button>
                 </SignInButton>
                 <SignUpButton mode="modal">
-                  <button className="terminal-button px-4 py-3">
+                  <button type="button" className="terminal-button px-4 py-3">
                     Create Account
                   </button>
                 </SignUpButton>
@@ -864,6 +875,7 @@ export default function Portfolio() {
                   </div>
                   <div className="flex justify-end md:col-span-2 md:text-right">
                     <button
+                      type="button"
                       onClick={() => removeHolding(position.symbol)}
                       className="material-symbols-outlined text-slate-400 transition-colors hover:text-[#c76d63]"
                     >
