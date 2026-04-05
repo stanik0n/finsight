@@ -289,6 +289,8 @@ function noteUrgency(title) {
 export default function Portfolio() {
   const { getToken, authEnabled, isSignedIn } = useFinsightAuth()
   const portfolioLocked = authEnabled && !isSignedIn
+  const hasLoadedPortfolioRef = useRef(false)
+  const clearLockedStateTimerRef = useRef(null)
   const [holdings, setHoldings] = useState([])
   const [form, setForm] = useState(EMPTY_FORM)
   const [watchlistForm, setWatchlistForm] = useState(EMPTY_WATCHLIST_FORM)
@@ -317,17 +319,34 @@ export default function Portfolio() {
     if (portfolioLocked) {
       setLoading(false)
       setError(null)
-      setHoldings([])
-      setResult(null)
-      setWatchlist([])
-      setWatchlistSnapshot(null)
-      setNotes([])
-      setAlerts({ portfolio: [], watchlist: [] })
-      setTelegramLink({ linked: false, pending_code: null })
+      clearLockedStateTimerRef.current = window.setTimeout(() => {
+        setHoldings([])
+        setResult(null)
+        setWatchlist([])
+        setWatchlistSnapshot(null)
+        setNotes([])
+        setAlerts({ portfolio: [], watchlist: [] })
+        setTelegramLink({ linked: false, pending_code: null })
+        hasLoadedPortfolioRef.current = false
+      }, 1500)
       return
     }
 
-    loadPortfolio()
+    if (clearLockedStateTimerRef.current) {
+      window.clearTimeout(clearLockedStateTimerRef.current)
+      clearLockedStateTimerRef.current = null
+    }
+
+    if (!hasLoadedPortfolioRef.current) {
+      hasLoadedPortfolioRef.current = true
+      loadPortfolio()
+    }
+    return () => {
+      if (clearLockedStateTimerRef.current) {
+        window.clearTimeout(clearLockedStateTimerRef.current)
+        clearLockedStateTimerRef.current = null
+      }
+    }
   }, [portfolioLocked])
 
   useEffect(() => {
