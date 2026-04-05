@@ -378,7 +378,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
 
       <section className="flex min-h-0 flex-1 overflow-hidden bg-surface">
       <div className="flex h-full min-h-0 flex-1 flex-col xl:flex-row">
-          <div className="relative flex min-w-0 flex-1 flex-col xl:border-r-2 xl:border-[#14181c] xl:px-8">
+          <div className="terminal-panel relative flex min-w-0 flex-1 flex-col overflow-hidden xl:mr-8">
             <div
               ref={messagesContainerRef}
               className="flex-1 overflow-y-auto px-3 pb-[148px] pt-4 sm:px-6 sm:pb-[220px] sm:pt-8 lg:px-8 lg:pb-[250px] lg:pt-10"
