@@ -739,12 +739,19 @@ export default function Portfolio() {
     const tagName = event.target?.tagName
     if (tagName === 'TEXTAREA') return
     event.preventDefault()
+    event.stopPropagation()
+  }
+
+  function preventNativeSubmit(event) {
+    event.preventDefault()
+    event.stopPropagation()
   }
 
   return (
     <div
       className="min-h-screen bg-background px-3 py-4 sm:px-5 sm:py-7 lg:px-8 lg:py-8"
       onKeyDownCapture={preventImplicitSubmit}
+      onSubmitCapture={preventNativeSubmit}
     >
       <div className="terminal-shell">
         <div className="mb-10 flex flex-col items-start justify-between gap-6 md:flex-row md:items-start">
