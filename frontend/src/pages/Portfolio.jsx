@@ -1091,7 +1091,7 @@ export default function Portfolio() {
 
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
               <div className="col-span-12 space-y-6 lg:col-span-8">
-                <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+                <div className="flex min-h-[44px] flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
                   <h2 className="font-headline text-2xl font-bold text-slate-900">Primary Watchlist</h2>
                   <div className="flex gap-2">
                     <button
@@ -1185,14 +1185,14 @@ export default function Portfolio() {
 
               </div>
 
-              <div className="col-span-12 space-y-6 lg:col-span-4 lg:h-[440px]">
-                <div className="flex items-center justify-between">
+              <div className="col-span-12 space-y-6 lg:col-span-4 lg:flex lg:h-[460px] lg:flex-col">
+                <div className="flex min-h-[44px] items-center justify-between">
                   <h2 className="font-headline text-2xl font-bold text-slate-900">Portfolio Signals</h2>
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#d14f59] text-[10px] font-bold text-white">
                     {allAlerts.length}
                   </span>
                 </div>
-                <div className="flex h-full flex-col space-y-4">
+                <div className="flex flex-1 flex-col space-y-4">
                   {allAlerts.length ? allAlerts.map((alert) => (
                     <div
                       key={alert.alert_id}
