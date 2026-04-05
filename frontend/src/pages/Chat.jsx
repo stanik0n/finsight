@@ -212,6 +212,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
   const [draftQuestion, setDraftQuestion] = useState('')
   const [inputPlaceholder, setInputPlaceholder] = useState('Ask about the market...')
   const inputRef = useRef(null)
+  const messagesContainerRef = useRef(null)
   const messagesEndRef = useRef(null)
 
   const chatLockedToPublic = authEnabled && !isSignedIn
@@ -249,7 +250,12 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
   }, [initialQuestion])
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    const container = messagesContainerRef.current
+    if (!container) return
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior: 'smooth',
+    })
   }, [history, loading])
 
   async function handleQuestion(question) {
@@ -328,7 +334,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
 
   return (
     <div className="box-border h-full overflow-hidden bg-background px-3 py-4 sm:px-5 sm:py-5 lg:px-8 lg:py-6">
-      <div className="terminal-shell">
+      <div className="terminal-shell h-full">
         <div className="flex h-full min-h-0 flex-col md:flex-row overflow-hidden">
       <aside className="hidden h-full min-h-0 w-60 bg-transparent pl-2 pr-2 py-4 lg:block xl:w-64">
         <div className="flex h-full flex-col overflow-y-auto border-r-2 border-[#14181c] pr-2">
@@ -427,10 +433,13 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
         </div>
       </aside>
 
-      <section className="flex min-h-0 flex-1 bg-surface">
+      <section className="flex min-h-0 flex-1 overflow-hidden bg-surface">
       <div className="flex h-full min-h-0 flex-1 flex-col xl:flex-row">
           <div className="relative flex min-w-0 flex-1 flex-col xl:border-r-2 xl:border-[#14181c] xl:px-8">
-            <div className="flex-1 overflow-y-auto px-4 pb-[180px] pt-6 sm:px-6 sm:pb-[220px] sm:pt-8 lg:px-8 lg:pb-[250px] lg:pt-10">
+            <div
+              ref={messagesContainerRef}
+              className="flex-1 overflow-y-auto px-4 pb-[180px] pt-6 sm:px-6 sm:pb-[220px] sm:pt-8 lg:px-8 lg:pb-[250px] lg:pt-10"
+            >
               <div className="mb-8 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
                 <div>
                   <span className="inline-flex border-2 border-[#14181c] bg-white px-4 py-1 terminal-label text-outline shadow-[2px_2px_0_rgba(20,24,28,0.7)]">
