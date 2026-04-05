@@ -229,11 +229,6 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
     )
   }
 
-  const visibleModes = useMemo(
-    () => ANALYSIS_MODES.filter((item) => !chatLockedToPublic || !['Portfolio', 'Watchlist'].includes(item.label)),
-    [chatLockedToPublic],
-  )
-
   const visibleExamples = useMemo(
     () => EXAMPLES.filter((example) => !chatLockedToPublic || !questionNeedsAccount(example)),
     [chatLockedToPublic],
@@ -285,18 +280,6 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
     }
   }
 
-  function handleModeClick(item) {
-    if (item.placeholder) {
-      setDraftQuestion('')
-      setInputPlaceholder(item.placeholder)
-      window.requestAnimationFrame(() => {
-        inputRef.current?.focus()
-      })
-      return
-    }
-    handleQuestion(item.prompt)
-  }
-
   function submitForm(e) {
     e.preventDefault()
     const question = draftQuestion.trim()
@@ -338,30 +321,6 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
         <div className="flex h-full min-h-0 flex-col md:flex-row overflow-hidden">
       <aside className="hidden h-full min-h-0 w-60 bg-transparent pl-2 pr-2 py-4 lg:block xl:w-64">
         <div className="flex h-full flex-col overflow-y-auto border-r-2 border-[#14181c] pr-2">
-          <div className="terminal-surface px-4 py-4">
-            <p className="terminal-label mb-3 text-outline">Analysis Modes</p>
-            <div className="space-y-1">
-                {visibleModes.map((item, index) => (
-                  <button
-                    key={item.label}
-                    type="button"
-                    onClick={() => handleModeClick(item)}
-                    className={`flex w-full items-center gap-3 border-2 px-3 py-3 text-left transition-colors ${
-                      index === 1
-                        ? 'border-[#14181c] bg-surface-container-low text-slate-900 shadow-[2px_2px_0_rgba(20,24,28,0.75)]'
-                        : 'border-transparent text-slate-600'
-                    } hover:bg-surface-container-low`}
-                  >
-                  <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
-                  <div className="min-w-0">
-                    <p className="terminal-label text-[11px]">{item.label}</p>
-                    <p className="mt-1 text-[11px] leading-relaxed text-slate-500">{item.hint}</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
-
           <div className="terminal-surface px-4 py-4">
             <div className="mb-3 flex items-center justify-between">
               <p className="terminal-label text-outline">Recent Sessions</p>
