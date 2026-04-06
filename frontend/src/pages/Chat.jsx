@@ -298,6 +298,10 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
     setInputPlaceholder('Ask about the market...')
   }
 
+  function preventNativeSubmit(event) {
+    event.preventDefault()
+  }
+
   const latestEntry = history[history.length - 1]
   const cards = useMemo(() => metricCards(latestEntry), [latestEntry])
   const latestResult = latestEntry?.results?.[0]
@@ -325,7 +329,10 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
   const sidebarCards = cards.slice(0, 3)
 
   return (
-    <div className="box-border h-full overflow-hidden bg-background px-2 py-3 sm:px-5 sm:py-5 lg:px-8 lg:py-6">
+    <div
+      className="box-border h-full overflow-hidden bg-background px-2 py-3 sm:px-5 sm:py-5 lg:px-8 lg:py-6"
+      onSubmitCapture={preventNativeSubmit}
+    >
       <div className="terminal-shell h-full">
         <div className="flex h-full min-h-0 flex-col md:flex-row overflow-hidden">
       <aside className="hidden h-full min-h-0 w-60 bg-transparent pl-2 pr-2 py-4 lg:block xl:w-64">
@@ -374,7 +381,7 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
               </p>
               <div className="mt-3">
                 <SignInButton mode="modal">
-                  <button className="terminal-button px-3 py-2">
+                  <button type="button" className="terminal-button px-3 py-2">
                     Sign In
                   </button>
                 </SignInButton>
