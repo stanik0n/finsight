@@ -429,20 +429,17 @@ def _run_conversational_query(question: str) -> dict:
 
     if any(phrase in normalized for phrase in ['how are you', 'how are u']):
         commentary = (
-            "Doing well and ready to help. I can chat casually, or if you want, "
-            "I can switch straight into markets, news, watchlist, or portfolio questions."
+            "Doing well. What are you in the mood to look at today?"
         )
     elif any(phrase in normalized for phrase in ['who are you', 'what can you do']):
         commentary = (
-            "I'm FinSight's analyst assistant. I can handle casual chat, but I'm mainly here for "
-            "market questions, stock screens, news, watchlist context, and your saved portfolio."
+            "I'm FinSight. Ask me about markets, stocks, news, or your portfolio."
         )
     elif any(phrase in normalized for phrase in ['thanks', 'thank you']):
-        commentary = "Anytime. If you want, ask me about the market, a ticker, recent news, or your portfolio next."
+        commentary = "Anytime."
     else:
         commentary = (
-            "Hey. I can chat normally, and I can also help with stocks, market news, technical screens, "
-            "watchlist ideas, or portfolio questions."
+            "Hey."
         )
 
     return {
