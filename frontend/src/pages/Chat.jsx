@@ -290,12 +290,19 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
   }
 
   function submitForm(e) {
-    e.preventDefault()
+    if (e?.preventDefault) e.preventDefault()
     const question = draftQuestion.trim()
     if (!question) return
     handleQuestion(question)
     setDraftQuestion('')
     setInputPlaceholder('Ask about the market...')
+  }
+
+  function handleComposerKeyDown(event) {
+    if (event.key !== 'Enter' || event.shiftKey) return
+    event.preventDefault()
+    event.stopPropagation()
+    submitForm()
   }
 
   function preventNativeSubmit(event) {
@@ -507,26 +514,26 @@ export default function Chat({ initialQuestion = '', onInitialQuestionHandled = 
 
             <div className="absolute inset-x-0 bottom-0 z-20 px-3 pb-3 pt-4 sm:px-6 sm:pb-6 sm:pt-6 lg:px-8 lg:pb-8 lg:pt-10">
               <div className="terminal-surface mx-auto max-w-5xl bg-[rgba(248,250,251,0.96)] px-4 py-4 sm:px-6 sm:py-5 backdrop-blur-md">
-                <form onSubmit={submitForm}>
-                  <div className="flex items-center gap-4">
-                      <input
-                        ref={inputRef}
-                        value={draftQuestion}
-                        onChange={(e) => setDraftQuestion(e.target.value)}
-                        disabled={loading}
-                        className="flex-1 bg-transparent py-3 text-sm font-medium text-slate-700 placeholder:text-slate-400 focus:outline-none disabled:opacity-50"
-                        placeholder={inputPlaceholder}
-                        autoComplete="off"
-                      />
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="material-symbols-outlined border-2 border-[#14181c] bg-[#1b55e2] p-2 text-white shadow-[3px_3px_0_rgba(20,24,28,0.9)] transition-colors hover:bg-[#2a63f6] disabled:opacity-50"
-                    >
-                      arrow_upward
-                    </button>
-                  </div>
-                </form>
+                <div className="flex items-center gap-4">
+                  <input
+                    ref={inputRef}
+                    value={draftQuestion}
+                    onChange={(e) => setDraftQuestion(e.target.value)}
+                    onKeyDown={handleComposerKeyDown}
+                    disabled={loading}
+                    className="flex-1 bg-transparent py-3 text-sm font-medium text-slate-700 placeholder:text-slate-400 focus:outline-none disabled:opacity-50"
+                    placeholder={inputPlaceholder}
+                    autoComplete="off"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => submitForm()}
+                    disabled={loading}
+                    className="material-symbols-outlined border-2 border-[#14181c] bg-[#1b55e2] p-2 text-white shadow-[3px_3px_0_rgba(20,24,28,0.9)] transition-colors hover:bg-[#2a63f6] disabled:opacity-50"
+                  >
+                    arrow_upward
+                  </button>
+                </div>
               </div>
             </div>
           </div>
