@@ -1,246 +1,192 @@
-<div align="center">
-
 # FinSight
 
-### AI-assisted financial analytics platform for markets, portfolio intelligence, and news workflows
+An AI-assisted financial analytics platform that combines market dashboards, portfolio intelligence, structured research notes, curated news, and Telegram delivery in one full-stack product.
 
-[Overview](#overview) •
-[Features](#features) •
-[Architecture](#architecture) •
-[Tech Stack](#tech-stack) •
-[Getting Started](#getting-started) •
-[Deployment](#deployment)
+![React](https://img.shields.io/badge/React-Frontend-61dafb?style=flat-square&logo=react&logoColor=white)
+![Python](https://img.shields.io/badge/Python-Backend-3776ab?style=flat-square&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-API-009688?style=flat-square&logo=fastapi&logoColor=white)
+![DuckDB](https://img.shields.io/badge/DuckDB-Warehouse-f7c948?style=flat-square)
+![Apache Kafka](https://img.shields.io/badge/Kafka-Streaming-231f20?style=flat-square&logo=apachekafka&logoColor=white)
+![Apache Spark](https://img.shields.io/badge/Spark-Processing-e25a1c?style=flat-square&logo=apachespark&logoColor=white)
+![dbt](https://img.shields.io/badge/dbt-Modeling-ff694b?style=flat-square&logo=dbt&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ed?style=flat-square&logo=docker&logoColor=white)
 
-</div>
+## Demo
+
+**Live:** https://finsight.rajeshchowdary.com
 
 ---
-
-## Overview
-
-FinSight is a full-stack financial analytics product built to combine:
-
-- market dashboards
-- natural-language financial analysis
-- portfolio and watchlist tracking
-- structured research notes
-- market news aggregation
-- Telegram-based alerts and brief delivery
-
-It is designed like a lightweight financial terminal with product-facing UX on top of a real analytics stack.
-
-## Features
-
-### Market intelligence
-
-- benchmark and sector-level market overview
-- movers, laggards, and volatility snapshots
-- live-style header ticker strip
-- market news feed with source article links
-
-### Analysis workspace
-
-- ask market and portfolio questions in natural language
-- route questions across live, historical, hybrid, and portfolio-aware contexts
-- receive analyst-style commentary instead of raw tables alone
-
-### Portfolio workflows
-
-- track holdings and watchlist symbols
-- calculate value, P&L, and concentration
-- generate portfolio alerts
-- manage research notes in a kanban-style board
-
-### Messaging and delivery
-
-- Telegram account linking
-- Telegram bot workflows
-- portfolio brief and alert delivery
 
 ## Architecture
 
 ```text
-React + Vite frontend
-        ↓
-FastAPI application layer
-        ↓
-DuckDB serving + analytics layer
-        ↓
-Spark + dbt transformation pipeline
-        ↓
-MinIO / Kafka / ingestion services
+Alpaca / Twelve Data / Brave News / yfinance
+                    │
+                    ▼
+      Ingestion + streaming jobs (Python)
+                    │
+                    ├──▶ Kafka                  intraday stream transport
+                    ├──▶ MinIO                  raw / warehouse object storage
+                    └──▶ Spark transform        RSI, SMA, VWAP, pct_change, z-score
+                                │
+                                ▼
+                        dbt + DuckDB warehouse
+                                │
+                                ▼
+                     FastAPI application layer
+                                │
+                ┌───────────────┼────────────────┐
+                ▼               ▼                ▼
+          React + Vite      Clerk auth      Telegram bot
 ```
 
-### Data flow
+---
 
-1. Market data is ingested through batch and streaming workflows.
-2. Spark computes indicators such as RSI, SMA, VWAP deviation, volume z-score, and daily percent change.
-3. dbt models build serving-ready marts for the application.
-4. FastAPI exposes product endpoints for dashboards, analysis, portfolio state, and news.
-5. React renders the user experience across Markets, Analysis, Portfolio, and News.
+## Features
 
-## Tech Stack
+- **Market overview** — benchmark context, sector summaries, movers, volatility signals, and a live-style ticker strip
+- **AI-assisted analysis** — natural-language questions across live, historical, hybrid, news, watchlist, and portfolio contexts
+- **Portfolio tracking** — saved holdings, watchlist, P&L, concentration profile, top winner/loser, and signal summaries
+- **Research notes board** — kanban-style note management for thesis, risk rules, review notes, exit triggers, and general notes
+- **News aggregation** — Brave News Search-backed market news feed with source article pages and external links
+- **Telegram integration** — account linking, portfolio briefs, and alert delivery through a Telegram bot
+- **Responsive product UI** — mobile-friendly layouts across Markets, Analysis, Portfolio, and News
 
-### Frontend
+---
 
-- React 18
-- Vite
-- Clerk authentication
-- CSS-based terminal/neobrutalist UI system
+## Stack
 
-### Backend
+| Layer | Technology |
+|---|---|
+| Frontend | React + Vite |
+| Backend | FastAPI (Python) |
+| Analytics warehouse | DuckDB |
+| Batch transform | Spark |
+| Modeling layer | dbt |
+| Streaming | Kafka |
+| Object storage | MinIO |
+| Auth | Clerk |
+| News | Brave News Search API |
+| Market data | Alpaca, Twelve Data, yfinance |
+| Messaging | Telegram Bot API |
+| Deployment | Docker Compose |
 
-- Python
-- FastAPI
-- DuckDB
-- pandas
-- yfinance
-
-### Data platform
-
-- Kafka
-- Spark
-- dbt
-- MinIO
-- Prefect
-
-### Integrations
-
-- Alpaca market data
-- Twelve Data benchmark quotes
-- Brave News Search API
-- Telegram Bot API
-- Clerk auth
-
-## Repository Structure
-
-```text
-api/              FastAPI app, auth, portfolio logic, Telegram bot
-frontend/         React app, routes, pages, components, styling
-ingestion/        Batch and streaming market data ingestion
-spark/            Indicator transforms and Silver build logic
-orchestration/    Load, validation, alert, and delivery scripts
-dbt_finsight/     Analytics models and warehouse marts
-pipeline/         Container runtime for pipeline jobs
-deploy/           Reverse proxy and deployment helpers
-```
-
-## Product Areas
-
-### Markets
-
-- market overview
-- benchmark cards
-- quick actions
-- watchlist
-- sector summaries
-- market news
-
-### Analysis
-
-- natural-language financial Q&A
-- historical and live market context
-- portfolio-aware responses
-- recent session memory
-
-### Portfolio
-
-- saved holdings
-- watchlist management
-- alert summaries
-- research notes board
-- concentration and winner/loser views
-
-### News
-
-- dedicated news feed
-- article detail pages
-- full source links
+---
 
 ## Getting Started
 
 ### Prerequisites
 
-- Docker
-- Docker Compose plugin
-- Node.js 20+ for standalone frontend development
-- Python 3.11+ for standalone backend development
+- Docker + Docker Compose plugin
+- Node.js 20+ if you want to run the frontend outside Docker
+- Python 3.11+ if you want to run services outside Docker
 
-### Environment
-
-Create a local environment file from the example:
+### Setup
 
 ```bash
+git clone <your-repo-url> finsight
+cd finsight
+
 cp .env.example .env
+# Fill in the environment variables you want to enable
 ```
 
-Then fill in the credentials you want to enable.
+### Run
 
-Common integrations:
-
-- `ALPACA_API_KEY`
-- `ALPACA_SECRET_KEY`
-- `GROQ_API_KEY`
-- `TWELVE_DATA_API_KEY`
-- `BRAVE_SEARCH_API_KEY`
-- `TELEGRAM_BOT_TOKEN`
-- `TELEGRAM_BOT_USERNAME`
-- `VITE_CLERK_PUBLISHABLE_KEY`
-- `CLERK_JWT_PUBLIC_KEY`
-
-See [`.env.example`](./.env.example) for the full list.
-
-### Local development
-
-Run the full local stack:
+For local development:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
 ```
 
-Run a production-style local stack:
+For a production-style run:
 
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 ```
 
-## Deployment
+The frontend will be available through the configured frontend service and proxy setup.
 
-FinSight is designed to run through Docker Compose behind a reverse proxy.
+### Environment Variables
 
-Helpful deployment files:
+| Variable | Required | Description |
+|---|---|---|
+| `ALPACA_API_KEY` | No | Batch and streaming market data ingestion |
+| `ALPACA_SECRET_KEY` | No | Batch and streaming market data ingestion |
+| `TWELVE_DATA_API_KEY` | No | Benchmark quote snapshots |
+| `BRAVE_SEARCH_API_KEY` | No | Market and business news retrieval |
+| `GROQ_API_KEY` | No | AI-assisted commentary / analysis generation |
+| `TELEGRAM_BOT_TOKEN` | No | Telegram bot integration |
+| `TELEGRAM_BOT_USERNAME` | No | Telegram deep-link / linking flow |
+| `VITE_CLERK_PUBLISHABLE_KEY` | No | Frontend authentication |
+| `CLERK_JWT_PUBLIC_KEY` | No | Backend token validation |
+| `FINSIGHT_INTERNAL_API_KEY` | No | Internal service auth between app services |
+| `MINIO_ROOT_USER` | No | MinIO object storage username |
+| `MINIO_ROOT_PASSWORD` | No | MinIO object storage password |
 
-- [DEPLOY_SERVER.md](./DEPLOY_SERVER.md)
-- [deploy/Caddyfile.example](./deploy/Caddyfile.example)
-- [docker-compose.prod.yml](./docker-compose.prod.yml)
-
-Typical update flow:
-
-```bash
-git pull
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
-```
-
-## Highlights
-
-- full-stack financial product, not just a dashboard prototype
-- analytics pipeline and user-facing app in one system
-- AI-assisted financial analysis across live, historical, and portfolio contexts
-- real portfolio notes, alerts, and messaging workflows
-- production-style containerized deployment
-
-## Documentation
-
-- [PROJECT_OVERVIEW.md](./PROJECT_OVERVIEW.md)
-- [DEPLOY_SERVER.md](./DEPLOY_SERVER.md)
-
-## Security Notes
-
-- `.env` is ignored
-- `.env.example` contains placeholders only
-- local secrets, certificate files, and editor/tool metadata are ignored by default
+See [`.env.example`](./.env.example) for the full configuration.
 
 ---
 
-## Resume Summary
+## Project Structure
 
-Built FinSight, a full-stack financial analytics platform using React, FastAPI, DuckDB, Spark, dbt, Kafka, and Docker Compose, with AI-assisted analysis, portfolio tracking, news aggregation, and Telegram alerts.
+```text
+finsight/
+├── api/              FastAPI app, auth, portfolio logic, Telegram bot
+├── frontend/         React app, routes, pages, components, styles
+├── ingestion/        Batch and stream market data ingestion
+├── spark/            Indicator transform pipeline
+├── orchestration/    Load, alert, and delivery scripts
+├── dbt_finsight/     Warehouse models, marts, seeds
+├── pipeline/         Container runtime for pipeline jobs
+├── prefect/          Prefect container setup
+├── deploy/           Reverse proxy and deployment helpers
+└── config/           Project config such as tracked ticker metadata
+```
+
+---
+
+## How It Works
+
+1. **Ingestion** pulls market data from configured providers and writes raw data into the pipeline flow.
+
+2. **Streaming and batch processing** move data through Kafka and Spark, where rolling indicators like RSI, SMA, VWAP deviation, volume z-score, and daily percent change are computed.
+
+3. **dbt models** transform the warehouse into serving-friendly marts for:
+   - market snapshot
+   - sector summaries
+   - anomaly detection
+   - query context
+
+4. **FastAPI** exposes product endpoints for:
+   - `/market-snapshot`
+   - `/market-news`
+   - `/query`
+   - `/portfolio`
+   - `/notes`
+   - `/telegram`
+
+5. **React frontend** renders the product experience across:
+   - Markets
+   - Analysis
+   - Portfolio
+   - News
+
+6. **Telegram bot flows** allow account linking and delivery of alerts and portfolio summaries outside the web app.
+
+---
+
+## Additional Documentation
+
+- [PROJECT_OVERVIEW.md](./PROJECT_OVERVIEW.md)
+- [DEPLOY_SERVER.md](./DEPLOY_SERVER.md)
+- [deploy/Caddyfile.example](./deploy/Caddyfile.example)
+
+---
+
+## Security Notes
+
+- `.env` is ignored by Git
+- `.env.example` contains placeholders only
+- local secret files and key/certificate files are ignored
+- local editor and tool metadata is ignored by default
