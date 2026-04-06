@@ -1,5 +1,13 @@
 # Environment / secrets
 .env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+secrets/
 
 # Python
 __pycache__/
@@ -30,6 +38,11 @@ metastore_db/
 .idea/
 .vscode/
 *.iml
+.claude/
+.codex/
+.cursor/
+CLAUDE.md
+CODEX.md
 
 # OS
 .DS_Store
