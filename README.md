@@ -9,6 +9,7 @@ An AI-assisted financial analytics platform that combines market dashboards, por
 ![Apache Kafka](https://img.shields.io/badge/Kafka-Streaming-231f20?style=flat-square&logo=apachekafka&logoColor=white)
 ![Apache Spark](https://img.shields.io/badge/Spark-Processing-e25a1c?style=flat-square&logo=apachespark&logoColor=white)
 ![dbt](https://img.shields.io/badge/dbt-Modeling-ff694b?style=flat-square&logo=dbt&logoColor=white)
+![Qwen](https://img.shields.io/badge/Qwen-Query%20Layer-7c3aed?style=flat-square)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ed?style=flat-square&logo=docker&logoColor=white)
 
 ## Demo
@@ -35,6 +36,8 @@ Alpaca / Twelve Data / Brave News / yfinance
                                 ▼
                      FastAPI application layer
                                 │
+                                ├──▶ Qwen-style text-to-SQL / analysis layer
+                                │
                 ┌───────────────┼────────────────┐
                 ▼               ▼                ▼
           React + Vite      Clerk auth      Telegram bot
@@ -45,7 +48,7 @@ Alpaca / Twelve Data / Brave News / yfinance
 ## Features
 
 - **Market overview** — benchmark context, sector summaries, movers, volatility signals, and a live-style ticker strip
-- **AI-assisted analysis** — natural-language questions across live, historical, hybrid, news, watchlist, and portfolio contexts
+- **AI-assisted analysis** — natural-language questions across live, historical, hybrid, news, watchlist, and portfolio contexts through a Qwen-based query layer
 - **Portfolio tracking** — saved holdings, watchlist, P&L, concentration profile, top winner/loser, and signal summaries
 - **Research notes board** — kanban-style note management for thesis, risk rules, review notes, exit triggers, and general notes
 - **News aggregation** — Brave News Search-backed market news feed with source article pages and external links
@@ -60,6 +63,7 @@ Alpaca / Twelve Data / Brave News / yfinance
 |---|---|
 | Frontend | React + Vite |
 | Backend | FastAPI (Python) |
+| LLM query layer | Qwen-oriented text-to-SQL flow via Groq |
 | Analytics warehouse | DuckDB |
 | Batch transform | Spark |
 | Modeling layer | dbt |
@@ -137,7 +141,9 @@ finsight/
    - anomaly detection
    - query context
 
-4. **FastAPI** exposes product endpoints for:
+4. **Qwen query logic** converts natural-language analytical questions into structured query behavior inside the backend analysis flow.
+
+5. **FastAPI** exposes product endpoints for:
    - `/market-snapshot`
    - `/market-news`
    - `/query`
@@ -145,10 +151,10 @@ finsight/
    - `/notes`
    - `/telegram`
 
-5. **React frontend** renders the product experience across:
+6. **React frontend** renders the product experience across:
    - Markets
    - Analysis
    - Portfolio
    - News
 
-6. **Telegram bot flows** extend the product outside the web app through account linking and delivery workflows.
+7. **Telegram bot flows** extend the product outside the web app through account linking and delivery workflows.
