@@ -47,13 +47,13 @@ Alpaca / Twelve Data / Brave News / yfinance
 
 ## Features
 
-- **Market overview** — benchmark context, sector summaries, movers, volatility signals, and a live-style ticker strip
-- **AI-assisted analysis** — natural-language questions across live, historical, hybrid, news, watchlist, and portfolio contexts through a Qwen-based query layer
-- **Portfolio tracking** — saved holdings, watchlist, P&L, concentration profile, top winner/loser, and signal summaries
-- **Research notes board** — kanban-style note management for thesis, risk rules, review notes, exit triggers, and general notes
-- **News aggregation** — Brave News Search-backed market news feed with source article pages and external links
-- **Telegram integration** — account linking, portfolio briefs, and alert delivery through a Telegram bot
-- **Responsive product UI** — mobile-friendly layouts across Markets, Analysis, Portfolio, and News
+- **Market overview** - benchmark context, sector summaries, movers, volatility signals, and a live-style ticker strip
+- **AI-assisted analysis** - natural-language questions across live, historical, hybrid, news, watchlist, and portfolio contexts through a Qwen-based query layer
+- **Portfolio tracking** - saved holdings, watchlist, P&L, concentration profile, top winner/loser, and signal summaries
+- **Research notes board** - kanban-style note management for thesis, risk rules, review notes, exit triggers, and general notes
+- **News aggregation** - Brave News Search-backed market news feed with source article pages and external links
+- **Telegram integration** - account linking, portfolio briefs, and alert delivery through a Telegram bot
+- **Responsive product UI** - mobile-friendly layouts across Markets, Analysis, Portfolio, and News
 
 ---
 
