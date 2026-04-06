@@ -73,58 +73,37 @@ Alpaca / Twelve Data / Brave News / yfinance
 
 ---
 
-## Getting Started
+## Product Areas
 
-### Prerequisites
+### Markets
 
-- Docker + Docker Compose plugin
-- Node.js 20+ if you want to run the frontend outside Docker
-- Python 3.11+ if you want to run services outside Docker
+- market overview
+- benchmark cards
+- quick actions
+- watchlist
+- sector summaries
+- market news
 
-### Setup
+### Analysis
 
-```bash
-git clone <your-repo-url> finsight
-cd finsight
+- natural-language financial Q&A
+- historical and live market context
+- portfolio-aware responses
+- recent-session continuity
 
-cp .env.example .env
-# Fill in the environment variables you want to enable
-```
+### Portfolio
 
-### Run
+- saved holdings
+- watchlist management
+- alert summaries
+- research notes board
+- concentration and winner/loser views
 
-For local development:
+### News
 
-```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
-```
-
-For a production-style run:
-
-```bash
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
-```
-
-The frontend will be available through the configured frontend service and proxy setup.
-
-### Environment Variables
-
-| Variable | Required | Description |
-|---|---|---|
-| `ALPACA_API_KEY` | No | Batch and streaming market data ingestion |
-| `ALPACA_SECRET_KEY` | No | Batch and streaming market data ingestion |
-| `TWELVE_DATA_API_KEY` | No | Benchmark quote snapshots |
-| `BRAVE_SEARCH_API_KEY` | No | Market and business news retrieval |
-| `GROQ_API_KEY` | No | AI-assisted commentary / analysis generation |
-| `TELEGRAM_BOT_TOKEN` | No | Telegram bot integration |
-| `TELEGRAM_BOT_USERNAME` | No | Telegram deep-link / linking flow |
-| `VITE_CLERK_PUBLISHABLE_KEY` | No | Frontend authentication |
-| `CLERK_JWT_PUBLIC_KEY` | No | Backend token validation |
-| `FINSIGHT_INTERNAL_API_KEY` | No | Internal service auth between app services |
-| `MINIO_ROOT_USER` | No | MinIO object storage username |
-| `MINIO_ROOT_PASSWORD` | No | MinIO object storage password |
-
-See [`.env.example`](./.env.example) for the full configuration.
+- dedicated news feed
+- article detail pages
+- links to original sources
 
 ---
 
@@ -141,7 +120,7 @@ finsight/
 ├── pipeline/         Container runtime for pipeline jobs
 ├── prefect/          Prefect container setup
 ├── deploy/           Reverse proxy and deployment helpers
-└── config/           Project config such as tracked ticker metadata
+└── config/           Project config and tracked market metadata
 ```
 
 ---
@@ -172,21 +151,4 @@ finsight/
    - Portfolio
    - News
 
-6. **Telegram bot flows** allow account linking and delivery of alerts and portfolio summaries outside the web app.
-
----
-
-## Additional Documentation
-
-- [PROJECT_OVERVIEW.md](./PROJECT_OVERVIEW.md)
-- [DEPLOY_SERVER.md](./DEPLOY_SERVER.md)
-- [deploy/Caddyfile.example](./deploy/Caddyfile.example)
-
----
-
-## Security Notes
-
-- `.env` is ignored by Git
-- `.env.example` contains placeholders only
-- local secret files and key/certificate files are ignored
-- local editor and tool metadata is ignored by default
+6. **Telegram bot flows** extend the product outside the web app through account linking and delivery workflows.
